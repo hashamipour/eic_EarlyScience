@@ -1,9 +1,0 @@
-/home/hh/Downloads/eic_TDR/build/CMakeFiles/eicplot.dir
-/home/hh/Downloads/eic_TDR/build/CMakeFiles/ddis_skim_q2_xy.dir
-/home/hh/Downloads/eic_TDR/build/CMakeFiles/skim_t.dir
-/home/hh/Downloads/eic_TDR/build/CMakeFiles/ddis_skim_combined.dir
-/home/hh/Downloads/eic_TDR/build/CMakeFiles/ddis_plot_q2_xy.dir
-/home/hh/Downloads/eic_TDR/build/CMakeFiles/ddis_plot_t.dir
-/home/hh/Downloads/eic_TDR/build/CMakeFiles/ddis_plot_combined.dir
-/home/hh/Downloads/eic_TDR/build/CMakeFiles/edit_cache.dir
-/home/hh/Downloads/eic_TDR/build/CMakeFiles/rebuild_cache.dir

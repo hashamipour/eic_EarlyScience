@@ -1,2 +1,0 @@
-/usr/bin/ar qc libeicplot.a CMakeFiles/eicplot.dir/plotting/PlotOptions.cpp.o CMakeFiles/eicplot.dir/plotting/PlotOptions1D.cpp.o CMakeFiles/eicplot.dir/plotting/PlotOptionsBinnedRelRes.cpp.o CMakeFiles/eicplot.dir/plotting/PlotOptionsCombinedCorrelation.cpp.o CMakeFiles/eicplot.dir/plotting/PlotOptionsRelRes.cpp.o CMakeFiles/eicplot.dir/plotting/PlotOptionsResponseMatrix.cpp.o CMakeFiles/eicplot.dir/utility/Utility.cpp.o CMakeFiles/eicplot.dir/utility/RecoMethods.cpp.o
-/usr/bin/ranlib libeicplot.a

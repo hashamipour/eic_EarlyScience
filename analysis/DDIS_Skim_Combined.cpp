@@ -361,7 +361,7 @@ int main(int argc, char** argv) {
     TH1D* h_xpom_B0 = new TH1D("xpom_B0", "B0 Reco x_{pom} (from x_L);x_{pom};Counts", n_xpom_bins, xpom_bins);
     TH1D* h_xpom_RP = new TH1D("xpom_RP", "RP Reco x_{pom} (from x_L);x_{pom};Counts", n_xpom_bins, xpom_bins);
     
-    // x_pom histograms from definition: x_pom = (M_X^2 + Q^2 - t)/(W^2 + Q^2 - m_p^2)
+    // x_pom histograms from definition: x_pom = (M_X^2 + Q^2 + |t|)/(W^2 + Q^2 - m_p^2)
     TH1D* h_xpom_def_MC = new TH1D("xpom_def_MC", "Truth x_{pom} (from definition);x_{pom};Counts", n_xpom_bins, xpom_bins);
     TH1D* h_xpom_def_B0 = new TH1D("xpom_def_B0", "B0 Reco x_{pom} (from definition);x_{pom};Counts", n_xpom_bins, xpom_bins);
     TH1D* h_xpom_def_RP = new TH1D("xpom_def_RP", "RP Reco x_{pom} (from definition);x_{pom};Counts", n_xpom_bins, xpom_bins);
@@ -775,7 +775,7 @@ int main(int argc, char** argv) {
                 double xpom_from_def = -999.0;
                 double denominator = W2_truth + electron_Q2_truth - m_p_sq;
                 if(denominator > 0) {
-                    xpom_from_def = (MX2_truth + electron_Q2_truth - t_val) / denominator;
+                    xpom_from_def = (MX2_truth + electron_Q2_truth + t_val) / denominator;
                 }
 
                 truth_protons.push_back(p);
@@ -948,13 +948,13 @@ int main(int argc, char** argv) {
                 double xpom_reco_from_def = -999.0;
                 double denominator_reco = W2_EM + electron_Q2_EM - m_p_sq;
                 if(denominator_reco > 0) {
-                    xpom_reco_from_def = (MX2_reco + electron_Q2_EM - t_reco_abs) / denominator_reco;
+                    xpom_reco_from_def = (MX2_reco + electron_Q2_EM + t_reco_abs) / denominator_reco;
                 }
                 
                 double xpom_truth_from_def = -999.0;
                 double denominator_truth = W2_truth + electron_Q2_truth - m_p_sq;
                 if(denominator_truth > 0) {
-                    xpom_truth_from_def = (MX2_truth + electron_Q2_truth - t_truth_abs) / denominator_truth;
+                    xpom_truth_from_def = (MX2_truth + electron_Q2_truth +  t_truth_abs) / denominator_truth;
                 }
 
                 // Fill histograms
