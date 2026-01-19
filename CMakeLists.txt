@@ -40,6 +40,10 @@ add_executable(skim_t analysis/DDIS_Skim_t.cpp)
 target_link_libraries(skim_t PRIVATE eicplot ${ROOT_LIBRARIES})
 add_executable(ddis_skim_combined analysis/DDIS_Skim_Combined.cpp)
 target_link_libraries(ddis_skim_combined PRIVATE eicplot ${ROOT_LIBRARIES})
+add_executable(ddis_skim_binning_inputs analysis/DDIS_Skim_BinningInputs.cpp)
+target_link_libraries(ddis_skim_binning_inputs PRIVATE eicplot ${ROOT_LIBRARIES})
+add_executable(ddis_skim_final analysis/DDIS_Skim_Final.cpp)
+target_link_libraries(ddis_skim_final PRIVATE eicplot ${ROOT_LIBRARIES})
 
 add_executable(ddis_plot_q2_xy analysis/DDIS_Plots_Q2_with_xy.cpp)
 target_link_libraries(ddis_plot_q2_xy PRIVATE eicplot ${ROOT_LIBRARIES})
@@ -47,6 +51,10 @@ add_executable(ddis_plot_t analysis/DDIS_Plot_t.cpp)
 target_link_libraries(ddis_plot_t PRIVATE eicplot ${ROOT_LIBRARIES})
 add_executable(ddis_plot_combined analysis/DDIS_Plot_Combined.cpp)
 target_link_libraries(ddis_plot_combined PRIVATE eicplot ${ROOT_LIBRARIES})
+add_executable(ddis_plot_binning analysis/DDIS_Plot_Binning.cpp)
+target_link_libraries(ddis_plot_binning PRIVATE eicplot ${ROOT_LIBRARIES})
+add_executable(ddis_plot_final analysis/DDIS_Plot_Final.cpp)
+target_link_libraries(ddis_plot_final PRIVATE eicplot ${ROOT_LIBRARIES})
 
 
 
