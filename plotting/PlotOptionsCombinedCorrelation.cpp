@@ -1,6 +1,8 @@
 #include "Plotting.hpp"
 #include <TLatex.h>
 #include <TLine.h>
+#include <TLegend.h>
+#include <TMath.h>
 #include <TStyle.h>
 #include <iostream>
 
@@ -13,7 +15,9 @@ PlotOptionsCombinedCorrelation::PlotOptionsCombinedCorrelation(const std::vector
                                                                const char* yLabel,
                                                                const char* saveName,
                                                                const std::pair<double, double>& xRange,
-                                                               const std::pair<double, double>& yRange)
+                                                               const std::pair<double, double>& yRange,
+                                                               const bool isLogX,
+                                                               const bool isLogY)
     : m_histNames(histNames),
       m_legendEntries(legendEntries),
       m_colors(colors),
@@ -23,7 +27,9 @@ PlotOptionsCombinedCorrelation::PlotOptionsCombinedCorrelation(const std::vector
       m_yLabel(yLabel),
       m_saveName(saveName),
       m_xRange(xRange),
-      m_yRange(yRange) {}
+      m_yRange(yRange),
+      m_isLogX(isLogX),
+      m_isLogY(isLogY) {}
 
 void PlotOptionsCombinedCorrelation::Plot(TFile* inputFile) {
     TCanvas* c = new TCanvas("c_combined_corr", m_canvasTitle, 1200, 1000);
@@ -31,11 +37,16 @@ void PlotOptionsCombinedCorrelation::Plot(TFile* inputFile) {
     c->SetLeftMargin(0.15);
     c->SetTopMargin(0.1);
     c->SetBottomMargin(0.1);
+    c->SetLogx(m_isLogX);
+    c->SetLogy(m_isLogY);
     
     gStyle->SetOptStat(0);
     
     bool firstPlot = true;
     
+    std::vector<TGraph*> graphs;
+    graphs.reserve(m_histNames.size());
+
     for (size_t i = 0; i < m_histNames.size(); ++i) {
         TGraph* graph = (TGraph*)inputFile->Get(m_histNames[i]);
         
@@ -45,8 +56,10 @@ void PlotOptionsCombinedCorrelation::Plot(TFile* inputFile) {
         }
         
         graph->SetMarkerColor(m_colors[i]);
+        graph->SetLineColor(m_colors[i]);
         graph->SetMarkerStyle(m_markerStyles[i]);
         graph->SetMarkerSize(0.3);
+        graphs.push_back(graph);
         
         if (firstPlot) {
             graph->SetTitle("");
@@ -88,6 +101,18 @@ void PlotOptionsCombinedCorrelation::Plot(TFile* inputFile) {
     diagLine->SetLineStyle(2);
     diagLine->Draw("same");
     
+    if (!graphs.empty() && m_legendEntries.size() == graphs.size()) {
+        TLegend* legend = new TLegend(0.7, 0.7, 0.9, 0.9);
+        legend->SetBorderSize(0);
+        legend->SetFillStyle(0);
+        legend->SetTextFont(42);
+        legend->SetTextSize(0.035);
+        for (size_t i = 0; i < graphs.size(); ++i) {
+            legend->AddEntry(graphs[i], m_legendEntries[i], "p");
+        }
+        legend->Draw();
+    }
+
     TLatex latex;
     latex.SetTextSize(0.04);
     latex.SetNDC();
@@ -96,7 +121,7 @@ void PlotOptionsCombinedCorrelation::Plot(TFile* inputFile) {
     latex.DrawLatex(0.65, 0.92, "#bf{Diff. DIS} 10x100 GeV");
     
     c->Update();
-    c->SaveAs(m_saveName);
+    SaveCanvas(c, m_saveName);
     
     delete diagLine;
     delete c;

@@ -223,7 +223,7 @@ void PlotOptionsRelRes::Plot(TFile* inputFile) {
         latex.DrawLatex(0.15, 0.92, "#bf{ePIC} Simulation");
         latex.DrawLatex(0.15, 0.86, "#bf{Diff. DIS} 10x100 GeV");
 
-        c->SaveAs(m_saveName);
+        SaveCanvas(c, m_saveName);
         delete c;
         return;
     }
@@ -245,7 +245,7 @@ void PlotOptionsRelRes::Plot(TFile* inputFile) {
             latex.DrawLatex(0.15, 0.92, "#bf{ePIC} Simulation");
             latex.DrawLatex(0.15, 0.86, "#bf{Diff. DIS} 10x100 GeV");
 
-            c->SaveAs(m_saveName);
+            SaveCanvas(c, m_saveName);
             delete c;
             return;
         }
@@ -278,7 +278,7 @@ void PlotOptionsRelRes::Plot(TFile* inputFile) {
     latex->DrawLatex(0.15, 0.92, "#bf{ePIC} Simulation");
     latex->DrawLatex(0.15, 0.86, "#bf{Diff. DIS} 10x100 GeV");
 
-    c->SaveAs(m_saveName);
+    SaveCanvas(c, m_saveName);
     delete c;
     delete latex;
 }

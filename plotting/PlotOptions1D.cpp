@@ -178,7 +178,7 @@ void PlotOptions1D::Plot(TFile* inputFile) {
     // legend->Draw();
     // gPad->Update();
     c->Update();
-    c->SaveAs(m_saveName);
+    SaveCanvas(c, m_saveName);
 
     delete c;
 }

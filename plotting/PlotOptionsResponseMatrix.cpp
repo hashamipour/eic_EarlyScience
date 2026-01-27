@@ -133,7 +133,7 @@ void PlotOptionsResponseMatrix::Plot(TFile* inputFile) {
     SetCustomPalette("SolarBloom");
     TColor::InvertPalette(); // Invert the palette for better visibility
     c->Update();
-    c->SaveAs(m_saveName);
+    SaveCanvas(c, m_saveName);
 
     delete h_matrix_perc;
     delete c;

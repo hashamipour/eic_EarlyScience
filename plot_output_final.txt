@@ -1,0 +1,2170 @@
+Warning in <TClassTable::Add>: class TConditionImp already in TClassTable
+Warning in <TClassTable::Add>: class TPosixCondition already in TClassTable
+Warning in <TClassTable::Add>: class TMutexImp already in TClassTable
+Warning in <TClassTable::Add>: class TPosixMutex already in TClassTable
+Warning in <TClassTable::Add>: class TThreadImp already in TClassTable
+Warning in <TClassTable::Add>: class TPosixThread already in TClassTable
+Warning in <TClassTable::Add>: class TThreadFactory already in TClassTable
+Warning in <TClassTable::Add>: class TPosixThreadFactory already in TClassTable
+Warning in <TClassTable::Add>: class TAtomicCount already in TClassTable
+Warning in <TClassTable::Add>: class TCondition already in TClassTable
+Warning in <TClassTable::Add>: class TMutex already in TClassTable
+Warning in <TClassTable::Add>: class TRWLock already in TClassTable
+Warning in <TClassTable::Add>: class TSemaphore already in TClassTable
+Warning in <TClassTable::Add>: class TThread already in TClassTable
+Warning in <TClassTable::Add>: class ROOT::TSpinMutex already in TClassTable
+Warning in <TClassTable::Add>: class ROOT::Internal::RRawFile already in TClassTable
+Warning in <TClassTable::Add>: class TDirectoryFile already in TClassTable
+Warning in <TClassTable::Add>: class TFile already in TClassTable
+Warning in <TClassTable::Add>: class TFileMerger already in TClassTable
+Warning in <TClassTable::Add>: class TMemFile already in TClassTable
+Warning in <TClassTable::Add>: class ROOT::TBufferMerger already in TClassTable
+Warning in <TClassTable::Add>: class ROOT::TBufferMergerFile already in TClassTable
+Warning in <TClassTable::Add>: class TArchiveFile already in TClassTable
+Warning in <TClassTable::Add>: class TArchiveMember already in TClassTable
+Warning in <TClassTable::Add>: class TBufferIO already in TClassTable
+Warning in <TClassTable::Add>: class TBufferFile already in TClassTable
+Warning in <TClassTable::Add>: class TBufferText already in TClassTable
+Warning in <TClassTable::Add>: class TBufferJSON already in TClassTable
+Warning in <TClassTable::Add>: class TGenCollectionProxy already in TClassTable
+Warning in <TClassTable::Add>: class TGenCollectionProxy::Value already in TClassTable
+Warning in <TClassTable::Add>: class TGenCollectionProxy::Method already in TClassTable
+Warning in <TClassTable::Add>: class TCollectionProxyFactory already in TClassTable
+Warning in <TClassTable::Add>: class TCollectionStreamer already in TClassTable
+Warning in <TClassTable::Add>: class TCollectionClassStreamer already in TClassTable
+Warning in <TClassTable::Add>: class TCollectionMemberStreamer already in TClassTable
+Warning in <TClassTable::Add>: class TEmulatedCollectionProxy already in TClassTable
+Warning in <TClassTable::Add>: class TEmulatedMapProxy already in TClassTable
+Warning in <TClassTable::Add>: class TFileCacheRead already in TClassTable
+Warning in <TClassTable::Add>: class TFree already in TClassTable
+Warning in <TClassTable::Add>: class TFileCacheWrite already in TClassTable
+Warning in <TClassTable::Add>: class TFPBlock already in TClassTable
+Warning in <TClassTable::Add>: class TFilePrefetch already in TClassTable
+Warning in <TClassTable::Add>: class TKey already in TClassTable
+Warning in <TClassTable::Add>: class TKeyMapFile already in TClassTable
+Warning in <TClassTable::Add>: class TLockFile already in TClassTable
+Warning in <TClassTable::Add>: class TMapFile already in TClassTable
+Warning in <TClassTable::Add>: class TMapRec already in TClassTable
+Warning in <TClassTable::Add>: class TStreamerInfo already in TClassTable
+Warning in <TClassTable::Add>: class TStreamerInfoActions::TConfiguration already in TClassTable
+Warning in <TClassTable::Add>: class TStreamerInfoActions::TConfiguredAction already in TClassTable
+Warning in <TClassTable::Add>: class TStreamerInfoActions::TActionSequence already in TClassTable
+Warning in <TClassTable::Add>: class TZIPFile already in TClassTable
+Warning in <TClassTable::Add>: class TZIPMember already in TClassTable
+Error in <TExMap::Add>: key 130364488892464 is not unique
+cling::DynamicLibraryManager::loadLibrary(): /home/hh/root/lib/libNet.so: undefined symbol: _ZN7TSystem18AnnounceTcpServiceEibii17ESocketBindOption
+Error in <TInterpreter::TCling::AutoLoad>: failure loading library libTree.so for TTree
+cling::DynamicLibraryManager::loadLibrary(): /home/hh/root/lib/libNet.so: undefined symbol: _ZN7TSystem18AnnounceTcpServiceEibii17ESocketBindOption
+Error in <TInterpreter::TCling::AutoLoad>: failure loading library libTree.so for TTree
+cling::DynamicLibraryManager::loadLibrary(): /home/hh/root/lib/libNet.so: undefined symbol: _ZN7TSystem18AnnounceTcpServiceEibii17ESocketBindOption
+Error in <TInterpreter::TCling::AutoLoad>: failure loading library libTree.so for TTree
+cling::DynamicLibraryManager::loadLibrary(): /home/hh/root/lib/libNet.so: undefined symbol: _ZN7TSystem18AnnounceTcpServiceEibii17ESocketBindOption
+Error in <TInterpreter::TCling::AutoLoad>: failure loading library libTree.so for TTree::ELockStatusBits
+cling::DynamicLibraryManager::loadLibrary(): /home/hh/root/lib/libNet.so: undefined symbol: _ZN7TSystem18AnnounceTcpServiceEibii17ESocketBindOption
+Error in <TInterpreter::TCling::AutoLoad>: failure loading library libTree.so for TTree
+cling::DynamicLibraryManager::loadLibrary(): /home/hh/root/lib/libNet.so: undefined symbol: _ZN7TSystem18AnnounceTcpServiceEibii17ESocketBindOption
+Error in <TInterpreter::TCling::AutoLoad>: failure loading library libTree.so for TTree
+cling::DynamicLibraryManager::loadLibrary(): /home/hh/root/lib/libNet.so: undefined symbol: _ZN7TSystem18AnnounceTcpServiceEibii17ESocketBindOption
+Error in <TInterpreter::TCling::AutoLoad>: failure loading library libTree.so for TTree::ESetBranchAddressStatus
+cling::DynamicLibraryManager::loadLibrary(): /home/hh/root/lib/libNet.so: undefined symbol: _ZN7TSystem18AnnounceTcpServiceEibii17ESocketBindOption
+Error in <TInterpreter::TCling::AutoLoad>: failure loading library libTree.so for TTree
+cling::DynamicLibraryManager::loadLibrary(): /home/hh/root/lib/libNet.so: undefined symbol: _ZN7TSystem18AnnounceTcpServiceEibii17ESocketBindOption
+Error in <TInterpreter::TCling::AutoLoad>: failure loading library libTree.so for TTree
+cling::DynamicLibraryManager::loadLibrary(): /home/hh/root/lib/libNet.so: undefined symbol: _ZN7TSystem18AnnounceTcpServiceEibii17ESocketBindOption
+Error in <TInterpreter::TCling::AutoLoad>: failure loading library libTree.so for TTree::EStatusBits
+cling::DynamicLibraryManager::loadLibrary(): /home/hh/root/lib/libNet.so: undefined symbol: _ZN7TSystem18AnnounceTcpServiceEibii17ESocketBindOption
+Error in <TInterpreter::TCling::AutoLoad>: failure loading library libTree.so for TTree
+cling::DynamicLibraryManager::loadLibrary(): /home/hh/root/lib/libNet.so: undefined symbol: _ZN7TSystem18AnnounceTcpServiceEibii17ESocketBindOption
+Error in <TInterpreter::TCling::AutoLoad>: failure loading library libTree.so for TTree
+cling::DynamicLibraryManager::loadLibrary(): /home/hh/root/lib/libNet.so: undefined symbol: _ZN7TSystem18AnnounceTcpServiceEibii17ESocketBindOption
+Error in <TInterpreter::TCling::AutoLoad>: failure loading library libTree.so for TTree
+cling::DynamicLibraryManager::loadLibrary(): /home/hh/root/lib/libNet.so: undefined symbol: _ZN7TSystem18AnnounceTcpServiceEibii17ESocketBindOption
+Error in <TInterpreter::TCling::AutoLoad>: failure loading library libTree.so for TBranch
+cling::DynamicLibraryManager::loadLibrary(): /home/hh/root/lib/libNet.so: undefined symbol: _ZN7TSystem18AnnounceTcpServiceEibii17ESocketBindOption
+Error in <TInterpreter::TCling::AutoLoad>: failure loading library libTree.so for TBranch
+cling::DynamicLibraryManager::loadLibrary(): /home/hh/root/lib/libNet.so: undefined symbol: _ZN7TSystem18AnnounceTcpServiceEibii17ESocketBindOption
+Error in <TInterpreter::TCling::AutoLoad>: failure loading library libTree.so for TBranch
+cling::DynamicLibraryManager::loadLibrary(): /home/hh/root/lib/libNet.so: undefined symbol: _ZN7TSystem18AnnounceTcpServiceEibii17ESocketBindOption
+Error in <TInterpreter::TCling::AutoLoad>: failure loading library libTree.so for TBranch::EStatusBits
+cling::DynamicLibraryManager::loadLibrary(): /home/hh/root/lib/libNet.so: undefined symbol: _ZN7TSystem18AnnounceTcpServiceEibii17ESocketBindOption
+Error in <TInterpreter::TCling::AutoLoad>: failure loading library libTree.so for TBranch
+cling::DynamicLibraryManager::loadLibrary(): /home/hh/root/lib/libNet.so: undefined symbol: _ZN7TSystem18AnnounceTcpServiceEibii17ESocketBindOption
+Error in <TInterpreter::TCling::AutoLoad>: failure loading library libTree.so for TLeaf
+cling::DynamicLibraryManager::loadLibrary(): /home/hh/root/lib/libNet.so: undefined symbol: _ZN7TSystem18AnnounceTcpServiceEibii17ESocketBindOption
+Error in <TInterpreter::TCling::AutoLoad>: failure loading library libTree.so for TLeaf
+cling::DynamicLibraryManager::loadLibrary(): /home/hh/root/lib/libNet.so: undefined symbol: _ZN7TSystem18AnnounceTcpServiceEibii17ESocketBindOption
+Error in <TInterpreter::TCling::AutoLoad>: failure loading library libTree.so for TLeaf
+cling::DynamicLibraryManager::loadLibrary(): /home/hh/root/lib/libNet.so: undefined symbol: _ZN7TSystem18AnnounceTcpServiceEibii17ESocketBindOption
+Error in <TInterpreter::TCling::AutoLoad>: failure loading library libTree.so for TLeaf::EStatusBits
+cling::DynamicLibraryManager::loadLibrary(): /home/hh/root/lib/libNet.so: undefined symbol: _ZN7TSystem18AnnounceTcpServiceEibii17ESocketBindOption
+Error in <TInterpreter::TCling::AutoLoad>: failure loading library libTree.so for TLeaf
+cling::DynamicLibraryManager::loadLibrary(): /home/hh/root/lib/libNet.so: undefined symbol: _ZN7TSystem18AnnounceTcpServiceEibii17ESocketBindOption
+Error in <TInterpreter::TCling::AutoLoad>: failure loading library libTree.so for TBranchRef
+cling::DynamicLibraryManager::loadLibrary(): /home/hh/root/lib/libNet.so: undefined symbol: _ZN7TSystem18AnnounceTcpServiceEibii17ESocketBindOption
+Error in <TInterpreter::TCling::AutoLoad>: failure loading library libTree.so for TBranchRef
+cling::DynamicLibraryManager::loadLibrary(): /home/hh/root/lib/libNet.so: undefined symbol: _ZN7TSystem18AnnounceTcpServiceEibii17ESocketBindOption
+Error in <TInterpreter::TCling::AutoLoad>: failure loading library libTree.so for TBranch
+cling::DynamicLibraryManager::loadLibrary(): /home/hh/root/lib/libNet.so: undefined symbol: _ZN7TSystem18AnnounceTcpServiceEibii17ESocketBindOption
+Error in <TInterpreter::TCling::AutoLoad>: failure loading library libTree.so for ROOT::TIOFeatures
+cling::DynamicLibraryManager::loadLibrary(): /home/hh/root/lib/libNet.so: undefined symbol: _ZN7TSystem18AnnounceTcpServiceEibii17ESocketBindOption
+Error in <TInterpreter::TCling::AutoLoad>: failure loading library libTree.so for TLeafF
+cling::DynamicLibraryManager::loadLibrary(): /home/hh/root/lib/libNet.so: undefined symbol: _ZN7TSystem18AnnounceTcpServiceEibii17ESocketBindOption
+Error in <TInterpreter::TCling::AutoLoad>: failure loading library libTree.so for TLeafF
+cling::DynamicLibraryManager::loadLibrary(): /home/hh/root/lib/libNet.so: undefined symbol: _ZN7TSystem18AnnounceTcpServiceEibii17ESocketBindOption
+Error in <TInterpreter::TCling::AutoLoad>: failure loading library libTree.so for TLeaf
+cling::DynamicLibraryManager::loadLibrary(): /home/hh/root/lib/libNet.so: undefined symbol: _ZN7TSystem18AnnounceTcpServiceEibii17ESocketBindOption
+Error in <TInterpreter::TCling::AutoLoad>: failure loading library libMinuit2.so for ROOT::Minuit2::Minuit2Minimizer
+cling::DynamicLibraryManager::loadLibrary(): /home/hh/root/lib/libNet.so: undefined symbol: _ZN7TSystem18AnnounceTcpServiceEibii17ESocketBindOption
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+cling::DynamicLibraryManager::loadLibrary(): /home/hh/root/lib/libNet.so: undefined symbol: _ZN7TSystem18AnnounceTcpServiceEibii17ESocketBindOption
+Error in <TInterpreter::TCling::AutoLoad>: failure loading library libMinuit.so for TMinuitMinimizer
+cling::DynamicLibraryManager::loadLibrary(): /home/hh/root/lib/libNet.so: undefined symbol: _ZN7TSystem18AnnounceTcpServiceEibii17ESocketBindOption
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Exponential fit: b = 5 +/- 0 GeV^{-2}
+Creating custom dsigma/dt plots...
+  h_dsigma_dt_MC: found
+  h_dsigma_dt_B0: found
+  h_dsigma_dt_RP: found
+  h_dsigma_dt_Sum: found
+  fit_exp: found
+  All histograms and fit found, creating plots...
+  Saving figs/dsigma_dt.png...
+Error in <TCling::LoadPCM>: ROOT PCM /home/hh/root/lib/libPostscript_rdict.pcm file does not exist
+Error in <TUnixSystem::Load>: version mismatch, /home/hh/root/lib/libPostscript.so = 63210, ROOT = 63202
+Error in <TInterpreter::TCling::AutoLoad>: failure loading library libPostscript.so for TPDF
+cling::DynamicLibraryManager::loadLibrary(): /home/hh/root/lib/libNet.so: undefined symbol: _ZN7TSystem18AnnounceTcpServiceEibii17ESocketBindOption
+Error in <TInterpreter::TCling::AutoLoad>: failure loading library libHistPainter.so for THistPainter
+cling::DynamicLibraryManager::loadLibrary(): /home/hh/root/lib/libNet.so: undefined symbol: _ZN7TSystem18AnnounceTcpServiceEibii17ESocketBindOption
+cling::DynamicLibraryManager::loadLibrary(): /home/hh/root/lib/libNet.so: undefined symbol: _ZN7TSystem18AnnounceTcpServiceEibii17ESocketBindOption
+Error in <TInterpreter::TCling::AutoLoad>: failure loading library libASImage.so for TASImage
+cling::DynamicLibraryManager::loadLibrary(): /home/hh/root/lib/libNet.so: undefined symbol: _ZN7TSystem18AnnounceTcpServiceEibii17ESocketBindOption
+  Saved!
+  Saving figs/dsigma_dt_logy.png...
+  Saved!
+Creating Q2 resolution visualizations with hollow circles...
+  Saving figs/resolutions/2d_maps/Q2_RelRes_Q2x_EM.png...
+  Saved successfully!
+  Saving figs/resolutions/2d_maps/Q2_RelRes_Q2x_DA.png...
+  Saved successfully!
+  Saving figs/resolutions/2d_maps/Q2_RelRes_Q2x_Sigma.png...
+  Saved successfully!
+Creating best method comparison plot...
+  Saving figs/resolutions/2d_maps/Q2_RelRes_Q2x_BestMethod.png...
+  Saved successfully!
+Creating x resolution circle plots...
+  Saving figs/resolutions/2d_maps/x_RelRes_xQ2_EM.png...
+  Saved successfully!
+  Saving figs/resolutions/2d_maps/x_RelRes_xQ2_DA.png...
+  Saved successfully!
+  Saving figs/resolutions/2d_maps/x_RelRes_xQ2_Sigma.png...
+  Saved successfully!
+Creating x resolution best method comparison plot...
+  Saving figs/resolutions/2d_maps/x_RelRes_xQ2_BestMethod.png...
+  Saved successfully!
+Creating y resolution circle plots...
+  Saving figs/resolutions/2d_maps/y_RelRes_xQ2_EM.png...
+  Saved successfully!
+  Saving figs/resolutions/2d_maps/y_RelRes_xQ2_DA.png...
+  Saved successfully!
+  Saving figs/resolutions/2d_maps/y_RelRes_xQ2_Sigma.png...
+  Saved successfully!
+Creating y resolution best method comparison plot...
+  Saving figs/resolutions/2d_maps/y_RelRes_xQ2_BestMethod.png...
+  Saved successfully!
+Creating diffractive variable bin-by-bin resolution circle plots...
+  Saving figs/resolutions/2d_maps/t_RelRes_xpomQ2_B0.png...
+  Saved successfully!
+  Saving figs/resolutions/2d_maps/t_RelRes_xpomQ2_RP.png...
+  Saved successfully!
+  Saving figs/resolutions/2d_maps/xpom_RelRes_xpomQ2_B0.png...
+  Saved successfully!
+  Saving figs/resolutions/2d_maps/xpom_RelRes_xpomQ2_RP.png...
+  Saved successfully!
+  Saving figs/resolutions/2d_maps/beta_RelRes_betaQ2_B0.png...
+  Saved successfully!
+  Saving figs/resolutions/2d_maps/beta_RelRes_betaQ2_RP.png...
+  Saved successfully!
+  Saving figs/resolutions/2d_maps/MX2_RelRes_MX2Q2.png...
+  Saved successfully!
+  Saving figs/resolutions/2d_maps/xL_RelRes_xLQ2_B0.png...
+  Saved successfully!
+  Saving figs/resolutions/2d_maps/xL_RelRes_xLQ2_RP.png...
+  Saved successfully!
+Creating E-pz 2D plot...
+Creating triple differential cross section 1D slices...
+Creating d3sigma vs beta comparison plots...
+Creating d3sigma vs x_pom comparison plots...
+Triple differential cross section 1D slice plots created!
+Creating acceptance, efficiency, and purity plots...
+Warning in <TAxis::TAxis::SetRangeUser>: ufirst < fXmin, fXmin is used
+Warning in <TAxis::TAxis::SetRangeUser>: ulast > fXmax, fXmax is used
+Warning in <TAxis::TAxis::SetRangeUser>: ufirst < fXmin, fXmin is used
+Warning in <TAxis::TAxis::SetRangeUser>: ulast > fXmax, fXmax is used
+Warning in <TAxis::TAxis::SetRangeUser>: ufirst < fXmin, fXmin is used
+Warning in <TAxis::TAxis::SetRangeUser>: ulast > fXmax, fXmax is used
+Warning in <TAxis::TAxis::SetRangeUser>: ufirst < fXmin, fXmin is used
+Warning in <TAxis::TAxis::SetRangeUser>: ulast > fXmax, fXmax is used
+Warning in <TAxis::TAxis::SetRangeUser>: ufirst < fXmin, fXmin is used
+Warning in <TAxis::TAxis::SetRangeUser>: ulast > fXmax, fXmax is used
+Warning in <TAxis::TAxis::SetRangeUser>: ufirst < fXmin, fXmin is used
+Warning in <TAxis::TAxis::SetRangeUser>: ulast > fXmax, fXmax is used
+Warning in <TAxis::TAxis::SetRangeUser>: ufirst < fXmin, fXmin is used
+Warning in <TAxis::TAxis::SetRangeUser>: ulast > fXmax, fXmax is used
+Warning in <TAxis::TAxis::SetRangeUser>: ufirst < fXmin, fXmin is used
+Warning in <TAxis::TAxis::SetRangeUser>: ulast > fXmax, fXmax is used
+Warning in <TAxis::TAxis::SetRangeUser>: ufirst < fXmin, fXmin is used
+Warning in <TAxis::TAxis::SetRangeUser>: ufirst < fXmin, fXmin is used
+[36mINFO: [0mUsing user-defined fit range: [-0.500000, 0.500000] for figs/resolutions/simple/t_resolution_B0.png
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+[36mINFO: [0mUsing user-defined fit range: [-0.500000, 0.500000] for figs/resolutions/simple/t_resolution_RP.png
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+[36mINFO: [0mUsing user-defined fit range: [-0.500000, 0.500000] for figs/resolutions/simple/xL_resolution_B0.png
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+[36mINFO: [0mUsing user-defined fit range: [-0.500000, 0.500000] for figs/resolutions/simple/xL_resolution_RP.png
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+[36mINFO: [0mUsing user-defined fit range: [-0.500000, 0.500000] for figs/resolutions/simple/xpom_resolution_B0.png
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+[36mINFO: [0mUsing user-defined fit range: [-0.500000, 0.500000] for figs/resolutions/simple/xpom_resolution_RP.png
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 21. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 22. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 23. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 24. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 25. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 26. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 27. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 28. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+cling::DynamicLibraryManager::loadLibrary(): /home/hh/root/lib/libNet.so: undefined symbol: _ZN7TSystem18AnnounceTcpServiceEibii17ESocketBindOption
+Error in <TInterpreter::TCling::AutoLoad>: failure loading library libHistPainter.so for TGraphPainter
+cling::DynamicLibraryManager::loadLibrary(): /home/hh/root/lib/libNet.so: undefined symbol: _ZN7TSystem18AnnounceTcpServiceEibii17ESocketBindOption
+Warning: Not enough fit ranges provided for bin 8. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 9. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 10. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 11. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 12. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 13. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 14. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 15. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 16. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 17. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 18. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 19. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 20. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 2. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 3. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 4. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 5. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 6. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 7. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 8. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 9. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 10. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 11. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 12. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 13. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 3. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 4. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 5. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 6. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 7. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 8. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 9. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 10. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 11. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 12. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 13. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 8. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <Fit>: Fit data is empty 
+Warning: Not enough fit ranges provided for bin 9. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <Fit>: Fit data is empty 
+Warning: Not enough fit ranges provided for bin 10. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 11. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 12. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 13. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 14. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 15. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 16. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 17. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 18. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 19. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 8. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 9. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 10. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 11. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 12. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 13. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 14. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 15. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 16. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 17. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 18. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 19. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 2. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 3. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 4. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 5. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 6. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 7. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 8. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 9. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 10. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 2. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 3. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 4. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 5. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 6. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 7. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 8. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 9. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 10. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 2. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 3. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 4. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 5. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 6. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 7. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 8. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 9. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 10. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 11. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 12. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 13. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 14. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 15. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 16. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 17. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 18. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 19. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 20. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 21. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 22. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 23. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 24. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 25. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 26. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 27. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 28. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 29. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 30. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 31. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 32. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 33. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 34. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 35. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 36. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 37. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 38. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 39. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 40. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 41. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 42. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 43. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 44. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 45. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 46. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 47. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 48. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 49. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning: Not enough fit ranges provided for bin 50. Using automatic range detection.
+--------------------------------------------------------
+   nBins_L | nBins_R | Total | Chi2/NDF | |f(x_L) - f(x_R)|% 
+--------------------------------------------------------
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)
+Warning in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer. Try using the minimizer Minuit
+Error in <ROOT::Math::FitConfig::CreateMinimizer>: Could not create the Minuit2 minimizer
+Error in <ROOT::Math::Fitter::DoInitMinimizer>: Minimizer cannot be created
+Error: 2D Histogram beta_vs_Q2 not found.
+Error: 2D Histogram beta_vs_xpom not found.
+Error: 2D Histogram beta_vs_t not found.
+
+======================================================================
+Plotting complete! All plots organized in figs/ subdirectories:
+======================================================================
+  figs/distributions/       - Base histograms and distributions
+  figs/response_matrices/   - Correlation plots (truth vs reco)
+  figs/resolutions/simple/  - 1D resolution histograms
+  figs/resolutions/binned/  - Binned resolution with Gaussian fits
+  figs/resolutions/2d_maps/ - 2D resolution maps (circle plots)
+  figs/cross_sections/      - Differential cross sections
+  figs/performance/         - Acceptance, efficiency, purity
+======================================================================
+                 Best method comparison plot: color-coded by best resolution method
+                 (Red=Electron, Blue=DA, Green=Sigma)
+  Mandelstam t analysis: t, x_L, x_pom response matrices
+  x_pom comparison: Definition vs (1-x_L) for MC, B0, RP
+  Beta analysis: distributions, resolutions, response matrices (MC, B0, RP)
+  Diffractive variable resolution plots:
+    - Overall resolution (with Gaussian fits): |t|, x_L, x_pom (B0 and RP)
+    - Binned resolution vs truth (TH2D with Gaussian fits per bin):
+      * |t| resolution vs truth |t| (B0 and RP)
+      * x_L resolution vs truth x_L (B0 and RP)
+      * x_pom resolution vs truth x_pom (B0 and RP)
+      * beta resolution vs truth beta (B0 and RP)
+      * Individual bin plots saved in figs/bins/
+    - 2D bin-by-bin resolution (circle plots):
+      * |t| binned in (x_pom, Q²)
+      * x_pom binned in (x_pom, Q²)
+      * beta binned in (beta, Q²)
+      * x_L binned in (x_L, Q²)
+    - Circle size indicates resolution (larger = worse)
+    - Filled circles: >=100 entries, Hollow circles: <100 entries
+  Differential cross section: d(sigma)/dt for MC, B0, RP, and B0+RP sum (linear and log-y)
+                              Reconstructed data shown as points with error bars
+  Triple differential cross section: d^3(sigma)/(dQ^2 dbeta dx_pom) 1D slices
+                                      - vs beta (grid: Q2 columns x x_pom rows)
+                                      - vs x_pom (grid: Q2 columns x beta rows)
+                                      MC (black hist), B0 (red pts), RP (blue pts), Sum (orange pts)
+  Acceptance/Efficiency/Purity: vs Q^2 for EM, DA, and Sigma methods
+                                 Saved as both PNG and PDF

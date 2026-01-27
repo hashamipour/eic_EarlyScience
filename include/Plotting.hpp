@@ -167,6 +167,8 @@ private:
     const char* m_saveName;
     std::pair<double, double> m_xRange;
     std::pair<double, double> m_yRange;
+    bool m_isLogX;
+    bool m_isLogY;
 
 public:
     PlotOptionsCombinedCorrelation(const std::vector<TString>& histNames,
@@ -178,9 +180,13 @@ public:
                                    const char* yLabel,
                                    const char* saveName,
                                    const std::pair<double, double>& xRange = {-999., -999.},
-                                   const std::pair<double, double>& yRange = {-999., -999.});
+                                   const std::pair<double, double>& yRange = {-999., -999.},
+                                   const bool isLogX = false,
+                                   const bool isLogY = false);
     
     void Plot(TFile* inputFile) override;
 };
+
+void SaveCanvas(TCanvas* canvas, const char* filename);
 
 #endif // PLOTTING_HPP

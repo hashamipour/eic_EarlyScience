@@ -283,7 +283,7 @@ void PlotOptionsBinnedRelRes::Plot(TFile* inputFile) {
         latex_proj.DrawLatex(0.15, 0.80, "#bf{Diff. DIS} 10x100 GeV");
 
         c_proj->Update();
-        c_proj->SaveAs(Form("figs/%s_bin_%d.png", m_binSavePrefix, j));
+        SaveCanvas(c_proj, Form("figs/%s_bin_%d.png", m_binSavePrefix, j));
         
         // Add to fit graph only if fit was performed
         if (!skipFit) {
@@ -348,7 +348,7 @@ void PlotOptionsBinnedRelRes::Plot(TFile* inputFile) {
     latex.DrawLatex(0.15, 0.80, "#bf{Diff. DIS} 10x100 GeV");
 
     c->Update();
-    c->SaveAs(m_saveName);
+    SaveCanvas(c, m_saveName);
     delete c;
     delete g;
     delete g_RMS;
