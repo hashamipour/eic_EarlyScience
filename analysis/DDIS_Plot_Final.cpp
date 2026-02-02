@@ -1316,6 +1316,72 @@ int main(int argc, char** argv) {
         {1e-4, 0.3}
     ));
 
+    plots.push_back(new PlotOptionsResponseMatrix(
+        "Response_beta_EM_B0",
+        "Truth #beta",
+        "Reco #beta",
+        "figs/diffractive/response/response_beta_em_b0.png",
+        false,
+        false,
+        {0.0, 1.0},
+        {0.0, 1.0}
+    ));
+
+    plots.push_back(new PlotOptionsResponseMatrix(
+        "Response_beta_EM_RP",
+        "Truth #beta",
+        "Reco #beta",
+        "figs/diffractive/response/response_beta_em_rp.png",
+        false,
+        false,
+        {0.0, 1.0},
+        {0.0, 1.0}
+    ));
+
+    plots.push_back(new PlotOptionsResponseMatrix(
+        "Response_beta_DA_B0",
+        "Truth #beta",
+        "Reco #beta",
+        "figs/diffractive/response/response_beta_da_b0.png",
+        false,
+        false,
+        {0.0, 1.0},
+        {0.0, 1.0}
+    ));
+
+    plots.push_back(new PlotOptionsResponseMatrix(
+        "Response_beta_DA_RP",
+        "Truth #beta",
+        "Reco #beta",
+        "figs/diffractive/response/response_beta_da_rp.png",
+        false,
+        false,
+        {0.0, 1.0},
+        {0.0, 1.0}
+    ));
+
+    plots.push_back(new PlotOptionsResponseMatrix(
+        "Response_beta_Sigma_B0",
+        "Truth #beta",
+        "Reco #beta",
+        "figs/diffractive/response/response_beta_sigma_b0.png",
+        false,
+        false,
+        {0.0, 1.0},
+        {0.0, 1.0}
+    ));
+
+    plots.push_back(new PlotOptionsResponseMatrix(
+        "Response_beta_Sigma_RP",
+        "Truth #beta",
+        "Reco #beta",
+        "figs/diffractive/response/response_beta_sigma_rp.png",
+        false,
+        false,
+        {0.0, 1.0},
+        {0.0, 1.0}
+    ));
+
     // =================================================================
     // Diffractive: beta = x_{Bj}/x_{pom} (B0/RP)
     // =================================================================

@@ -529,6 +529,20 @@ int main(int argc, char** argv) {
                                              xpom_bins.size()-1, xpom_bins.data(),
                                              xpom_bins.size()-1, xpom_bins.data());
 
+    const int n_beta_resp_bins = 10;
+    TH2D* h_Response_beta_EM_B0 = new TH2D("Response_beta_EM_B0", "#beta Response EM (B0);Truth #beta;Reco #beta",
+                                          n_beta_resp_bins, 0.0, 1.0, n_beta_resp_bins, 0.0, 1.0);
+    TH2D* h_Response_beta_EM_RP = new TH2D("Response_beta_EM_RP", "#beta Response EM (RP);Truth #beta;Reco #beta",
+                                          n_beta_resp_bins, 0.0, 1.0, n_beta_resp_bins, 0.0, 1.0);
+    TH2D* h_Response_beta_DA_B0 = new TH2D("Response_beta_DA_B0", "#beta Response DA (B0);Truth #beta;Reco #beta",
+                                          n_beta_resp_bins, 0.0, 1.0, n_beta_resp_bins, 0.0, 1.0);
+    TH2D* h_Response_beta_DA_RP = new TH2D("Response_beta_DA_RP", "#beta Response DA (RP);Truth #beta;Reco #beta",
+                                          n_beta_resp_bins, 0.0, 1.0, n_beta_resp_bins, 0.0, 1.0);
+    TH2D* h_Response_beta_Sigma_B0 = new TH2D("Response_beta_Sigma_B0", "#beta Response #Sigma (B0);Truth #beta;Reco #beta",
+                                             n_beta_resp_bins, 0.0, 1.0, n_beta_resp_bins, 0.0, 1.0);
+    TH2D* h_Response_beta_Sigma_RP = new TH2D("Response_beta_Sigma_RP", "#beta Response #Sigma (RP);Truth #beta;Reco #beta",
+                                             n_beta_resp_bins, 0.0, 1.0, n_beta_resp_bins, 0.0, 1.0);
+
     TH1D* h_beta_truth_all = new TH1D("beta_truth_all", "Truth #beta (All);#beta;Counts", 50, 0.0, 1.0);
     TH1D* h_beta_truth_B0 = new TH1D("beta_truth_B0", "Truth #beta (B0);#beta;Counts", 50, 0.0, 1.0);
     TH1D* h_beta_truth_RP = new TH1D("beta_truth_RP", "Truth #beta (RP);#beta;Counts", 50, 0.0, 1.0);
@@ -1400,6 +1414,7 @@ int main(int argc, char** argv) {
                                 h_beta_reco_EM_B0->Fill(beta_reco);
                                 if (beta_truth_valid && beta_truth > 0.0 && beta_truth <= 1.0) {
                                     g_beta_EM_B0->SetPoint(n_g_beta_em_b0++, beta_truth, beta_reco);
+                                    h_Response_beta_EM_B0->Fill(beta_truth, beta_reco);
                                 }
                             }
                         }
@@ -1431,6 +1446,7 @@ int main(int argc, char** argv) {
                                 h_beta_reco_DA_B0->Fill(beta_reco);
                                 if (beta_truth_valid && beta_truth > 0.0 && beta_truth <= 1.0) {
                                     g_beta_DA_B0->SetPoint(n_g_beta_da_b0++, beta_truth, beta_reco);
+                                    h_Response_beta_DA_B0->Fill(beta_truth, beta_reco);
                                 }
                             }
                         }
@@ -1462,6 +1478,7 @@ int main(int argc, char** argv) {
                                 h_beta_reco_Sigma_B0->Fill(beta_reco);
                                 if (beta_truth_valid && beta_truth > 0.0 && beta_truth <= 1.0) {
                                     g_beta_Sigma_B0->SetPoint(n_g_beta_sigma_b0++, beta_truth, beta_reco);
+                                    h_Response_beta_Sigma_B0->Fill(beta_truth, beta_reco);
                                 }
                             }
                         }
@@ -1572,6 +1589,7 @@ int main(int argc, char** argv) {
                                     h_beta_reco_EM_RP->Fill(beta_reco);
                                     if (beta_truth_valid && beta_truth > 0.0 && beta_truth <= 1.0) {
                                         g_beta_EM_RP->SetPoint(n_g_beta_em_rp++, beta_truth, beta_reco);
+                                        h_Response_beta_EM_RP->Fill(beta_truth, beta_reco);
                                     }
                                 }
                             }
@@ -1603,6 +1621,7 @@ int main(int argc, char** argv) {
                                     h_beta_reco_DA_RP->Fill(beta_reco);
                                     if (beta_truth_valid && beta_truth > 0.0 && beta_truth <= 1.0) {
                                         g_beta_DA_RP->SetPoint(n_g_beta_da_rp++, beta_truth, beta_reco);
+                                        h_Response_beta_DA_RP->Fill(beta_truth, beta_reco);
                                     }
                                 }
                             }
@@ -1634,6 +1653,7 @@ int main(int argc, char** argv) {
                                     h_beta_reco_Sigma_RP->Fill(beta_reco);
                                     if (beta_truth_valid && beta_truth > 0.0 && beta_truth <= 1.0) {
                                         g_beta_Sigma_RP->SetPoint(n_g_beta_sigma_rp++, beta_truth, beta_reco);
+                                        h_Response_beta_Sigma_RP->Fill(beta_truth, beta_reco);
                                     }
                                 }
                             }
@@ -1869,6 +1889,12 @@ int main(int argc, char** argv) {
     h_Response_xpom_DA_RP->Write();
     h_Response_xpom_Sigma_B0->Write();
     h_Response_xpom_Sigma_RP->Write();
+    h_Response_beta_EM_B0->Write();
+    h_Response_beta_EM_RP->Write();
+    h_Response_beta_DA_B0->Write();
+    h_Response_beta_DA_RP->Write();
+    h_Response_beta_Sigma_B0->Write();
+    h_Response_beta_Sigma_RP->Write();
     h_beta_truth_all->Write();
     h_beta_truth_B0->Write();
     h_beta_truth_RP->Write();
