@@ -9,6 +9,7 @@
 #include <TSystem.h>
 #include <TROOT.h>
 #include <TCanvas.h>
+#include <TLatex.h>
 #include <TTree.h>
 #include <TH2.h>
 #include <TMath.h>
@@ -19,6 +20,155 @@
 #include <iomanip>
 #include <vector>
 #include <string>
+
+static void PlotXQ2Density(TFile* inputFile) {
+    if (!inputFile) return;
+    TTree* tree = (TTree*)inputFile->Get("Q2_tree");
+    if (!tree) {
+        std::cerr << "Warning: Q2_tree not found; skipping x-Q2 density plot." << std::endl;
+        return;
+    }
+
+    if (!tree->GetBranch("x_truth") || !tree->GetBranch("Q2_truth")) {
+        TH2D* h_existing = (TH2D*)inputFile->Get("xQ2_truth");
+        if (!h_existing) {
+            std::cerr << "Warning: Missing branches x_truth/Q2_truth and no xQ2_truth histogram found; "
+                         "skipping x-Q2 density plot." << std::endl;
+            return;
+        }
+
+        TCanvas* c = new TCanvas("c_xq2_density", "x-Q2 Density", 1200, 1000);
+        gStyle->SetOptStat(0);
+        c->SetRightMargin(0.15);
+        c->SetLeftMargin(0.15);
+        c->SetTopMargin(0.1);
+        c->SetBottomMargin(0.1);
+        c->SetLogx();
+        c->SetLogy();
+
+        h_existing->SetTitle("");
+        h_existing->GetXaxis()->SetTitle("x_{Bj}");
+        h_existing->GetYaxis()->SetTitle("Q^{2} [GeV^{2}]");
+        h_existing->GetXaxis()->SetTitleOffset(1.3);
+        h_existing->GetYaxis()->SetTitleOffset(1.3);
+        h_existing->Draw("COLZ");
+
+        TLatex latex;
+        latex.SetTextSize(0.04);
+        latex.SetNDC();
+        latex.SetTextColor(kBlack);
+        const std::string simLabel = BuildSimLabel(inputFile);
+        latex.DrawLatex(0.2, 0.92, simLabel.c_str());
+        latex.DrawLatex(0.65, 0.92, "#bf{Diff. DIS} 10x100 GeV");
+
+        c->Update();
+        SaveCanvas(c, "figs/inclusive/histos/xbj_q2_density.png");
+        delete c;
+
+        std::cerr << "Note: Q2_tree lacks Q2_truth; using stored xQ2_truth histogram from skim output. "
+                     "Re-skim with Q2_truth in the tree for finer/unbinned x-Q2 plotting." << std::endl;
+        return;
+    }
+
+    float x_truth = -999.0f;
+    float Q2_truth = -999.0f;
+    tree->SetBranchAddress("x_truth", &x_truth);
+    tree->SetBranchAddress("Q2_truth", &Q2_truth);
+
+    const int n_x_bins = 120;
+    const int n_q2_bins = 120;
+    const double q2_min = 1.0;
+    const double q2_max = 1000.0;
+    std::vector<Double_t> x_bins = GetLogBins(1.0e-4, 1.0, n_x_bins);
+    std::vector<Double_t> q2_bins = GetLogBins(q2_min, q2_max, n_q2_bins);
+
+    TH2D* h = new TH2D("xQ2_density_tmp",
+                       "Event Density;x_{Bj};Q^{2} [GeV^{2}]",
+                       x_bins.size() - 1, x_bins.data(),
+                       q2_bins.size() - 1, q2_bins.data());
+
+    const Long64_t nEntries = tree->GetEntries();
+    for (Long64_t i = 0; i < nEntries; ++i) {
+        tree->GetEntry(i);
+        if (std::isfinite(x_truth) && x_truth > 0.0f && x_truth < 1.0f &&
+            std::isfinite(Q2_truth) && Q2_truth > 0.0f) {
+            h->Fill(x_truth, Q2_truth);
+        }
+    }
+
+    TCanvas* c = new TCanvas("c_xq2_density", "x-Q2 Density", 1200, 1000);
+    gStyle->SetOptStat(0);
+    c->SetRightMargin(0.15);
+    c->SetLeftMargin(0.15);
+    c->SetTopMargin(0.1);
+    c->SetBottomMargin(0.1);
+    c->SetLogx();
+    c->SetLogy();
+
+    h->SetTitle("");
+    h->GetXaxis()->SetTitle("x_{Bj}");
+    h->GetYaxis()->SetTitle("Q^{2} [GeV^{2}]");
+    h->GetXaxis()->SetTitleOffset(1.3);
+    h->GetYaxis()->SetTitleOffset(1.3);
+    h->Draw("COLZ");
+
+    TLatex latex;
+    latex.SetTextSize(0.04);
+    latex.SetNDC();
+    latex.SetTextColor(kBlack);
+    const std::string simLabel = BuildSimLabel(inputFile);
+    latex.DrawLatex(0.2, 0.92, simLabel.c_str());
+    latex.DrawLatex(0.65, 0.92, "#bf{Diff. DIS} 10x100 GeV");
+
+    c->Update();
+    SaveCanvas(c, "figs/inclusive/histos/xbj_q2_density.png");
+
+    delete h;
+    delete c;
+}
+
+static void PlotDensityFromHist(TFile* inputFile,
+                                const char* histName,
+                                const char* xLabel,
+                                const char* yLabel,
+                                const char* saveName,
+                                const bool logX,
+                                const bool logY) {
+    if (!inputFile) return;
+    TH2* h = (TH2*)inputFile->Get(histName);
+    if (!h) {
+        std::cerr << "Warning: Histogram " << histName << " not found; skipping density plot." << std::endl;
+        return;
+    }
+
+    TCanvas* c = new TCanvas(Form("c_%s", histName), histName, 1200, 1000);
+    gStyle->SetOptStat(0);
+    c->SetRightMargin(0.15);
+    c->SetLeftMargin(0.15);
+    c->SetTopMargin(0.1);
+    c->SetBottomMargin(0.1);
+    if (logX) c->SetLogx();
+    if (logY) c->SetLogy();
+
+    h->SetTitle("");
+    h->GetXaxis()->SetTitle(xLabel);
+    h->GetYaxis()->SetTitle(yLabel);
+    h->GetXaxis()->SetTitleOffset(1.3);
+    h->GetYaxis()->SetTitleOffset(1.3);
+    h->Draw("COLZ");
+
+    TLatex latex;
+    latex.SetTextSize(0.04);
+    latex.SetNDC();
+    latex.SetTextColor(kBlack);
+    const std::string simLabel = BuildSimLabel(inputFile);
+    latex.DrawLatex(0.2, 0.92, simLabel.c_str());
+    latex.DrawLatex(0.65, 0.92, "#bf{Diff. DIS} 10x100 GeV");
+
+    c->Update();
+    SaveCanvas(c, saveName);
+    delete c;
+}
 
 int main(int argc, char** argv) {
     if (argc < 2) {
@@ -80,6 +230,26 @@ int main(int argc, char** argv) {
     TH1D* h_reco_Q2_EM = (TH1D*)inputFile->Get("h_reco_Q2_EM");
     TH1D* h_reco_Q2_DA = (TH1D*)inputFile->Get("h_reco_Q2_DA");
     TH1D* h_reco_Q2_Sigma = (TH1D*)inputFile->Get("h_reco_Q2_Sigma");
+
+    PlotXQ2Density(inputFile);
+    PlotDensityFromHist(inputFile, "beta_Q2_truth", "#beta", "Q^{2} [GeV^{2}]",
+                        "figs/diffractive/histos/beta_q2_density.png", false, true);
+    PlotDensityFromHist(inputFile, "t_Q2_truth", "|t| [GeV^{2}]", "Q^{2} [GeV^{2}]",
+                        "figs/diffractive/histos/t_q2_density.png", true, true);
+    PlotDensityFromHist(inputFile, "xpom_Q2_truth", "x_{pom}", "Q^{2} [GeV^{2}]",
+                        "figs/diffractive/histos/xpom_q2_density.png", true, true);
+    PlotDensityFromHist(inputFile, "beta_t_truth", "#beta", "|t| [GeV^{2}]",
+                        "figs/diffractive/histos/beta_t_density.png", false, true);
+    PlotDensityFromHist(inputFile, "xbj_t_truth", "x_{Bj}", "|t| [GeV^{2}]",
+                        "figs/diffractive/histos/xbj_t_density.png", true, true);
+    PlotDensityFromHist(inputFile, "xpom_t_truth", "x_{pom}", "|t| [GeV^{2}]",
+                        "figs/diffractive/histos/xpom_t_density.png", true, true);
+    PlotDensityFromHist(inputFile, "xpom_beta_truth", "x_{pom}", "#beta",
+                        "figs/diffractive/histos/xpom_beta_density.png", true, false);
+    PlotDensityFromHist(inputFile, "xbj_beta_truth", "x_{Bj}", "#beta",
+                        "figs/diffractive/histos/xbj_beta_density.png", true, false);
+    PlotDensityFromHist(inputFile, "xbj_xpom_truth", "x_{Bj}", "x_{pom}",
+                        "figs/diffractive/histos/xbj_xpom_density.png", true, true);
 
     if (h_gen_Q2 && h_gen_and_reco_after_cuts_Q2_EM && h_reco_Q2_EM) {
         TH1D* h_acceptance_Q2_EM = (TH1D*)h_gen_and_reco_after_cuts_Q2_EM->Clone("h_acceptance_Q2_EM");
@@ -235,7 +405,7 @@ int main(int argc, char** argv) {
         true,
         true
     );
-    plot_ptr->SetRangeX(1e-3, 1000.0);
+    plot_ptr->SetRangeX(10.0, 1.0e4);
     plot_ptr->SetLegendPosition(0.7, 0.7, 0.9, 0.9);
     plots.push_back(plot_ptr);
 
@@ -251,7 +421,7 @@ int main(int argc, char** argv) {
         true,
         true
     );
-    plot_ptr->SetRangeX(1e-3, 1000.0);
+    plot_ptr->SetRangeX(10.0, 1.0e4);
     plot_ptr->SetLegendPosition(0.7, 0.7, 0.9, 0.9);
     plots.push_back(plot_ptr);
 
@@ -334,6 +504,7 @@ int main(int argc, char** argv) {
     // =================================================================
     // Unbinned correlation plots (Reco vs MC) - one per method
     // =================================================================
+#if 0
     plots.push_back(new PlotOptionsCombinedCorrelation(
         {"g_Q2_EM"},
         {"EM"},
@@ -379,6 +550,7 @@ int main(int argc, char** argv) {
         true
     ));
 
+#if 0
     plots.push_back(new PlotOptionsCombinedCorrelation(
         {"g_x_EM"},
         {"EM"},
@@ -462,6 +634,7 @@ int main(int argc, char** argv) {
         {0.0, 1.0},
         {0.0, 1.0}
     ));
+#endif
 
     plots.push_back(new PlotOptionsCombinedCorrelation(
         {"g_W2_EM"},
@@ -472,8 +645,8 @@ int main(int argc, char** argv) {
         "W^{2}_{truth} [GeV^{2}]",
         "W^{2}_{reco} [GeV^{2}]",
         "figs/inclusive/histos/w2_corr_unbinned_em.png",
-        {1e-3, 1000.0},
-        {1e-3, 1000.0},
+        {10.0, 1.0e4},
+        {10.0, 1.0e4},
         true,
         true
     ));
@@ -487,8 +660,8 @@ int main(int argc, char** argv) {
         "W^{2}_{truth} [GeV^{2}]",
         "W^{2}_{reco} [GeV^{2}]",
         "figs/inclusive/histos/w2_corr_unbinned_da.png",
-        {1e-3, 1000.0},
-        {1e-3, 1000.0},
+        {10.0, 1.0e4},
+        {10.0, 1.0e4},
         true,
         true
     ));
@@ -502,12 +675,28 @@ int main(int argc, char** argv) {
         "W^{2}_{truth} [GeV^{2}]",
         "W^{2}_{reco} [GeV^{2}]",
         "figs/inclusive/histos/w2_corr_unbinned_sigma.png",
-        {1e-3, 1000.0},
-        {1e-3, 1000.0},
+        {10.0, 1.0e4},
+        {10.0, 1.0e4},
         true,
         true
     ));
 
+    plots.push_back(new PlotOptionsCombinedCorrelation(
+        {"g_W2_EM", "g_W2_DA", "g_W2_Sigma"},
+        {"EM", "DA", "Sigma"},
+        {kRed, kBlue, kGreen + 2},
+        {20, 21, 22},
+        "W^{2} Correlation (EM/DA/#Sigma, Unbinned)",
+        "W^{2}_{truth} [GeV^{2}]",
+        "W^{2}_{reco} [GeV^{2}]",
+        "figs/inclusive/histos/w2_corr_unbinned_all.png",
+        {10.0, 1.0e4},
+        {10.0, 1.0e4},
+        true,
+        true
+    ));
+
+#if 0
     plots.push_back(new PlotOptionsCombinedCorrelation(
         {"g_Ep_e"},
         {"Electron"},
@@ -546,6 +735,8 @@ int main(int argc, char** argv) {
         {0.0, 10.0},
         {0.0, 10.0}
     ));
+#endif
+#endif
 
     // =================================================================
     // NEW: Unfolding response matrices (raw and normalized)
@@ -892,6 +1083,473 @@ int main(int argc, char** argv) {
     binned_plot_ptr->SetLegendPosition(0.15, 0.15, 0.3, 0.3);
     plots.push_back(binned_plot_ptr);
 
+    plot_ptr = new PlotOptions1D(
+        {"xL_MC", "xL_B0", "xL_RP"},
+        {"MC Truth", "B0 Reco", "RP Reco"},
+        {"hist", "pe", "pe"},
+        "x_{L} Distributions",
+        "x_{L}",
+        "Counts",
+        "figs/diffractive/histos/xL_distributions.png",
+        false,
+        false
+    );
+    plot_ptr->SetLegendPosition(0.6, 0.7, 0.85, 0.9);
+    plots.push_back(plot_ptr);
+
+#if 0
+    plots.push_back(new PlotOptionsCombinedCorrelation(
+        {"g_xL_B0", "g_xL_RP"},
+        {"B0", "RP"},
+        {kRed, kBlue},
+        {20, 24},
+        "x_{L} Correlation (Unbinned)",
+        "Truth x_{L}",
+        "Reco x_{L}",
+        "figs/diffractive/histos/xL_corr_unbinned.png",
+        {0.75, 1.05},
+        {0.75, 1.05}
+    ));
+#endif
+
+    // =================================================================
+    // Diffractive: x_{pom} (definition) - split by B0/RP
+    // =================================================================
+    plot_ptr = new PlotOptions1D(
+        {"xpom_truth_all", "xpom_reco_EM_all", "xpom_reco_DA_all", "xpom_reco_Sigma_all"},
+        {"MC Truth", "Reco EM", "Reco DA", "Reco Sigma"},
+        {"hist", "pe", "pe", "pe"},
+        "x_{pom} Distributions (All)",
+        "x_{pom}",
+        "Counts",
+        "figs/diffractive/histos/xpom_def_comparison_all.png",
+        true,
+        false
+    );
+    plot_ptr->SetRangeX(1e-4, 0.3);
+    plot_ptr->SetLegendPosition(0.6, 0.7, 0.85, 0.9);
+    plots.push_back(plot_ptr);
+
+    plot_ptr = new PlotOptions1D(
+        {"xpom_truth_B0", "xpom_reco_EM_B0", "xpom_reco_DA_B0", "xpom_reco_Sigma_B0"},
+        {"MC Truth", "Reco EM", "Reco DA", "Reco Sigma"},
+        {"hist", "pe", "pe", "pe"},
+        "x_{pom} Distributions (B0)",
+        "x_{pom}",
+        "Counts",
+        "figs/diffractive/histos/xpom_def_comparison_b0.png",
+        true,
+        false
+    );
+    plot_ptr->SetRangeX(1e-4, 0.3);
+    plot_ptr->SetLegendPosition(0.6, 0.7, 0.85, 0.9);
+    plots.push_back(plot_ptr);
+
+    plot_ptr = new PlotOptions1D(
+        {"xpom_truth_RP", "xpom_reco_EM_RP", "xpom_reco_DA_RP", "xpom_reco_Sigma_RP"},
+        {"MC Truth", "Reco EM", "Reco DA", "Reco Sigma"},
+        {"hist", "pe", "pe", "pe"},
+        "x_{pom} Distributions (RP)",
+        "x_{pom}",
+        "Counts",
+        "figs/diffractive/histos/xpom_def_comparison_rp.png",
+        true,
+        false
+    );
+    plot_ptr->SetRangeX(1e-4, 0.3);
+    plot_ptr->SetLegendPosition(0.6, 0.7, 0.85, 0.9);
+    plots.push_back(plot_ptr);
+
+    plots.push_back(new PlotOptionsCombinedCorrelation(
+        {"g_xpom_EM_B0"},
+        {"EM"},
+        {kRed},
+        {20},
+        "x_{pom} Correlation (EM, B0)",
+        "Truth x_{pom}",
+        "Reco x_{pom}",
+        "figs/diffractive/histos/xpom_corr_unbinned_em_b0.png",
+        {1e-4, 0.3},
+        {1e-4, 0.3},
+        true,
+        true
+    ));
+
+    plots.push_back(new PlotOptionsCombinedCorrelation(
+        {"g_xpom_DA_B0"},
+        {"DA"},
+        {kBlue},
+        {21},
+        "x_{pom} Correlation (DA, B0)",
+        "Truth x_{pom}",
+        "Reco x_{pom}",
+        "figs/diffractive/histos/xpom_corr_unbinned_da_b0.png",
+        {1e-4, 0.3},
+        {1e-4, 0.3},
+        true,
+        true
+    ));
+
+    plots.push_back(new PlotOptionsCombinedCorrelation(
+        {"g_xpom_Sigma_B0"},
+        {"Sigma"},
+        {kGreen + 2},
+        {22},
+        "x_{pom} Correlation (#Sigma, B0)",
+        "Truth x_{pom}",
+        "Reco x_{pom}",
+        "figs/diffractive/histos/xpom_corr_unbinned_sigma_b0.png",
+        {1e-4, 0.3},
+        {1e-4, 0.3},
+        true,
+        true
+    ));
+
+    plots.push_back(new PlotOptionsCombinedCorrelation(
+        {"g_xpom_EM_RP"},
+        {"EM"},
+        {kRed},
+        {20},
+        "x_{pom} Correlation (EM, RP)",
+        "Truth x_{pom}",
+        "Reco x_{pom}",
+        "figs/diffractive/histos/xpom_corr_unbinned_em_rp.png",
+        {1e-4, 0.3},
+        {1e-4, 0.3},
+        true,
+        true
+    ));
+
+    plots.push_back(new PlotOptionsCombinedCorrelation(
+        {"g_xpom_DA_RP"},
+        {"DA"},
+        {kBlue},
+        {21},
+        "x_{pom} Correlation (DA, RP)",
+        "Truth x_{pom}",
+        "Reco x_{pom}",
+        "figs/diffractive/histos/xpom_corr_unbinned_da_rp.png",
+        {1e-4, 0.3},
+        {1e-4, 0.3},
+        true,
+        true
+    ));
+
+    plots.push_back(new PlotOptionsCombinedCorrelation(
+        {"g_xpom_Sigma_RP"},
+        {"Sigma"},
+        {kGreen + 2},
+        {22},
+        "x_{pom} Correlation (#Sigma, RP)",
+        "Truth x_{pom}",
+        "Reco x_{pom}",
+        "figs/diffractive/histos/xpom_corr_unbinned_sigma_rp.png",
+        {1e-4, 0.3},
+        {1e-4, 0.3},
+        true,
+        true
+    ));
+
+    plots.push_back(new PlotOptionsResponseMatrix(
+        "Response_xpom_EM_B0",
+        "Truth x_{pom}",
+        "Reco x_{pom}",
+        "figs/diffractive/response/response_xpom_em_b0.png",
+        true,
+        true,
+        {1e-4, 0.3},
+        {1e-4, 0.3}
+    ));
+
+    plots.push_back(new PlotOptionsResponseMatrix(
+        "Response_xpom_EM_RP",
+        "Truth x_{pom}",
+        "Reco x_{pom}",
+        "figs/diffractive/response/response_xpom_em_rp.png",
+        true,
+        true,
+        {1e-4, 0.3},
+        {1e-4, 0.3}
+    ));
+
+    plots.push_back(new PlotOptionsResponseMatrix(
+        "Response_xpom_DA_B0",
+        "Truth x_{pom}",
+        "Reco x_{pom}",
+        "figs/diffractive/response/response_xpom_da_b0.png",
+        true,
+        true,
+        {1e-4, 0.3},
+        {1e-4, 0.3}
+    ));
+
+    plots.push_back(new PlotOptionsResponseMatrix(
+        "Response_xpom_DA_RP",
+        "Truth x_{pom}",
+        "Reco x_{pom}",
+        "figs/diffractive/response/response_xpom_da_rp.png",
+        true,
+        true,
+        {1e-4, 0.3},
+        {1e-4, 0.3}
+    ));
+
+    plots.push_back(new PlotOptionsResponseMatrix(
+        "Response_xpom_Sigma_B0",
+        "Truth x_{pom}",
+        "Reco x_{pom}",
+        "figs/diffractive/response/response_xpom_sigma_b0.png",
+        true,
+        true,
+        {1e-4, 0.3},
+        {1e-4, 0.3}
+    ));
+
+    plots.push_back(new PlotOptionsResponseMatrix(
+        "Response_xpom_Sigma_RP",
+        "Truth x_{pom}",
+        "Reco x_{pom}",
+        "figs/diffractive/response/response_xpom_sigma_rp.png",
+        true,
+        true,
+        {1e-4, 0.3},
+        {1e-4, 0.3}
+    ));
+
+    // =================================================================
+    // Diffractive: beta = x_{Bj}/x_{pom} (B0/RP)
+    // =================================================================
+    plot_ptr = new PlotOptions1D(
+        {"beta_truth_all", "beta_reco_EM_all", "beta_reco_DA_all", "beta_reco_Sigma_all"},
+        {"MC Truth", "Reco EM", "Reco DA", "Reco Sigma"},
+        {"hist", "pe", "pe", "pe"},
+        "#beta Distributions (All)",
+        "#beta",
+        "Counts",
+        "figs/diffractive/histos/beta_comparison_all.png",
+        false,
+        false
+    );
+    plot_ptr->SetRangeX(0.0, 1.0);
+    plot_ptr->SetLegendPosition(0.6, 0.7, 0.85, 0.9);
+    plots.push_back(plot_ptr);
+
+    plot_ptr = new PlotOptions1D(
+        {"beta_truth_B0", "beta_reco_EM_B0", "beta_reco_DA_B0", "beta_reco_Sigma_B0"},
+        {"MC Truth", "Reco EM", "Reco DA", "Reco Sigma"},
+        {"hist", "pe", "pe", "pe"},
+        "#beta Distributions (B0)",
+        "#beta",
+        "Counts",
+        "figs/diffractive/histos/beta_comparison_b0.png",
+        false,
+        false
+    );
+    plot_ptr->SetRangeX(0.0, 1.0);
+    plot_ptr->SetLegendPosition(0.6, 0.7, 0.85, 0.9);
+    plots.push_back(plot_ptr);
+
+    plot_ptr = new PlotOptions1D(
+        {"beta_truth_RP", "beta_reco_EM_RP", "beta_reco_DA_RP", "beta_reco_Sigma_RP"},
+        {"MC Truth", "Reco EM", "Reco DA", "Reco Sigma"},
+        {"hist", "pe", "pe", "pe"},
+        "#beta Distributions (RP)",
+        "#beta",
+        "Counts",
+        "figs/diffractive/histos/beta_comparison_rp.png",
+        false,
+        false
+    );
+    plot_ptr->SetRangeX(0.0, 1.0);
+    plot_ptr->SetLegendPosition(0.6, 0.7, 0.85, 0.9);
+    plots.push_back(plot_ptr);
+
+    plots.push_back(new PlotOptionsCombinedCorrelation(
+        {"g_beta_EM_B0"},
+        {"EM"},
+        {kRed},
+        {20},
+        "#beta Correlation (EM, B0)",
+        "#beta_{truth}",
+        "#beta_{reco}",
+        "figs/diffractive/histos/beta_corr_unbinned_em_b0.png",
+        {0.0, 1.0},
+        {0.0, 1.0},
+        false,
+        false
+    ));
+
+    plots.push_back(new PlotOptionsCombinedCorrelation(
+        {"g_beta_DA_B0"},
+        {"DA"},
+        {kBlue},
+        {21},
+        "#beta Correlation (DA, B0)",
+        "#beta_{truth}",
+        "#beta_{reco}",
+        "figs/diffractive/histos/beta_corr_unbinned_da_b0.png",
+        {0.0, 1.0},
+        {0.0, 1.0},
+        false,
+        false
+    ));
+
+    plots.push_back(new PlotOptionsCombinedCorrelation(
+        {"g_beta_Sigma_B0"},
+        {"Sigma"},
+        {kGreen + 2},
+        {22},
+        "#beta Correlation (#Sigma, B0)",
+        "#beta_{truth}",
+        "#beta_{reco}",
+        "figs/diffractive/histos/beta_corr_unbinned_sigma_b0.png",
+        {0.0, 1.0},
+        {0.0, 1.0},
+        false,
+        false
+    ));
+
+    plots.push_back(new PlotOptionsCombinedCorrelation(
+        {"g_beta_EM_RP"},
+        {"EM"},
+        {kRed},
+        {20},
+        "#beta Correlation (EM, RP)",
+        "#beta_{truth}",
+        "#beta_{reco}",
+        "figs/diffractive/histos/beta_corr_unbinned_em_rp.png",
+        {0.0, 1.0},
+        {0.0, 1.0},
+        false,
+        false
+    ));
+
+    plots.push_back(new PlotOptionsCombinedCorrelation(
+        {"g_beta_DA_RP"},
+        {"DA"},
+        {kBlue},
+        {21},
+        "#beta Correlation (DA, RP)",
+        "#beta_{truth}",
+        "#beta_{reco}",
+        "figs/diffractive/histos/beta_corr_unbinned_da_rp.png",
+        {0.0, 1.0},
+        {0.0, 1.0},
+        false,
+        false
+    ));
+
+    plots.push_back(new PlotOptionsCombinedCorrelation(
+        {"g_beta_Sigma_RP"},
+        {"Sigma"},
+        {kGreen + 2},
+        {22},
+        "#beta Correlation (#Sigma, RP)",
+        "#beta_{truth}",
+        "#beta_{reco}",
+        "figs/diffractive/histos/beta_corr_unbinned_sigma_rp.png",
+        {0.0, 1.0},
+        {0.0, 1.0},
+        false,
+        false
+    ));
+
+    // =================================================================
+    // Diffractive: M_X^2 plots
+    // =================================================================
+    plot_ptr = new PlotOptions1D(
+        {"MX2_truth", "MX2_reco"},
+        {"MC Truth", "Reco"},
+        {"hist", "pe"},
+        "M_{X}^{2} Distributions",
+        "M_{X}^{2} [GeV^{2}]",
+        "Counts",
+        "figs/diffractive/histos/MX2_comparison.png",
+        true,
+        false
+    );
+    plot_ptr->SetRangeX(1e-3, 1000.0);
+    plot_ptr->SetLegendPosition(0.6, 0.7, 0.85, 0.9);
+    plots.push_back(plot_ptr);
+
+    plot_ptr = new PlotOptions1D(
+        {"MX2_truth", "MX2_reco"},
+        {"MC Truth", "Reco"},
+        {"hist", "pe"},
+        "M_{X}^{2} Distributions",
+        "M_{X}^{2} [GeV^{2}]",
+        "Counts",
+        "figs/diffractive/histos/MX2_comparison_logy.png",
+        true,
+        true
+    );
+    plot_ptr->SetRangeX(1e-3, 1000.0);
+    plot_ptr->SetLegendPosition(0.6, 0.7, 0.85, 0.9);
+    plots.push_back(plot_ptr);
+
+    plots.push_back(new PlotOptionsCombinedCorrelation(
+        {"g_MX2"},
+        {"Reco vs Truth"},
+        {kBlack},
+        {20},
+        "M_{X}^{2} Correlation (Unbinned)",
+        "M_{X,truth}^{2} [GeV^{2}]",
+        "M_{X,reco}^{2} [GeV^{2}]",
+        "figs/diffractive/histos/MX2_corr_unbinned.png",
+        {1e-3, 1000.0},
+        {1e-3, 1000.0},
+        true,
+        true
+    ));
+
+#if 0
+    plots.push_back(new PlotOptions2D(
+        "MX2_corr",
+        "M_{X,truth}^{2} [GeV^{2}]",
+        "M_{X,reco}^{2} [GeV^{2}]",
+        "figs/diffractive/histos/MX2_truth_vs_reco.png",
+        true,
+        true,
+        {1e-3, 1000.0},
+        {1e-3, 1000.0}
+    ));
+#endif
+
+#if 0
+    plots.push_back(new PlotOptions2D(
+        "MX2_t_truth",
+        "M_{X}^{2} [GeV^{2}]",
+        "|t| [GeV^{2}]",
+        "figs/diffractive/histos/MX2_vs_t_truth.png",
+        true,
+        true,
+        {1e-3, 1000.0},
+        {1e-3, 2.0}
+    ));
+
+    plots.push_back(new PlotOptions2D(
+        "MX2_t_B0",
+        "M_{X}^{2} [GeV^{2}]",
+        "|t| [GeV^{2}]",
+        "figs/diffractive/histos/MX2_vs_t_b0.png",
+        true,
+        true,
+        {1e-3, 1000.0},
+        {1e-3, 2.0}
+    ));
+
+    plots.push_back(new PlotOptions2D(
+        "MX2_t_RP",
+        "M_{X}^{2} [GeV^{2}]",
+        "|t| [GeV^{2}]",
+        "figs/diffractive/histos/MX2_vs_t_rp.png",
+        true,
+        true,
+        {1e-3, 1000.0},
+        {1e-3, 2.0}
+    ));
+#endif
+
     // =================================================================
     // Diffractive: Mandelstam t plots
     // =================================================================
@@ -951,20 +1609,22 @@ int main(int argc, char** argv) {
     plot_ptr->SetLegendPosition(0.6, 0.7, 0.85, 0.9);
     plots.push_back(plot_ptr);
 
+#if 0
     plots.push_back(new PlotOptionsCombinedCorrelation(
         {"g_t_B0", "g_t_RP"},
         {"B0", "RP"},
-        {kBlue + 1, kOrange + 7},
+        {kRed, kBlue},
         {20, 24},
         "|t| Correlation (Unbinned)",
         "Truth |t| [GeV^{2}]",
         "Reco |t| [GeV^{2}]",
         "figs/diffractive/histos/t_corr_unbinned.png",
-        {1e-3, 1.6},
-        {1e-3, 1.6},
+        {1e-3, 2.0},
+        {1e-3, 2.0},
         true,
         true
     ));
+#endif
 
     plots.push_back(new PlotOptionsResponseMatrix(
         "t_corr_B0",
@@ -973,8 +1633,8 @@ int main(int argc, char** argv) {
         "figs/diffractive/response/response_t_b0.png",
         true,
         true,
-        {1e-3, 1.6},
-        {1e-3, 1.6}
+        {1e-3, 2.0},
+        {1e-3, 2.0}
     ));
 
     plots.push_back(new PlotOptionsResponseMatrix(
@@ -984,8 +1644,8 @@ int main(int argc, char** argv) {
         "figs/diffractive/response/response_t_rp.png",
         true,
         true,
-        {1e-3, 1.6},
-        {1e-3, 1.6}
+        {1e-3, 2.0},
+        {1e-3, 2.0}
     ));
 
     plots.push_back(new PlotOptionsRelRes(
@@ -1012,7 +1672,7 @@ int main(int argc, char** argv) {
         {},
         "figs/diffractive/resolution/t_relres_binned_b0.png",
         "diffractive/resolution/profile/t_relres_binned_b0",
-        std::make_pair(1e-3, 1.6),
+        std::make_pair(1e-3, 2.0),
         true
     );
     plots.push_back(binned_plot_ptr);
@@ -1025,7 +1685,7 @@ int main(int argc, char** argv) {
         {},
         "figs/diffractive/resolution/t_relres_binned_rp.png",
         "diffractive/resolution/profile/t_relres_binned_rp",
-        std::make_pair(1e-3, 1.6),
+        std::make_pair(1e-3, 2.0),
         true
     );
     plots.push_back(binned_plot_ptr);

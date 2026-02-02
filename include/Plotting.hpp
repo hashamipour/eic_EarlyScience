@@ -12,6 +12,7 @@
 #include <vector>
 #include <TStyle.h>
 #include <TColor.h>
+#include <string>
 #include "Utility.hpp"  // Use your existing utility functions
 
 // Base class for plot options
@@ -154,6 +155,31 @@ public:
     void Plot(TFile* inputFile) override;
 };
 
+// Simple 2D histogram plot (density)
+class PlotOptions2D : public PlotOptions {
+private:
+    TString m_histName;
+    const char* m_xLabel;
+    const char* m_yLabel;
+    const char* m_saveName;
+    bool m_isLogX;
+    bool m_isLogY;
+    std::pair<double, double> m_xRange;
+    std::pair<double, double> m_yRange;
+
+public:
+    PlotOptions2D(const TString& histName,
+                  const char* xLabel,
+                  const char* yLabel,
+                  const char* saveName,
+                  const bool isLogX = false,
+                  const bool isLogY = false,
+                  const std::pair<double, double>& xRange = {-999., -999.},
+                  const std::pair<double, double>& yRange = {-999., -999.});
+
+    void Plot(TFile* inputFile) override;
+};
+
 // NEW CLASS: Combined correlation plot options
 class PlotOptionsCombinedCorrelation : public PlotOptions {
 private:
@@ -188,5 +214,6 @@ public:
 };
 
 void SaveCanvas(TCanvas* canvas, const char* filename);
+std::string BuildSimLabel(TFile* inputFile);
 
 #endif // PLOTTING_HPP

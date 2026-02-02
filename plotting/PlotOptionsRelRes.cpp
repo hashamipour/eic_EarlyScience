@@ -220,7 +220,8 @@ void PlotOptionsRelRes::Plot(TFile* inputFile) {
         latex.SetTextSize(0.04);
         latex.SetNDC();
         latex.SetTextColor(kBlack);
-        latex.DrawLatex(0.15, 0.92, "#bf{ePIC} Simulation");
+        const std::string simLabel = BuildSimLabel(inputFile);
+        latex.DrawLatex(0.15, 0.92, simLabel.c_str());
         latex.DrawLatex(0.15, 0.86, "#bf{Diff. DIS} 10x100 GeV");
 
         SaveCanvas(c, m_saveName);
@@ -242,7 +243,8 @@ void PlotOptionsRelRes::Plot(TFile* inputFile) {
             latex.SetTextSize(0.04);
             latex.SetNDC();
             latex.SetTextColor(kBlack);
-            latex.DrawLatex(0.15, 0.92, "#bf{ePIC} Simulation");
+            const std::string simLabel = BuildSimLabel(inputFile);
+            latex.DrawLatex(0.15, 0.92, simLabel.c_str());
             latex.DrawLatex(0.15, 0.86, "#bf{Diff. DIS} 10x100 GeV");
 
             SaveCanvas(c, m_saveName);
@@ -275,7 +277,8 @@ void PlotOptionsRelRes::Plot(TFile* inputFile) {
 
     // Add ePIC simulation labels
     latex->SetTextColor(kBlack);
-    latex->DrawLatex(0.15, 0.92, "#bf{ePIC} Simulation");
+    const std::string simLabel = BuildSimLabel(inputFile);
+    latex->DrawLatex(0.15, 0.92, simLabel.c_str());
     latex->DrawLatex(0.15, 0.86, "#bf{Diff. DIS} 10x100 GeV");
 
     SaveCanvas(c, m_saveName);

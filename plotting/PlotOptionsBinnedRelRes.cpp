@@ -178,6 +178,7 @@ void PlotOptionsBinnedRelRes::Plot(TFile* inputFile) {
         std::cerr << "Error: 2D Histogram " << m_histName << " not found." << std::endl;
         return;
     }
+    const std::string simLabel = BuildSimLabel(inputFile);
 
     TCanvas* c = new TCanvas("c_binned", "", 1200, 800);
     c->SetLeftMargin(0.15);
@@ -279,7 +280,7 @@ void PlotOptionsBinnedRelRes::Plot(TFile* inputFile) {
         latex_proj.SetTextSize(0.035);
         latex_proj.SetNDC();
         latex_proj.SetTextColor(kBlack);
-        latex_proj.DrawLatex(0.15, 0.85, "#bf{ePIC} Simulation");
+        latex_proj.DrawLatex(0.15, 0.85, simLabel.c_str());
         latex_proj.DrawLatex(0.15, 0.80, "#bf{Diff. DIS} 10x100 GeV");
 
         c_proj->Update();
@@ -344,7 +345,7 @@ void PlotOptionsBinnedRelRes::Plot(TFile* inputFile) {
     latex.SetTextSize(0.035);
     latex.SetNDC();
     latex.SetTextColor(kBlack);
-    latex.DrawLatex(0.15, 0.85, "#bf{ePIC} Simulation (100k events)");
+    latex.DrawLatex(0.15, 0.85, simLabel.c_str());
     latex.DrawLatex(0.15, 0.80, "#bf{Diff. DIS} 10x100 GeV");
 
     c->Update();

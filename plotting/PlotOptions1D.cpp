@@ -69,17 +69,25 @@ void PlotOptions1D::Plot(TFile* inputFile) {
         hist->SetLineWidth((i == 0) ? 2 : 1);
         if (m_histNames[i].Contains("truth")|| m_histNames[i].Contains("MC")) {
             hist->SetLineColor(kBlack);
-        } else if (m_histNames[i].Contains("EM")|| m_histNames[i].Contains("B0")) {
+        } else if (m_histNames[i].Contains("EM")) {
             hist->SetLineColor(kRed);
             hist->SetMarkerColor(kRed);
             hist->SetMarkerStyle(20);
-        } else if (m_histNames[i].Contains("DA")|| m_histNames[i].Contains("RP")) {
+        } else if (m_histNames[i].Contains("DA")) {
             hist->SetLineColor(kBlue);
             hist->SetMarkerColor(kBlue);
             hist->SetMarkerStyle(20);
         } else if (m_histNames[i].Contains("Sigma")) {
             hist->SetLineColor(kGreen + 2);
             hist->SetMarkerColor(kGreen + 2);
+            hist->SetMarkerStyle(20);
+        } else if (m_histNames[i].Contains("B0")) {
+            hist->SetLineColor(kRed);
+            hist->SetMarkerColor(kRed);
+            hist->SetMarkerStyle(20);
+        } else if (m_histNames[i].Contains("RP")) {
+            hist->SetLineColor(kBlue);
+            hist->SetMarkerColor(kBlue);
             hist->SetMarkerStyle(20);
         } else if (m_histNames[i].Contains("Sum")) {
             hist->SetLineColor(kOrange+7);
@@ -171,7 +179,8 @@ void PlotOptions1D::Plot(TFile* inputFile) {
     latex.SetTextSize(0.04);
     latex.SetNDC();
     latex.SetTextColor(kBlack);
-    latex.DrawLatex(0.2, 0.92, "#bf{ePIC} Simulation (100k events)");
+    const std::string simLabel = BuildSimLabel(inputFile);
+    latex.DrawLatex(0.2, 0.92, simLabel.c_str());
     latex.DrawLatex(0.65, 0.92, "#bf{Diff. DIS} 10x100 GeV");
 
     // ---------- Draw legend and save ----------

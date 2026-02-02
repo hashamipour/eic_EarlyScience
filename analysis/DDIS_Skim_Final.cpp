@@ -16,6 +16,7 @@
 #include <TObject.h>
 #include <TString.h>
 #include <TProfile2D.h>
+#include <TParameter.h>
 #include <string>
 #include <iostream>
 #include <fstream>
@@ -253,8 +254,13 @@ int main(int argc, char** argv) {
 
     // Create TTree for event-level data
     TTree* tree = new TTree("Q2_tree", "Q2 Kinematics Data");
+    float out_Q2_truth, out_Q2_EM, out_Q2_DA, out_Q2_Sigma;
     float out_x_truth, out_x_EM, out_x_DA, out_x_Sigma;
     float out_y_truth, out_y_EM, out_y_DA, out_y_Sigma;
+    tree->Branch("Q2_truth",   &out_Q2_truth,  "Q2_truth/F");
+    tree->Branch("Q2_EM",      &out_Q2_EM,     "Q2_EM/F");
+    tree->Branch("Q2_DA",      &out_Q2_DA,     "Q2_DA/F");
+    tree->Branch("Q2_Sigma",   &out_Q2_Sigma,  "Q2_Sigma/F");
     tree->Branch("x_truth",    &out_x_truth,   "x_truth/F");
     tree->Branch("x_EM",       &out_x_EM,      "x_EM/F");
     tree->Branch("x_DA",       &out_x_DA,      "x_DA/F");
@@ -285,6 +291,18 @@ int main(int argc, char** argv) {
     TH1D* h_y_DA     = new TH1D("y_DA",     "DA method;y",       n_y_bins, 0.0, 1.0);
     TH1D* h_y_Sigma  = new TH1D("y_Sigma",  "Sigma method;y",    n_y_bins, 0.0, 1.0);
     TH1D* h_y_truth  = new TH1D("y_truth",  "truth;y",           n_y_bins, 0.0, 1.0);
+
+    // Event density in (x_Bj, Q2) with finer binning for phase space coverage
+    const int n_x_bins_density = 120;
+    const int n_q2_bins_density = 120;
+    const double q2_min_density = 1.0;
+    const double q2_max_density = 1000.0;
+    std::vector<Double_t> x_bins_density = GetLogBins(1.0e-4, 1.0, n_x_bins_density);
+    std::vector<Double_t> q2_bins_density = GetLogBins(q2_min_density, q2_max_density, n_q2_bins_density);
+    TH2D* h_xQ2_truth = new TH2D("xQ2_truth",
+                                "Event Density;x_{Bj};Q^{2} [GeV^{2}]",
+                                x_bins_density.size()-1, x_bins_density.data(),
+                                q2_bins_density.size()-1, q2_bins_density.data());
 
     // Relative resolution histograms
     TH1D* h_RelRes_x_EM     = new TH1D("x_RelRes_EM",     "electron method;#frac{x(Reco)-x(MC)}{x(MC)}", 101, -0.15, 0.15);
@@ -363,10 +381,28 @@ int main(int argc, char** argv) {
     //---------------------------------------------------------
 
     // W² histograms
-    TH1D* h_W2_EM    = new TH1D("W2_EM",    "Electron method;W^{2} [GeV^{2}]", 50, 0, 1000);
-    TH1D* h_W2_DA    = new TH1D("W2_DA",    "DA method;W^{2} [GeV^{2}]",       50, 0, 1000);
-    TH1D* h_W2_Sigma = new TH1D("W2_Sigma", "Sigma method;W^{2} [GeV^{2}]",    50, 0, 1000);
-    TH1D* h_W2_truth = new TH1D("W2_truth", "Truth;W^{2} [GeV^{2}]",           50, 0, 1000);
+    const int n_w2_bins = 60;
+    const double w2_min = 10.0;
+    const double w2_max = 1.0e4;
+    std::vector<Double_t> w2_bins = GetLogBins(w2_min, w2_max, n_w2_bins);
+    TH1D* h_W2_EM    = new TH1D("W2_EM",    "Electron method;W^{2} [GeV^{2}]", w2_bins.size()-1, w2_bins.data());
+    TH1D* h_W2_DA    = new TH1D("W2_DA",    "DA method;W^{2} [GeV^{2}]",       w2_bins.size()-1, w2_bins.data());
+    TH1D* h_W2_Sigma = new TH1D("W2_Sigma", "Sigma method;W^{2} [GeV^{2}]",    w2_bins.size()-1, w2_bins.data());
+    TH1D* h_W2_truth = new TH1D("W2_truth", "Truth;W^{2} [GeV^{2}]",           w2_bins.size()-1, w2_bins.data());
+
+    // M_X^2 histograms (hadronic invariant mass squared, excluding scattered e- and leading proton)
+    const int n_mx2_bins = 120;
+    const double mx2_min = 1.0e-3;
+    const double mx2_max = 1000.0;
+    std::vector<Double_t> mx2_bins = GetLogBins(mx2_min, mx2_max, n_mx2_bins);
+    TH1D* h_MX2_truth = new TH1D("MX2_truth", "Truth M_{X}^{2};M_{X}^{2} [GeV^{2}];Counts",
+                                mx2_bins.size() - 1, mx2_bins.data());
+    TH1D* h_MX2_reco  = new TH1D("MX2_reco",  "Reco M_{X}^{2};M_{X}^{2} [GeV^{2}];Counts",
+                                mx2_bins.size() - 1, mx2_bins.data());
+    TH2D* h_MX2_corr  = new TH2D("MX2_corr",
+                                "M_{X}^{2} Truth vs Reco;M_{X,truth}^{2} [GeV^{2}];M_{X,reco}^{2} [GeV^{2}]",
+                                mx2_bins.size() - 1, mx2_bins.data(),
+                                mx2_bins.size() - 1, mx2_bins.data());
 
     // Scattered electron quantities (reco)
     TH1D* h_Ep_e     = new TH1D("Ep_e",     "Scattered electron energy;E'_{e} [GeV]",  50, 0, 20);
@@ -419,7 +455,7 @@ int main(int argc, char** argv) {
     // DIFFRACTIVE: Mandelstam t
     //---------------------------------------------------------
     std::vector<Double_t> t_bins_low = GetLogBins(1e-3, 0.5, 20);
-    std::vector<Double_t> t_bins_high = {0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.25, 1.6};
+    std::vector<Double_t> t_bins_high = {0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.25, 1.6, 1.8, 2.0};
     std::vector<Double_t> t_bins = t_bins_low;
     for(size_t i = 1; i < t_bins_high.size(); i++){
         t_bins.push_back(t_bins_high[i]);
@@ -443,6 +479,101 @@ int main(int argc, char** argv) {
     TH1D* h_theta_B0 = new TH1D("theta_B0", "B0 Proton Scattering Angle;#theta [mrad];Counts", 100, 0.0, 25.0);
     TH1D* h_theta_RP = new TH1D("theta_RP", "RP Proton Scattering Angle;#theta [mrad];Counts", 100, 0.0, 25.0);
 
+    TH1D* h_xL_MC = new TH1D("xL_MC", "Truth x_{L};x_{L};Counts", 30, 0.75, 1.05);
+    TH1D* h_xL_B0 = new TH1D("xL_B0", "B0 Reco x_{L};x_{L};Counts", 30, 0.75, 1.05);
+    TH1D* h_xL_RP = new TH1D("xL_RP", "RP Reco x_{L};x_{L};Counts", 30, 0.75, 1.05);
+
+    // x_pom histograms from definition: x_pom = (Q^2 + M_X^2 - t)/(Q^2 + W^2 - m_p^2)
+    std::vector<Double_t> xpom_bins = {1e-4, 3e-4, 1e-3, 3e-3, 1e-2, 3e-2, 1e-1, 3e-1};
+    TH1D* h_xpom_truth_all = new TH1D("xpom_truth_all", "Truth x_{pom} (All);x_{pom};Counts",
+                                     xpom_bins.size()-1, xpom_bins.data());
+    TH1D* h_xpom_truth_B0 = new TH1D("xpom_truth_B0", "Truth x_{pom} (B0);x_{pom};Counts",
+                                    xpom_bins.size()-1, xpom_bins.data());
+    TH1D* h_xpom_truth_RP = new TH1D("xpom_truth_RP", "Truth x_{pom} (RP);x_{pom};Counts",
+                                    xpom_bins.size()-1, xpom_bins.data());
+    TH1D* h_xpom_reco_EM_all = new TH1D("xpom_reco_EM_all", "Reco x_{pom} EM (All);x_{pom};Counts",
+                                       xpom_bins.size()-1, xpom_bins.data());
+    TH1D* h_xpom_reco_EM_B0 = new TH1D("xpom_reco_EM_B0", "Reco x_{pom} EM (B0);x_{pom};Counts",
+                                      xpom_bins.size()-1, xpom_bins.data());
+    TH1D* h_xpom_reco_EM_RP = new TH1D("xpom_reco_EM_RP", "Reco x_{pom} EM (RP);x_{pom};Counts",
+                                      xpom_bins.size()-1, xpom_bins.data());
+    TH1D* h_xpom_reco_DA_all = new TH1D("xpom_reco_DA_all", "Reco x_{pom} DA (All);x_{pom};Counts",
+                                       xpom_bins.size()-1, xpom_bins.data());
+    TH1D* h_xpom_reco_DA_B0 = new TH1D("xpom_reco_DA_B0", "Reco x_{pom} DA (B0);x_{pom};Counts",
+                                      xpom_bins.size()-1, xpom_bins.data());
+    TH1D* h_xpom_reco_DA_RP = new TH1D("xpom_reco_DA_RP", "Reco x_{pom} DA (RP);x_{pom};Counts",
+                                      xpom_bins.size()-1, xpom_bins.data());
+    TH1D* h_xpom_reco_Sigma_all = new TH1D("xpom_reco_Sigma_all", "Reco x_{pom} #Sigma (All);x_{pom};Counts",
+                                          xpom_bins.size()-1, xpom_bins.data());
+    TH1D* h_xpom_reco_Sigma_B0 = new TH1D("xpom_reco_Sigma_B0", "Reco x_{pom} #Sigma (B0);x_{pom};Counts",
+                                         xpom_bins.size()-1, xpom_bins.data());
+    TH1D* h_xpom_reco_Sigma_RP = new TH1D("xpom_reco_Sigma_RP", "Reco x_{pom} #Sigma (RP);x_{pom};Counts",
+                                         xpom_bins.size()-1, xpom_bins.data());
+
+    TH2D* h_Response_xpom_EM_B0 = new TH2D("Response_xpom_EM_B0", "x_{pom} Response EM (B0);Truth x_{pom};Reco x_{pom}",
+                                          xpom_bins.size()-1, xpom_bins.data(),
+                                          xpom_bins.size()-1, xpom_bins.data());
+    TH2D* h_Response_xpom_EM_RP = new TH2D("Response_xpom_EM_RP", "x_{pom} Response EM (RP);Truth x_{pom};Reco x_{pom}",
+                                          xpom_bins.size()-1, xpom_bins.data(),
+                                          xpom_bins.size()-1, xpom_bins.data());
+    TH2D* h_Response_xpom_DA_B0 = new TH2D("Response_xpom_DA_B0", "x_{pom} Response DA (B0);Truth x_{pom};Reco x_{pom}",
+                                          xpom_bins.size()-1, xpom_bins.data(),
+                                          xpom_bins.size()-1, xpom_bins.data());
+    TH2D* h_Response_xpom_DA_RP = new TH2D("Response_xpom_DA_RP", "x_{pom} Response DA (RP);Truth x_{pom};Reco x_{pom}",
+                                          xpom_bins.size()-1, xpom_bins.data(),
+                                          xpom_bins.size()-1, xpom_bins.data());
+    TH2D* h_Response_xpom_Sigma_B0 = new TH2D("Response_xpom_Sigma_B0", "x_{pom} Response #Sigma (B0);Truth x_{pom};Reco x_{pom}",
+                                             xpom_bins.size()-1, xpom_bins.data(),
+                                             xpom_bins.size()-1, xpom_bins.data());
+    TH2D* h_Response_xpom_Sigma_RP = new TH2D("Response_xpom_Sigma_RP", "x_{pom} Response #Sigma (RP);Truth x_{pom};Reco x_{pom}",
+                                             xpom_bins.size()-1, xpom_bins.data(),
+                                             xpom_bins.size()-1, xpom_bins.data());
+
+    TH1D* h_beta_truth_all = new TH1D("beta_truth_all", "Truth #beta (All);#beta;Counts", 50, 0.0, 1.0);
+    TH1D* h_beta_truth_B0 = new TH1D("beta_truth_B0", "Truth #beta (B0);#beta;Counts", 50, 0.0, 1.0);
+    TH1D* h_beta_truth_RP = new TH1D("beta_truth_RP", "Truth #beta (RP);#beta;Counts", 50, 0.0, 1.0);
+    TH1D* h_beta_reco_EM_all = new TH1D("beta_reco_EM_all", "Reco #beta EM (All);#beta;Counts", 50, 0.0, 1.0);
+    TH1D* h_beta_reco_EM_B0 = new TH1D("beta_reco_EM_B0", "Reco #beta EM (B0);#beta;Counts", 50, 0.0, 1.0);
+    TH1D* h_beta_reco_EM_RP = new TH1D("beta_reco_EM_RP", "Reco #beta EM (RP);#beta;Counts", 50, 0.0, 1.0);
+    TH1D* h_beta_reco_DA_all = new TH1D("beta_reco_DA_all", "Reco #beta DA (All);#beta;Counts", 50, 0.0, 1.0);
+    TH1D* h_beta_reco_DA_B0 = new TH1D("beta_reco_DA_B0", "Reco #beta DA (B0);#beta;Counts", 50, 0.0, 1.0);
+    TH1D* h_beta_reco_DA_RP = new TH1D("beta_reco_DA_RP", "Reco #beta DA (RP);#beta;Counts", 50, 0.0, 1.0);
+    TH1D* h_beta_reco_Sigma_all = new TH1D("beta_reco_Sigma_all", "Reco #beta #Sigma (All);#beta;Counts", 50, 0.0, 1.0);
+    TH1D* h_beta_reco_Sigma_B0 = new TH1D("beta_reco_Sigma_B0", "Reco #beta #Sigma (B0);#beta;Counts", 50, 0.0, 1.0);
+    TH1D* h_beta_reco_Sigma_RP = new TH1D("beta_reco_Sigma_RP", "Reco #beta #Sigma (RP);#beta;Counts", 50, 0.0, 1.0);
+
+    // Phase-space density plots (truth, unbinned-style)
+    const int n_beta_bins_density = 120;
+    const int n_xpom_bins_density = 120;
+    std::vector<Double_t> xpom_bins_density = GetLogBins(1.0e-4, 0.3, n_xpom_bins_density);
+    TH2D* h_beta_Q2_truth = new TH2D("beta_Q2_truth", "Event Density;#beta;Q^{2} [GeV^{2}]",
+                                    n_beta_bins_density, 0.0, 1.0,
+                                    q2_bins_density.size()-1, q2_bins_density.data());
+    TH2D* h_t_Q2_truth = new TH2D("t_Q2_truth", "Event Density;|t| [GeV^{2}];Q^{2} [GeV^{2}]",
+                                 t_bins.size()-1, t_bins.data(),
+                                 q2_bins_density.size()-1, q2_bins_density.data());
+    TH2D* h_xpom_Q2_truth = new TH2D("xpom_Q2_truth", "Event Density;x_{pom};Q^{2} [GeV^{2}]",
+                                    xpom_bins_density.size()-1, xpom_bins_density.data(),
+                                    q2_bins_density.size()-1, q2_bins_density.data());
+    TH2D* h_beta_t_truth = new TH2D("beta_t_truth", "Event Density;#beta;|t| [GeV^{2}]",
+                                   n_beta_bins_density, 0.0, 1.0,
+                                   t_bins.size()-1, t_bins.data());
+    TH2D* h_xbj_t_truth = new TH2D("xbj_t_truth", "Event Density;x_{Bj};|t| [GeV^{2}]",
+                                  x_bins_density.size()-1, x_bins_density.data(),
+                                  t_bins.size()-1, t_bins.data());
+    TH2D* h_xpom_t_truth = new TH2D("xpom_t_truth", "Event Density;x_{pom};|t| [GeV^{2}]",
+                                   xpom_bins_density.size()-1, xpom_bins_density.data(),
+                                   t_bins.size()-1, t_bins.data());
+    TH2D* h_xpom_beta_truth = new TH2D("xpom_beta_truth", "Event Density;x_{pom};#beta",
+                                      xpom_bins_density.size()-1, xpom_bins_density.data(),
+                                      n_beta_bins_density, 0.0, 1.0);
+    TH2D* h_xbj_beta_truth = new TH2D("xbj_beta_truth", "Event Density;x_{Bj};#beta",
+                                     x_bins_density.size()-1, x_bins_density.data(),
+                                     n_beta_bins_density, 0.0, 1.0);
+    TH2D* h_xbj_xpom_truth = new TH2D("xbj_xpom_truth", "Event Density;x_{Bj};x_{pom}",
+                                     x_bins_density.size()-1, x_bins_density.data(),
+                                     xpom_bins_density.size()-1, xpom_bins_density.data());
+
     TH1D* h_t_res_B0 = new TH1D("t_res_B0", "B0 t Resolution;(|t|_{reco}-|t|_{truth})/|t|_{truth};Counts", 100, -2.0, 2.0);
     TH1D* h_t_res_RP = new TH1D("t_res_RP", "RP t Resolution;(|t|_{reco}-|t|_{truth})/|t|_{truth};Counts", 100, -2.0, 2.0);
 
@@ -458,9 +589,44 @@ int main(int argc, char** argv) {
     TH2D* h_t_corr_RP = new TH2D("t_corr_RP", "RP |t| Response;Truth |t| [GeV^{2}];Reco |t| [GeV^{2}]",
                                  t_bins.size()-1, t_bins.data(), t_bins.size()-1, t_bins.data());
 
+    TH2D* h_MX2_t_truth = new TH2D("MX2_t_truth", "M_{X}^{2} vs |t| (Truth);M_{X}^{2} [GeV^{2}];|t| [GeV^{2}]",
+                                   mx2_bins.size() - 1, mx2_bins.data(),
+                                   t_bins.size()-1, t_bins.data());
+    TH2D* h_MX2_t_B0 = new TH2D("MX2_t_B0", "M_{X}^{2} vs |t| (B0 Reco);M_{X}^{2} [GeV^{2}];|t| [GeV^{2}]",
+                                mx2_bins.size() - 1, mx2_bins.data(),
+                                t_bins.size()-1, t_bins.data());
+    TH2D* h_MX2_t_RP = new TH2D("MX2_t_RP", "M_{X}^{2} vs |t| (RP Reco);M_{X}^{2} [GeV^{2}];|t| [GeV^{2}]",
+                                mx2_bins.size() - 1, mx2_bins.data(),
+                                t_bins.size()-1, t_bins.data());
+
     TGraph* g_t_B0 = new TGraph(); g_t_B0->SetName("g_t_B0");
     TGraph* g_t_RP = new TGraph(); g_t_RP->SetName("g_t_RP");
     int n_g_t_B0 = 0, n_g_t_RP = 0;
+
+    TGraph* g_xL_B0 = new TGraph(); g_xL_B0->SetName("g_xL_B0");
+    TGraph* g_xL_RP = new TGraph(); g_xL_RP->SetName("g_xL_RP");
+    int n_g_xL_B0 = 0, n_g_xL_RP = 0;
+
+    TGraph* g_xpom_EM_B0 = new TGraph(); g_xpom_EM_B0->SetName("g_xpom_EM_B0");
+    TGraph* g_xpom_EM_RP = new TGraph(); g_xpom_EM_RP->SetName("g_xpom_EM_RP");
+    TGraph* g_xpom_DA_B0 = new TGraph(); g_xpom_DA_B0->SetName("g_xpom_DA_B0");
+    TGraph* g_xpom_DA_RP = new TGraph(); g_xpom_DA_RP->SetName("g_xpom_DA_RP");
+    TGraph* g_xpom_Sigma_B0 = new TGraph(); g_xpom_Sigma_B0->SetName("g_xpom_Sigma_B0");
+    TGraph* g_xpom_Sigma_RP = new TGraph(); g_xpom_Sigma_RP->SetName("g_xpom_Sigma_RP");
+    TGraph* g_beta_EM_B0 = new TGraph(); g_beta_EM_B0->SetName("g_beta_EM_B0");
+    TGraph* g_beta_EM_RP = new TGraph(); g_beta_EM_RP->SetName("g_beta_EM_RP");
+    TGraph* g_beta_DA_B0 = new TGraph(); g_beta_DA_B0->SetName("g_beta_DA_B0");
+    TGraph* g_beta_DA_RP = new TGraph(); g_beta_DA_RP->SetName("g_beta_DA_RP");
+    TGraph* g_beta_Sigma_B0 = new TGraph(); g_beta_Sigma_B0->SetName("g_beta_Sigma_B0");
+    TGraph* g_beta_Sigma_RP = new TGraph(); g_beta_Sigma_RP->SetName("g_beta_Sigma_RP");
+    TGraph* g_MX2 = new TGraph(); g_MX2->SetName("g_MX2");
+    int n_g_xpom_em_b0 = 0, n_g_xpom_em_rp = 0;
+    int n_g_xpom_da_b0 = 0, n_g_xpom_da_rp = 0;
+    int n_g_xpom_sigma_b0 = 0, n_g_xpom_sigma_rp = 0;
+    int n_g_beta_em_b0 = 0, n_g_beta_em_rp = 0;
+    int n_g_beta_da_b0 = 0, n_g_beta_da_rp = 0;
+    int n_g_beta_sigma_b0 = 0, n_g_beta_sigma_rp = 0;
+    int n_g_MX2 = 0;
 
     //---------------------------------------------------------
     // DECLARE TTREEREADER AND BRANCHES TO USE
@@ -647,6 +813,7 @@ int main(int argc, char** argv) {
     // RUN OVER TTREEREADER
     //---------------------------------------------------------
     Long64_t nentries = events->GetEntries();
+    Long64_t nProcessed = 0;
     Long64_t nTruthValid = 0;
     Long64_t nEMValid = 0;
     Long64_t nDAValid = 0;
@@ -664,6 +831,7 @@ int main(int argc, char** argv) {
         fflush(stdout);
         }
         if (!tree_reader.Next()) break;
+        nProcessed++;
 
         float electron_Q2_EM = GetArrayValue(kin_Q2_EM);
         float electron_x_EM = GetArrayValue(kin_x_EM);
@@ -812,6 +980,10 @@ int main(int argc, char** argv) {
 
         // Also fill the output tree for x and y
         if (validTruthX && validTruthY) {
+            out_Q2_truth = electron_Q2_truth;
+            out_Q2_EM    = electron_Q2_EM;
+            out_Q2_DA    = electron_Q2_DA;
+            out_Q2_Sigma = electron_Q2_Sigma;
             out_x_truth  = electron_x_truth;
             out_x_EM     = electron_x_EM;
             out_x_DA     = electron_x_DA;
@@ -825,6 +997,9 @@ int main(int argc, char** argv) {
         
         // Fill histograms for truth
         if (validTruthQ2) h_Q2_truth->Fill(electron_Q2_truth);
+        if (validTruthQ2 && validTruthX) {
+            h_xQ2_truth->Fill(electron_x_truth, electron_Q2_truth);
+        }
 
         if (validTruthQ2 && validEMQ2) {
             h_RelRes_Q2_EM->Fill((electron_Q2_EM - electron_Q2_truth) / electron_Q2_truth);
@@ -914,6 +1089,12 @@ int main(int argc, char** argv) {
         if (validWTruth && validWDA) g_W2_DA->SetPoint(n_g_W2_DA++, W2_truth, W2_DA);
         if (hasSigmaMethod && validWTruth && validWSigma) g_W2_Sigma->SetPoint(n_g_W2_Sigma++, W2_truth, W2_Sigma);
 
+        const double m_p_sq = MASS_PROTON * MASS_PROTON;
+        const double xpom_denominator_EM    = (validEMQ2 && validWEM)       ? (electron_Q2_EM    + W2_EM    - m_p_sq) : -1.0;
+        const double xpom_denominator_truth = (validTruthQ2 && validWTruth) ? (electron_Q2_truth + W2_truth - m_p_sq) : -1.0;
+        const double xpom_denominator_DA    = (validDAQ2 && validWDA)       ? (electron_Q2_DA    + W2_DA    - m_p_sq) : -1.0;
+        const double xpom_denominator_Sigma = (hasSigmaMethod && validSigmaQ2 && validWSigma) ? (electron_Q2_Sigma + W2_Sigma - m_p_sq): -1.0;
+
         // Response matrices (Electron method)
         if (validTruthQ2 && validEMQ2) h_Response_Q2->Fill(electron_Q2_truth, electron_Q2_EM);
         if (validTruthX && validEMX) h_Response_x->Fill(electron_x_truth, electron_x_EM);
@@ -978,8 +1159,94 @@ int main(int argc, char** argv) {
         }
 
         //=================================================================
+        // DIFFRACTIVE: M_X^2 (hadronic system) excluding scattered e- and leading proton
+        //=================================================================
+        int scat_reco_idx_mx2 = scat_reco_idx;
+        if (scat_reco_idx_mx2 < 0) {
+            double bestE = -1.0;
+            int bestIdx = -1;
+            for (int j = 0; j < re_energy_array.GetSize(); j++) {
+                if (re_pdg_array[j] != 11) continue;
+                if (re_energy_array[j] > bestE) {
+                    bestE = re_energy_array[j];
+                    bestIdx = j;
+                }
+            }
+            scat_reco_idx_mx2 = bestIdx;
+        }
+
+        int lead_reco_proton_idx = -1;
+        double lead_reco_pz = -1.0e12;
+        for (int j = 0; j < re_px_array.GetSize(); j++) {
+            if (re_pdg_array[j] != 2212) continue;
+            if (re_pz_array[j] > lead_reco_pz) {
+                lead_reco_pz = re_pz_array[j];
+                lead_reco_proton_idx = j;
+            }
+        }
+
+        P3EVector total_hadrons_reco(0.0, 0.0, 0.0, 0.0);
+        for (int j = 0; j < re_energy_array.GetSize(); j++) {
+            if (j == scat_reco_idx_mx2) continue;
+            if (j == lead_reco_proton_idx) continue;
+            P3EVector particle(re_px_array[j], re_py_array[j], re_pz_array[j], re_energy_array[j]);
+            total_hadrons_reco += particle;
+        }
+        double MX2_reco = total_hadrons_reco.M2();
+
+        P3EVector total_hadrons_truth(0.0, 0.0, 0.0, 0.0);
+        for (unsigned int j = 0; j < re_energy_array.GetSize(); j++) {
+            if ((int)j == scat_reco_idx_mx2) continue;
+            if ((int)j == lead_reco_proton_idx) continue;
+
+            int mc_idx = -1;
+            for (unsigned int k = 0; k < assoc_rec_id.GetSize(); k++) {
+                if (assoc_rec_id[k] == j) {
+                    mc_idx = assoc_sim_id[k];
+                    break;
+                }
+            }
+            if (mc_idx < 0 || mc_idx >= (int)mc_px_array.GetSize()) continue;
+            if (mc_genStatus_array[mc_idx] != 1) continue;
+            if (mc_idx == scat_mc_idx) continue;
+            const int pdg = mc_pdg_array[mc_idx];
+            if (pdg == 12 || pdg == -12 || pdg == 14 || pdg == -14 || pdg == 16 || pdg == -16) continue;
+
+            const double px = mc_px_array[mc_idx];
+            const double py = mc_py_array[mc_idx];
+            const double pz = mc_pz_array[mc_idx];
+            const double m = mc_mass_array[mc_idx];
+            const double E = TMath::Sqrt(px*px + py*py + pz*pz + m*m);
+            P3EVector particle(px, py, pz, E);
+            total_hadrons_truth += particle;
+        }
+        double MX2_truth = total_hadrons_truth.M2();
+
+        const bool valid_MX2_reco = std::isfinite(MX2_reco) && MX2_reco >= 0.0;
+        const bool valid_MX2_truth = std::isfinite(MX2_truth) && MX2_truth >= 0.0;
+        if (valid_MX2_reco) h_MX2_reco->Fill(MX2_reco);
+        if (valid_MX2_truth) h_MX2_truth->Fill(MX2_truth);
+        if (valid_MX2_reco && valid_MX2_truth) h_MX2_corr->Fill(MX2_truth, MX2_reco);
+        if (valid_MX2_reco && valid_MX2_truth) g_MX2->SetPoint(n_g_MX2++, MX2_truth, MX2_reco);
+
+        //=================================================================
         // DIFFRACTIVE: Mandelstam t analysis
         //=================================================================
+        bool xpom_truth_all_filled = false;
+        bool xpom_truth_b0_filled = false;
+        bool xpom_truth_rp_filled = false;
+        bool xpom_reco_em_b0_filled = false;
+        bool xpom_reco_da_b0_filled = false;
+        bool xpom_reco_sigma_b0_filled = false;
+        bool xpom_reco_em_rp_filled = false;
+        bool xpom_reco_da_rp_filled = false;
+        bool xpom_reco_sigma_rp_filled = false;
+        bool xpom_reco_em_all_filled = false;
+        bool xpom_reco_da_all_filled = false;
+        bool xpom_reco_sigma_all_filled = false;
+        bool has_truth_lead = false;
+        double lead_truth_pz = -1.0;
+        P3MVector lead_truth(0.0, 0.0, 0.0, 0.0);
         std::vector<P3MVector> truth_protons;
         truth_protons.reserve(4);
         for (int j = 0; j < mc_px_array.GetSize(); j++) {
@@ -987,13 +1254,74 @@ int main(int argc, char** argv) {
             P3MVector p(mc_px_array[j], mc_py_array[j], mc_pz_array[j], mc_mass_array[j]);
             undoAfterburn(p);
             truth_protons.push_back(p);
+            if (p.Pz() > lead_truth_pz) {
+                lead_truth_pz = p.Pz();
+                lead_truth = p;
+                has_truth_lead = true;
+            }
 
             const double t_val = TMath::Abs(CalcT(beams.p_beam, p));
             if (std::isfinite(t_val)) {
                 h_t_MC->Fill(t_val);
                 h_dsigma_dt_MC->Fill(t_val);
+                if (valid_MX2_truth) {
+                    h_MX2_t_truth->Fill(MX2_truth, t_val);
+                }
             }
             h_theta_MC->Fill(p.Theta() * 1000.0);
+
+            const double xL_pz = p.Pz() / beams.p_beam.Pz();
+            if (std::isfinite(xL_pz)) {
+                h_xL_MC->Fill(xL_pz);
+            }
+
+
+        }
+
+        double t_truth_best = -1.0;
+        if (has_truth_lead) {
+            t_truth_best = TMath::Abs(CalcT(beams.p_beam, lead_truth));
+        }
+        double xpom_truth_best = -1.0;
+        if (xpom_denominator_truth > 0.0 && valid_MX2_truth && std::isfinite(t_truth_best)) {
+            xpom_truth_best = (electron_Q2_truth + MX2_truth + t_truth_best) / xpom_denominator_truth;
+            if (!(std::isfinite(xpom_truth_best) && xpom_truth_best > 0.0)) {
+                xpom_truth_best = -1.0;
+            }
+        }
+        double beta_truth_best = -1.0;
+        if (validTruthX && xpom_truth_best > 0.0) {
+            beta_truth_best = electron_x_truth / xpom_truth_best;
+            if (!(std::isfinite(beta_truth_best) && beta_truth_best > 0.0 && beta_truth_best <= 1.0)) {
+                beta_truth_best = -1.0;
+            }
+        }
+        if (validTruthQ2 && beta_truth_best > 0.0) {
+            h_beta_Q2_truth->Fill(beta_truth_best, electron_Q2_truth);
+        }
+        if (validTruthQ2 && t_truth_best > 0.0) {
+            h_t_Q2_truth->Fill(t_truth_best, electron_Q2_truth);
+        }
+        if (validTruthQ2 && xpom_truth_best > 0.0) {
+            h_xpom_Q2_truth->Fill(xpom_truth_best, electron_Q2_truth);
+        }
+        if (t_truth_best > 0.0 && beta_truth_best > 0.0) {
+            h_beta_t_truth->Fill(beta_truth_best, t_truth_best);
+        }
+        if (t_truth_best > 0.0 && validTruthX) {
+            h_xbj_t_truth->Fill(electron_x_truth, t_truth_best);
+        }
+        if (t_truth_best > 0.0 && xpom_truth_best > 0.0) {
+            h_xpom_t_truth->Fill(xpom_truth_best, t_truth_best);
+        }
+        if (beta_truth_best > 0.0 && xpom_truth_best > 0.0) {
+            h_xpom_beta_truth->Fill(xpom_truth_best, beta_truth_best);
+        }
+        if (beta_truth_best > 0.0 && validTruthX) {
+            h_xbj_beta_truth->Fill(electron_x_truth, beta_truth_best);
+        }
+        if (xpom_truth_best > 0.0 && validTruthX) {
+            h_xbj_xpom_truth->Fill(electron_x_truth, xpom_truth_best);
         }
 
         if (hasTSProtons && tsassoc_rec_id && tsassoc_sim_id && tsre_px_array && tsre_py_array && tsre_pz_array) {
@@ -1025,6 +1353,138 @@ int main(int argc, char** argv) {
                         h_t_res_B0->Fill(rel);
                         h_t_RelRes_binned_B0->Fill(t_truth_abs, rel);
                     }
+                }
+                if (std::isfinite(t_reco_abs) && valid_MX2_reco) {
+                    h_MX2_t_B0->Fill(MX2_reco, t_reco_abs);
+                }
+
+                const bool xpom_truth_valid = (xpom_denominator_truth > 0.0 && valid_MX2_truth && std::isfinite(t_truth_abs));
+                double xpom_truth_def = -1.0;
+                if (xpom_truth_valid) {
+                    xpom_truth_def = (electron_Q2_truth + MX2_truth + t_truth_abs) / xpom_denominator_truth;
+                    if (!(std::isfinite(xpom_truth_def) && xpom_truth_def > 0.0)) {
+                        xpom_truth_def = -1.0;
+                    }
+                }
+
+                const bool beta_truth_valid = (validTruthX && xpom_truth_def > 0.0);
+                const double beta_truth = beta_truth_valid ? (electron_x_truth / xpom_truth_def) : -1.0;
+
+                if (!xpom_truth_b0_filled && xpom_truth_def > 0.0) {
+                    h_xpom_truth_B0->Fill(xpom_truth_def);
+                    if (beta_truth_valid && beta_truth > 0.0 && beta_truth <= 1.0) {
+                        h_beta_truth_B0->Fill(beta_truth);
+                    }
+                    xpom_truth_b0_filled = true;
+                }
+                if (!xpom_truth_all_filled && xpom_truth_def > 0.0) {
+                    h_xpom_truth_all->Fill(xpom_truth_def);
+                    if (beta_truth_valid && beta_truth > 0.0 && beta_truth <= 1.0) {
+                        h_beta_truth_all->Fill(beta_truth);
+                    }
+                    xpom_truth_all_filled = true;
+                }
+
+                if (!xpom_reco_em_b0_filled && xpom_denominator_EM > 0.0 && valid_MX2_reco && std::isfinite(t_reco_abs)) {
+                    const double xpom_reco_def = (electron_Q2_EM + MX2_reco + t_reco_abs) / xpom_denominator_EM;
+                    if (std::isfinite(xpom_reco_def) && xpom_reco_def > 0.0) {
+                        h_xpom_reco_EM_B0->Fill(xpom_reco_def);
+                        xpom_reco_em_b0_filled = true;
+                        if (xpom_truth_def > 0.0) {
+                            h_Response_xpom_EM_B0->Fill(xpom_truth_def, xpom_reco_def);
+                            g_xpom_EM_B0->SetPoint(n_g_xpom_em_b0++, xpom_truth_def, xpom_reco_def);
+                        }
+                        if (validEMX) {
+                            const double beta_reco = electron_x_EM / xpom_reco_def;
+                            if (beta_reco > 0.0 && beta_reco <= 1.0) {
+                                h_beta_reco_EM_B0->Fill(beta_reco);
+                                if (beta_truth_valid && beta_truth > 0.0 && beta_truth <= 1.0) {
+                                    g_beta_EM_B0->SetPoint(n_g_beta_em_b0++, beta_truth, beta_reco);
+                                }
+                            }
+                        }
+                        if (!xpom_reco_em_all_filled) {
+                            h_xpom_reco_EM_all->Fill(xpom_reco_def);
+                            xpom_reco_em_all_filled = true;
+                            if (validEMX) {
+                                const double beta_reco = electron_x_EM / xpom_reco_def;
+                                if (beta_reco > 0.0 && beta_reco <= 1.0) {
+                                    h_beta_reco_EM_all->Fill(beta_reco);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (!xpom_reco_da_b0_filled && xpom_denominator_DA > 0.0 && valid_MX2_reco && std::isfinite(t_reco_abs)) {
+                    const double xpom_reco_def = (electron_Q2_DA + MX2_reco + t_reco_abs) / xpom_denominator_DA;
+                    if (std::isfinite(xpom_reco_def) && xpom_reco_def > 0.0) {
+                        h_xpom_reco_DA_B0->Fill(xpom_reco_def);
+                        xpom_reco_da_b0_filled = true;
+                        if (xpom_truth_def > 0.0) {
+                            h_Response_xpom_DA_B0->Fill(xpom_truth_def, xpom_reco_def);
+                            g_xpom_DA_B0->SetPoint(n_g_xpom_da_b0++, xpom_truth_def, xpom_reco_def);
+                        }
+                        if (validDAX) {
+                            const double beta_reco = electron_x_DA / xpom_reco_def;
+                            if (beta_reco > 0.0 && beta_reco <= 1.0) {
+                                h_beta_reco_DA_B0->Fill(beta_reco);
+                                if (beta_truth_valid && beta_truth > 0.0 && beta_truth <= 1.0) {
+                                    g_beta_DA_B0->SetPoint(n_g_beta_da_b0++, beta_truth, beta_reco);
+                                }
+                            }
+                        }
+                        if (!xpom_reco_da_all_filled) {
+                            h_xpom_reco_DA_all->Fill(xpom_reco_def);
+                            xpom_reco_da_all_filled = true;
+                            if (validDAX) {
+                                const double beta_reco = electron_x_DA / xpom_reco_def;
+                                if (beta_reco > 0.0 && beta_reco <= 1.0) {
+                                    h_beta_reco_DA_all->Fill(beta_reco);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (!xpom_reco_sigma_b0_filled && xpom_denominator_Sigma > 0.0 && valid_MX2_reco && std::isfinite(t_reco_abs)) {
+                    const double xpom_reco_def = (electron_Q2_Sigma + MX2_reco + t_reco_abs) / xpom_denominator_Sigma;
+                    if (std::isfinite(xpom_reco_def) && xpom_reco_def > 0.0) {
+                        h_xpom_reco_Sigma_B0->Fill(xpom_reco_def);
+                        xpom_reco_sigma_b0_filled = true;
+                        if (xpom_truth_def > 0.0) {
+                            h_Response_xpom_Sigma_B0->Fill(xpom_truth_def, xpom_reco_def);
+                            g_xpom_Sigma_B0->SetPoint(n_g_xpom_sigma_b0++, xpom_truth_def, xpom_reco_def);
+                        }
+                        if (hasSigmaMethod && validSigmaX) {
+                            const double beta_reco = electron_x_Sigma / xpom_reco_def;
+                            if (beta_reco > 0.0 && beta_reco <= 1.0) {
+                                h_beta_reco_Sigma_B0->Fill(beta_reco);
+                                if (beta_truth_valid && beta_truth > 0.0 && beta_truth <= 1.0) {
+                                    g_beta_Sigma_B0->SetPoint(n_g_beta_sigma_b0++, beta_truth, beta_reco);
+                                }
+                            }
+                        }
+                        if (!xpom_reco_sigma_all_filled) {
+                            h_xpom_reco_Sigma_all->Fill(xpom_reco_def);
+                            xpom_reco_sigma_all_filled = true;
+                            if (hasSigmaMethod && validSigmaX) {
+                                const double beta_reco = electron_x_Sigma / xpom_reco_def;
+                                if (beta_reco > 0.0 && beta_reco <= 1.0) {
+                                    h_beta_reco_Sigma_all->Fill(beta_reco);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                const double xL_reco_pz = p_reco.Pz() / beams.p_beam.Pz();
+                const double xL_truth_pz = p_truth.Pz() / beams.p_beam.Pz();
+                if (std::isfinite(xL_reco_pz)) {
+                    h_xL_B0->Fill(xL_reco_pz);
+                }
+                if (std::isfinite(xL_truth_pz) && std::isfinite(xL_reco_pz)) {
+                    g_xL_B0->SetPoint(n_g_xL_B0++, xL_truth_pz, xL_reco_pz);
                 }
             }
         }
@@ -1065,6 +1525,138 @@ int main(int argc, char** argv) {
                             h_t_res_RP->Fill(rel);
                             h_t_RelRes_binned_RP->Fill(t_truth_abs, rel);
                         }
+                    }
+                    if (std::isfinite(t_reco_abs) && valid_MX2_reco) {
+                        h_MX2_t_RP->Fill(MX2_reco, t_reco_abs);
+                    }
+
+                    const bool xpom_truth_valid = (xpom_denominator_truth > 0.0 && valid_MX2_truth && std::isfinite(t_truth_abs));
+                    double xpom_truth_def = -1.0;
+                    if (xpom_truth_valid) {
+                        xpom_truth_def = (electron_Q2_truth + MX2_truth + t_truth_abs) / xpom_denominator_truth;
+                        if (!(std::isfinite(xpom_truth_def) && xpom_truth_def > 0.0)) {
+                            xpom_truth_def = -1.0;
+                        }
+                    }
+
+                    const bool beta_truth_valid = (validTruthX && xpom_truth_def > 0.0);
+                    const double beta_truth = beta_truth_valid ? (electron_x_truth / xpom_truth_def) : -1.0;
+
+                    if (!xpom_truth_rp_filled && xpom_truth_def > 0.0) {
+                        h_xpom_truth_RP->Fill(xpom_truth_def);
+                        if (beta_truth_valid && beta_truth > 0.0 && beta_truth <= 1.0) {
+                            h_beta_truth_RP->Fill(beta_truth);
+                        }
+                        xpom_truth_rp_filled = true;
+                    }
+                    if (!xpom_truth_all_filled && xpom_truth_def > 0.0) {
+                        h_xpom_truth_all->Fill(xpom_truth_def);
+                        if (beta_truth_valid && beta_truth > 0.0 && beta_truth <= 1.0) {
+                            h_beta_truth_all->Fill(beta_truth);
+                        }
+                        xpom_truth_all_filled = true;
+                    }
+
+                    if (!xpom_reco_em_rp_filled && xpom_denominator_EM > 0.0 && valid_MX2_reco && std::isfinite(t_reco_abs)) {
+                        const double xpom_reco_def = (electron_Q2_EM + MX2_reco + t_reco_abs) / xpom_denominator_EM;
+                        if (std::isfinite(xpom_reco_def) && xpom_reco_def > 0.0) {
+                            h_xpom_reco_EM_RP->Fill(xpom_reco_def);
+                            xpom_reco_em_rp_filled = true;
+                            if (xpom_truth_def > 0.0) {
+                                h_Response_xpom_EM_RP->Fill(xpom_truth_def, xpom_reco_def);
+                                g_xpom_EM_RP->SetPoint(n_g_xpom_em_rp++, xpom_truth_def, xpom_reco_def);
+                            }
+                            if (validEMX) {
+                                const double beta_reco = electron_x_EM / xpom_reco_def;
+                                if (beta_reco > 0.0 && beta_reco <= 1.0) {
+                                    h_beta_reco_EM_RP->Fill(beta_reco);
+                                    if (beta_truth_valid && beta_truth > 0.0 && beta_truth <= 1.0) {
+                                        g_beta_EM_RP->SetPoint(n_g_beta_em_rp++, beta_truth, beta_reco);
+                                    }
+                                }
+                            }
+                            if (!xpom_reco_em_all_filled) {
+                                h_xpom_reco_EM_all->Fill(xpom_reco_def);
+                                xpom_reco_em_all_filled = true;
+                                if (validEMX) {
+                                    const double beta_reco = electron_x_EM / xpom_reco_def;
+                                    if (beta_reco > 0.0 && beta_reco <= 1.0) {
+                                        h_beta_reco_EM_all->Fill(beta_reco);
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if (!xpom_reco_da_rp_filled && xpom_denominator_DA > 0.0 && valid_MX2_reco && std::isfinite(t_reco_abs)) {
+                        const double xpom_reco_def = (electron_Q2_DA + MX2_reco + t_reco_abs) / xpom_denominator_DA;
+                        if (std::isfinite(xpom_reco_def) && xpom_reco_def > 0.0) {
+                            h_xpom_reco_DA_RP->Fill(xpom_reco_def);
+                            xpom_reco_da_rp_filled = true;
+                            if (xpom_truth_def > 0.0) {
+                                h_Response_xpom_DA_RP->Fill(xpom_truth_def, xpom_reco_def);
+                                g_xpom_DA_RP->SetPoint(n_g_xpom_da_rp++, xpom_truth_def, xpom_reco_def);
+                            }
+                            if (validDAX) {
+                                const double beta_reco = electron_x_DA / xpom_reco_def;
+                                if (beta_reco > 0.0 && beta_reco <= 1.0) {
+                                    h_beta_reco_DA_RP->Fill(beta_reco);
+                                    if (beta_truth_valid && beta_truth > 0.0 && beta_truth <= 1.0) {
+                                        g_beta_DA_RP->SetPoint(n_g_beta_da_rp++, beta_truth, beta_reco);
+                                    }
+                                }
+                            }
+                            if (!xpom_reco_da_all_filled) {
+                                h_xpom_reco_DA_all->Fill(xpom_reco_def);
+                                xpom_reco_da_all_filled = true;
+                                if (validDAX) {
+                                    const double beta_reco = electron_x_DA / xpom_reco_def;
+                                    if (beta_reco > 0.0 && beta_reco <= 1.0) {
+                                        h_beta_reco_DA_all->Fill(beta_reco);
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if (!xpom_reco_sigma_rp_filled && xpom_denominator_Sigma > 0.0 && valid_MX2_reco && std::isfinite(t_reco_abs)) {
+                        const double xpom_reco_def = (electron_Q2_Sigma + MX2_reco + t_reco_abs) / xpom_denominator_Sigma;
+                        if (std::isfinite(xpom_reco_def) && xpom_reco_def > 0.0) {
+                            h_xpom_reco_Sigma_RP->Fill(xpom_reco_def);
+                            xpom_reco_sigma_rp_filled = true;
+                            if (xpom_truth_def > 0.0) {
+                                h_Response_xpom_Sigma_RP->Fill(xpom_truth_def, xpom_reco_def);
+                                g_xpom_Sigma_RP->SetPoint(n_g_xpom_sigma_rp++, xpom_truth_def, xpom_reco_def);
+                            }
+                            if (hasSigmaMethod && validSigmaX) {
+                                const double beta_reco = electron_x_Sigma / xpom_reco_def;
+                                if (beta_reco > 0.0 && beta_reco <= 1.0) {
+                                    h_beta_reco_Sigma_RP->Fill(beta_reco);
+                                    if (beta_truth_valid && beta_truth > 0.0 && beta_truth <= 1.0) {
+                                        g_beta_Sigma_RP->SetPoint(n_g_beta_sigma_rp++, beta_truth, beta_reco);
+                                    }
+                                }
+                            }
+                            if (!xpom_reco_sigma_all_filled) {
+                                h_xpom_reco_Sigma_all->Fill(xpom_reco_def);
+                                xpom_reco_sigma_all_filled = true;
+                                if (hasSigmaMethod && validSigmaX) {
+                                    const double beta_reco = electron_x_Sigma / xpom_reco_def;
+                                    if (beta_reco > 0.0 && beta_reco <= 1.0) {
+                                        h_beta_reco_Sigma_all->Fill(beta_reco);
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    const double xL_reco_pz = p_rp.Pz() / beams.p_beam.Pz();
+                    const double xL_truth_pz = best_match->Pz() / beams.p_beam.Pz();
+                    if (std::isfinite(xL_reco_pz)) {
+                        h_xL_RP->Fill(xL_reco_pz);
+                    }
+                    if (std::isfinite(xL_truth_pz) && std::isfinite(xL_reco_pz)) {
+                        g_xL_RP->SetPoint(n_g_xL_RP++, xL_truth_pz, xL_reco_pz);
                     }
                 }
             }
@@ -1174,6 +1766,8 @@ int main(int argc, char** argv) {
 
     // Write all histograms and TTree to the output file
     outputFile->cd();
+    TParameter<Long64_t> nEventsParam("nEventsProcessed", nProcessed);
+    nEventsParam.Write();
     tree->Write();
 
     // Write Q2/xy histograms
@@ -1202,6 +1796,7 @@ int main(int argc, char** argv) {
     h_RelRes_y_binned_EM->Write();
     h_RelRes_y_binned_DA->Write();
     h_RelRes_y_binned_Sigma->Write();
+    h_xQ2_truth->Write();
 
     // Write Q2 resolution profile histograms (binned in x, Q2)
     h_Q2_RelRes_vs_xy_EM->Write();
@@ -1251,6 +1846,71 @@ int main(int argc, char** argv) {
     h_t_corr_RP->Write();
     g_t_B0->Write();
     g_t_RP->Write();
+    h_xL_MC->Write();
+    h_xL_B0->Write();
+    h_xL_RP->Write();
+    g_xL_B0->Write();
+    g_xL_RP->Write();
+    h_xpom_truth_all->Write();
+    h_xpom_truth_B0->Write();
+    h_xpom_truth_RP->Write();
+    h_xpom_reco_EM_all->Write();
+    h_xpom_reco_DA_all->Write();
+    h_xpom_reco_Sigma_all->Write();
+    h_xpom_reco_EM_B0->Write();
+    h_xpom_reco_EM_RP->Write();
+    h_xpom_reco_DA_B0->Write();
+    h_xpom_reco_DA_RP->Write();
+    h_xpom_reco_Sigma_B0->Write();
+    h_xpom_reco_Sigma_RP->Write();
+    h_Response_xpom_EM_B0->Write();
+    h_Response_xpom_EM_RP->Write();
+    h_Response_xpom_DA_B0->Write();
+    h_Response_xpom_DA_RP->Write();
+    h_Response_xpom_Sigma_B0->Write();
+    h_Response_xpom_Sigma_RP->Write();
+    h_beta_truth_all->Write();
+    h_beta_truth_B0->Write();
+    h_beta_truth_RP->Write();
+    h_beta_reco_EM_all->Write();
+    h_beta_reco_DA_all->Write();
+    h_beta_reco_Sigma_all->Write();
+    h_beta_reco_EM_B0->Write();
+    h_beta_reco_EM_RP->Write();
+    h_beta_reco_DA_B0->Write();
+    h_beta_reco_DA_RP->Write();
+    h_beta_reco_Sigma_B0->Write();
+    h_beta_reco_Sigma_RP->Write();
+    h_beta_Q2_truth->Write();
+    h_t_Q2_truth->Write();
+    h_xpom_Q2_truth->Write();
+    h_beta_t_truth->Write();
+    h_xbj_t_truth->Write();
+    h_xpom_t_truth->Write();
+    h_xpom_beta_truth->Write();
+    h_xbj_beta_truth->Write();
+    h_xbj_xpom_truth->Write();
+    g_xpom_EM_B0->Write();
+    g_xpom_EM_RP->Write();
+    g_xpom_DA_B0->Write();
+    g_xpom_DA_RP->Write();
+    g_xpom_Sigma_B0->Write();
+    g_xpom_Sigma_RP->Write();
+    g_beta_EM_B0->Write();
+    g_beta_EM_RP->Write();
+    g_beta_DA_B0->Write();
+    g_beta_DA_RP->Write();
+    g_beta_Sigma_B0->Write();
+    g_beta_Sigma_RP->Write();
+    g_MX2->Write();
+
+    // Write diffractive M_X^2 histograms/correlations
+    h_MX2_truth->Write();
+    h_MX2_reco->Write();
+    h_MX2_corr->Write();
+    h_MX2_t_truth->Write();
+    h_MX2_t_B0->Write();
+    h_MX2_t_RP->Write();
 
     outputFile->Close();
     delete events;
