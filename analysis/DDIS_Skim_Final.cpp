@@ -556,6 +556,125 @@ int main(int argc, char** argv) {
     TH1D* h_beta_reco_Sigma_B0 = new TH1D("beta_reco_Sigma_B0", "Reco #beta #Sigma (B0);#beta;Counts", 50, 0.0, 1.0);
     TH1D* h_beta_reco_Sigma_RP = new TH1D("beta_reco_Sigma_RP", "Reco #beta #Sigma (RP);#beta;Counts", 50, 0.0, 1.0);
 
+    // --------------------------------------------------------
+    // Efficiency-correction inputs (MC subsample + pseudo-data)
+    // --------------------------------------------------------
+    TH1D* h_t_truth_mc = new TH1D("t_truth_mc", "Truth |t| (MC);|t| [GeV^{2}];Counts",
+                                 t_bins.size()-1, t_bins.data());
+    TH1D* h_t_reco_mc = new TH1D("t_reco_mc", "Reco |t| (MC);|t| [GeV^{2}];Counts",
+                                t_bins.size()-1, t_bins.data());
+    TH1D* h_t_reco_pdata = new TH1D("t_reco_pdata", "Reco |t| (Pseudo-data);|t| [GeV^{2}];Counts",
+                                   t_bins.size()-1, t_bins.data());
+
+    TH1D* h_beta_truth_mc = new TH1D("beta_truth_mc", "Truth #beta (MC);#beta;Counts", 50, 0.0, 1.0);
+    TH1D* h_beta_reco_mc = new TH1D("beta_reco_mc", "Reco #beta (MC);#beta;Counts", 50, 0.0, 1.0);
+    TH1D* h_beta_reco_pdata = new TH1D("beta_reco_pdata", "Reco #beta (Pseudo-data);#beta;Counts", 50, 0.0, 1.0);
+
+    TH1D* h_xpom_truth_mc = new TH1D("xpom_truth_mc", "Truth x_{pom} (MC);x_{pom};Counts",
+                                    xpom_bins.size()-1, xpom_bins.data());
+    TH1D* h_xpom_reco_mc = new TH1D("xpom_reco_mc", "Reco x_{pom} (MC);x_{pom};Counts",
+                                   xpom_bins.size()-1, xpom_bins.data());
+    TH1D* h_xpom_reco_pdata = new TH1D("xpom_reco_pdata", "Reco x_{pom} (Pseudo-data);x_{pom};Counts",
+                                      xpom_bins.size()-1, xpom_bins.data());
+
+    TH1D* h_Q2_truth_mc = new TH1D("Q2_truth_mc", "Truth Q^{2} (MC);Q^{2} [GeV^{2}];Counts",
+                                  n_bins, bin_edges_Q2.data());
+    TH1D* h_Q2_reco_mc = new TH1D("Q2_reco_mc", "Reco Q^{2} (MC);Q^{2} [GeV^{2}];Counts",
+                                 n_bins, bin_edges_Q2.data());
+    TH1D* h_Q2_reco_pdata = new TH1D("Q2_reco_pdata", "Reco Q^{2} (Pseudo-data);Q^{2} [GeV^{2}];Counts",
+                                    n_bins, bin_edges_Q2.data());
+    TH1D* h_Q2_truth_pdata = new TH1D("Q2_truth_pdata", "Truth Q^{2} (Pseudo-data);Q^{2} [GeV^{2}];Counts",
+                                     n_bins, bin_edges_Q2.data());
+
+    TH1D* h_MX2_truth_mc = new TH1D("MX2_truth_mc", "Truth M_{X}^{2} (MC);M_{X}^{2} [GeV^{2}];Counts",
+                                   mx2_bins.size() - 1, mx2_bins.data());
+    TH1D* h_MX2_reco_mc = new TH1D("MX2_reco_mc", "Reco M_{X}^{2} (MC);M_{X}^{2} [GeV^{2}];Counts",
+                                  mx2_bins.size() - 1, mx2_bins.data());
+    TH1D* h_MX2_reco_pdata = new TH1D("MX2_reco_pdata", "Reco M_{X}^{2} (Pseudo-data);M_{X}^{2} [GeV^{2}];Counts",
+                                     mx2_bins.size() - 1, mx2_bins.data());
+    TH1D* h_MX2_truth_pdata = new TH1D("MX2_truth_pdata", "Truth M_{X}^{2} (Pseudo-data);M_{X}^{2} [GeV^{2}];Counts",
+                                      mx2_bins.size() - 1, mx2_bins.data());
+
+    TH1D* h_x_truth_mc = new TH1D("x_truth_mc", "Truth x_{Bj} (MC);x_{Bj};Counts",
+                                 x_bins.size()-1, x_bins.data());
+    TH1D* h_x_reco_mc = new TH1D("x_reco_mc", "Reco x_{Bj} (MC);x_{Bj};Counts",
+                                x_bins.size()-1, x_bins.data());
+    TH1D* h_x_reco_pdata = new TH1D("x_reco_pdata", "Reco x_{Bj} (Pseudo-data);x_{Bj};Counts",
+                                   x_bins.size()-1, x_bins.data());
+    TH1D* h_x_truth_pdata = new TH1D("x_truth_pdata", "Truth x_{Bj} (Pseudo-data);x_{Bj};Counts",
+                                    x_bins.size()-1, x_bins.data());
+
+    TH1D* h_y_truth_mc = new TH1D("y_truth_mc", "Truth y (MC);y;Counts", n_y_bins, 0.0, 1.0);
+    TH1D* h_y_reco_mc = new TH1D("y_reco_mc", "Reco y (MC);y;Counts", n_y_bins, 0.0, 1.0);
+    TH1D* h_y_reco_pdata = new TH1D("y_reco_pdata", "Reco y (Pseudo-data);y;Counts", n_y_bins, 0.0, 1.0);
+    TH1D* h_y_truth_pdata = new TH1D("y_truth_pdata", "Truth y (Pseudo-data);y;Counts", n_y_bins, 0.0, 1.0);
+
+    TH1D* h_W2_truth_mc = new TH1D("W2_truth_mc", "Truth W^{2} (MC);W^{2} [GeV^{2}];Counts",
+                                  w2_bins.size()-1, w2_bins.data());
+    TH1D* h_W2_reco_mc = new TH1D("W2_reco_mc", "Reco W^{2} (MC);W^{2} [GeV^{2}];Counts",
+                                 w2_bins.size()-1, w2_bins.data());
+    TH1D* h_W2_reco_pdata = new TH1D("W2_reco_pdata", "Reco W^{2} (Pseudo-data);W^{2} [GeV^{2}];Counts",
+                                    w2_bins.size()-1, w2_bins.data());
+    TH1D* h_W2_truth_pdata = new TH1D("W2_truth_pdata", "Truth W^{2} (Pseudo-data);W^{2} [GeV^{2}];Counts",
+                                     w2_bins.size()-1, w2_bins.data());
+
+    TH1D* h_t_truth_mc_B0 = new TH1D("t_truth_mc_B0", "Truth |t| (MC, B0);|t| [GeV^{2}];Counts",
+                                    t_bins.size()-1, t_bins.data());
+    TH1D* h_t_reco_mc_B0 = new TH1D("t_reco_mc_B0", "Reco |t| (MC, B0);|t| [GeV^{2}];Counts",
+                                   t_bins.size()-1, t_bins.data());
+    TH1D* h_t_reco_pdata_B0 = new TH1D("t_reco_pdata_B0", "Reco |t| (Pseudo-data, B0);|t| [GeV^{2}];Counts",
+                                      t_bins.size()-1, t_bins.data());
+    TH1D* h_t_truth_pdata_B0 = new TH1D("t_truth_pdata_B0", "Truth |t| (Pseudo-data, B0);|t| [GeV^{2}];Counts",
+                                       t_bins.size()-1, t_bins.data());
+
+    TH1D* h_t_truth_mc_RP = new TH1D("t_truth_mc_RP", "Truth |t| (MC, RP);|t| [GeV^{2}];Counts",
+                                    t_bins.size()-1, t_bins.data());
+    TH1D* h_t_reco_mc_RP = new TH1D("t_reco_mc_RP", "Reco |t| (MC, RP);|t| [GeV^{2}];Counts",
+                                   t_bins.size()-1, t_bins.data());
+    TH1D* h_t_reco_pdata_RP = new TH1D("t_reco_pdata_RP", "Reco |t| (Pseudo-data, RP);|t| [GeV^{2}];Counts",
+                                      t_bins.size()-1, t_bins.data());
+    TH1D* h_t_truth_pdata_RP = new TH1D("t_truth_pdata_RP", "Truth |t| (Pseudo-data, RP);|t| [GeV^{2}];Counts",
+                                       t_bins.size()-1, t_bins.data());
+
+    TH1D* h_beta_truth_mc_B0 = new TH1D("beta_truth_mc_B0", "Truth #beta (MC, B0);#beta;Counts", 50, 0.0, 1.0);
+    TH1D* h_beta_reco_mc_B0 = new TH1D("beta_reco_mc_B0", "Reco #beta (MC, B0);#beta;Counts", 50, 0.0, 1.0);
+    TH1D* h_beta_reco_pdata_B0 = new TH1D("beta_reco_pdata_B0", "Reco #beta (Pseudo-data, B0);#beta;Counts", 50, 0.0, 1.0);
+    TH1D* h_beta_truth_pdata_B0 = new TH1D("beta_truth_pdata_B0", "Truth #beta (Pseudo-data, B0);#beta;Counts", 50, 0.0, 1.0);
+
+    TH1D* h_beta_truth_mc_RP = new TH1D("beta_truth_mc_RP", "Truth #beta (MC, RP);#beta;Counts", 50, 0.0, 1.0);
+    TH1D* h_beta_reco_mc_RP = new TH1D("beta_reco_mc_RP", "Reco #beta (MC, RP);#beta;Counts", 50, 0.0, 1.0);
+    TH1D* h_beta_reco_pdata_RP = new TH1D("beta_reco_pdata_RP", "Reco #beta (Pseudo-data, RP);#beta;Counts", 50, 0.0, 1.0);
+    TH1D* h_beta_truth_pdata_RP = new TH1D("beta_truth_pdata_RP", "Truth #beta (Pseudo-data, RP);#beta;Counts", 50, 0.0, 1.0);
+
+    TH1D* h_xpom_truth_mc_B0 = new TH1D("xpom_truth_mc_B0", "Truth x_{pom} (MC, B0);x_{pom};Counts",
+                                       xpom_bins.size()-1, xpom_bins.data());
+    TH1D* h_xpom_reco_mc_B0 = new TH1D("xpom_reco_mc_B0", "Reco x_{pom} (MC, B0);x_{pom};Counts",
+                                      xpom_bins.size()-1, xpom_bins.data());
+    TH1D* h_xpom_reco_pdata_B0 = new TH1D("xpom_reco_pdata_B0", "Reco x_{pom} (Pseudo-data, B0);x_{pom};Counts",
+                                         xpom_bins.size()-1, xpom_bins.data());
+    TH1D* h_xpom_truth_pdata_B0 = new TH1D("xpom_truth_pdata_B0", "Truth x_{pom} (Pseudo-data, B0);x_{pom};Counts",
+                                          xpom_bins.size()-1, xpom_bins.data());
+
+    TH1D* h_xpom_truth_mc_RP = new TH1D("xpom_truth_mc_RP", "Truth x_{pom} (MC, RP);x_{pom};Counts",
+                                       xpom_bins.size()-1, xpom_bins.data());
+    TH1D* h_xpom_reco_mc_RP = new TH1D("xpom_reco_mc_RP", "Reco x_{pom} (MC, RP);x_{pom};Counts",
+                                      xpom_bins.size()-1, xpom_bins.data());
+    TH1D* h_xpom_reco_pdata_RP = new TH1D("xpom_reco_pdata_RP", "Reco x_{pom} (Pseudo-data, RP);x_{pom};Counts",
+                                         xpom_bins.size()-1, xpom_bins.data());
+    TH1D* h_xpom_truth_pdata_RP = new TH1D("xpom_truth_pdata_RP", "Truth x_{pom} (Pseudo-data, RP);x_{pom};Counts",
+                                          xpom_bins.size()-1, xpom_bins.data());
+
+    TH1D* h_theta_truth_mc_B0 = new TH1D("theta_truth_mc_B0", "Truth #theta (MC, B0);#theta [mrad];Counts", 100, 0.0, 25.0);
+    TH1D* h_theta_reco_mc_B0 = new TH1D("theta_reco_mc_B0", "Reco #theta (MC, B0);#theta [mrad];Counts", 100, 0.0, 25.0);
+    TH1D* h_theta_reco_pdata_B0 = new TH1D("theta_reco_pdata_B0", "Reco #theta (Pseudo-data, B0);#theta [mrad];Counts", 100, 0.0, 25.0);
+    TH1D* h_theta_truth_pdata_B0 = new TH1D("theta_truth_pdata_B0", "Truth #theta (Pseudo-data, B0);#theta [mrad];Counts", 100, 0.0, 25.0);
+
+    TH1D* h_theta_truth_mc_RP = new TH1D("theta_truth_mc_RP", "Truth #theta (MC, RP);#theta [mrad];Counts", 100, 0.0, 25.0);
+    TH1D* h_theta_reco_mc_RP = new TH1D("theta_reco_mc_RP", "Reco #theta (MC, RP);#theta [mrad];Counts", 100, 0.0, 25.0);
+    TH1D* h_theta_reco_pdata_RP = new TH1D("theta_reco_pdata_RP", "Reco #theta (Pseudo-data, RP);#theta [mrad];Counts", 100, 0.0, 25.0);
+    TH1D* h_theta_truth_pdata_RP = new TH1D("theta_truth_pdata_RP", "Truth #theta (Pseudo-data, RP);#theta [mrad];Counts", 100, 0.0, 25.0);
+    TH1D* h_theta_truth_pdata_all = new TH1D("theta_truth_pdata_all", "Truth #theta (Pseudo-data);#theta [mrad];Counts", 100, 0.0, 25.0);
+
     // Phase-space density plots (truth, unbinned-style)
     const int n_beta_bins_density = 120;
     const int n_xpom_bins_density = 120;
@@ -846,6 +965,7 @@ int main(int argc, char** argv) {
         }
         if (!tree_reader.Next()) break;
         nProcessed++;
+        const bool is_mc_subsample = ((i % 2) == 0);
 
         float electron_Q2_EM = GetArrayValue(kin_Q2_EM);
         float electron_x_EM = GetArrayValue(kin_x_EM);
@@ -1261,6 +1381,8 @@ int main(int argc, char** argv) {
         bool has_truth_lead = false;
         double lead_truth_pz = -1.0;
         P3MVector lead_truth(0.0, 0.0, 0.0, 0.0);
+        bool has_reco_proton = false;
+        double t_reco_best = -1.0;
         std::vector<P3MVector> truth_protons;
         truth_protons.reserve(4);
         for (int j = 0; j < mc_px_array.GetSize(); j++) {
@@ -1283,6 +1405,9 @@ int main(int argc, char** argv) {
                 }
             }
             h_theta_MC->Fill(p.Theta() * 1000.0);
+            if (!is_mc_subsample) {
+                h_theta_truth_pdata_all->Fill(p.Theta() * 1000.0);
+            }
 
             const double xL_pz = p.Pz() / beams.p_beam.Pz();
             if (std::isfinite(xL_pz)) {
@@ -1338,6 +1463,43 @@ int main(int argc, char** argv) {
             h_xbj_xpom_truth->Fill(electron_x_truth, xpom_truth_best);
         }
 
+        if (has_truth_lead) {
+            const double lead_theta = lead_truth.Theta();
+            const double lead_theta_mrad = lead_theta * 1000.0;
+            const bool truth_in_b0 = (lead_theta > 0.0055 && lead_theta < 0.02);
+            const bool truth_in_rp = (lead_theta_mrad > 0.0 && lead_theta_mrad <= 5.0);
+
+            if (is_mc_subsample) {
+                if (truth_in_b0) {
+                    if (t_truth_best > 0.0) h_t_truth_mc_B0->Fill(t_truth_best);
+                    if (xpom_truth_best > 0.0) h_xpom_truth_mc_B0->Fill(xpom_truth_best);
+                    if (beta_truth_best > 0.0) h_beta_truth_mc_B0->Fill(beta_truth_best);
+                    h_theta_truth_mc_B0->Fill(lead_theta_mrad);
+                }
+
+                if (truth_in_rp) {
+                    if (t_truth_best > 0.0) h_t_truth_mc_RP->Fill(t_truth_best);
+                    if (xpom_truth_best > 0.0) h_xpom_truth_mc_RP->Fill(xpom_truth_best);
+                    if (beta_truth_best > 0.0) h_beta_truth_mc_RP->Fill(beta_truth_best);
+                    h_theta_truth_mc_RP->Fill(lead_theta_mrad);
+                }
+            } else {
+                if (truth_in_b0) {
+                    if (t_truth_best > 0.0) h_t_truth_pdata_B0->Fill(t_truth_best);
+                    if (xpom_truth_best > 0.0) h_xpom_truth_pdata_B0->Fill(xpom_truth_best);
+                    if (beta_truth_best > 0.0) h_beta_truth_pdata_B0->Fill(beta_truth_best);
+                    h_theta_truth_pdata_B0->Fill(lead_theta_mrad);
+                }
+
+                if (truth_in_rp) {
+                    if (t_truth_best > 0.0) h_t_truth_pdata_RP->Fill(t_truth_best);
+                    if (xpom_truth_best > 0.0) h_xpom_truth_pdata_RP->Fill(xpom_truth_best);
+                    if (beta_truth_best > 0.0) h_beta_truth_pdata_RP->Fill(beta_truth_best);
+                    h_theta_truth_pdata_RP->Fill(lead_theta_mrad);
+                }
+            }
+        }
+
         if (hasTSProtons && tsassoc_rec_id && tsassoc_sim_id && tsre_px_array && tsre_py_array && tsre_pz_array) {
             for (unsigned int j = 0; j < tsassoc_rec_id->GetSize(); j++) {
                 auto mc_idx = (*tsassoc_sim_id)[j];
@@ -1348,7 +1510,8 @@ int main(int argc, char** argv) {
                 undoAfterburn(p_reco);
 
                 if (p_reco.Theta() <= 0.0055 || p_reco.Theta() >= 0.02) continue;
-                h_theta_B0->Fill(p_reco.Theta() * 1000.0);
+                const double theta_reco_mrad = p_reco.Theta() * 1000.0;
+                h_theta_B0->Fill(theta_reco_mrad);
 
                 P3MVector p_truth(mc_px_array[mc_idx], mc_py_array[mc_idx], mc_pz_array[mc_idx], mc_mass_array[mc_idx]);
                 undoAfterburn(p_truth);
@@ -1358,6 +1521,15 @@ int main(int argc, char** argv) {
                 if (std::isfinite(t_reco_abs)) {
                     h_t_B0->Fill(t_reco_abs);
                     h_dsigma_dt_B0->Fill(t_reco_abs);
+                    if (!has_reco_proton) {
+                        t_reco_best = t_reco_abs;
+                        has_reco_proton = true;
+                    }
+                }
+                if (is_mc_subsample) {
+                    if (std::isfinite(t_reco_abs)) h_t_reco_mc_B0->Fill(t_reco_abs);
+                } else {
+                    if (std::isfinite(t_reco_abs)) h_t_reco_pdata_B0->Fill(t_reco_abs);
                 }
                 if (std::isfinite(t_truth_abs) && std::isfinite(t_reco_abs)) {
                     h_t_corr_B0->Fill(t_truth_abs, t_reco_abs);
@@ -1415,6 +1587,23 @@ int main(int argc, char** argv) {
                                 if (beta_truth_valid && beta_truth > 0.0 && beta_truth <= 1.0) {
                                     g_beta_EM_B0->SetPoint(n_g_beta_em_b0++, beta_truth, beta_reco);
                                     h_Response_beta_EM_B0->Fill(beta_truth, beta_reco);
+                                }
+                            }
+                        }
+                        if (is_mc_subsample) {
+                            h_xpom_reco_mc_B0->Fill(xpom_reco_def);
+                            if (validEMX) {
+                                const double beta_reco = electron_x_EM / xpom_reco_def;
+                                if (beta_reco > 0.0 && beta_reco <= 1.0) {
+                                    h_beta_reco_mc_B0->Fill(beta_reco);
+                                }
+                            }
+                        } else {
+                            h_xpom_reco_pdata_B0->Fill(xpom_reco_def);
+                            if (validEMX) {
+                                const double beta_reco = electron_x_EM / xpom_reco_def;
+                                if (beta_reco > 0.0 && beta_reco <= 1.0) {
+                                    h_beta_reco_pdata_B0->Fill(beta_reco);
                                 }
                             }
                         }
@@ -1503,6 +1692,11 @@ int main(int argc, char** argv) {
                 if (std::isfinite(xL_truth_pz) && std::isfinite(xL_reco_pz)) {
                     g_xL_B0->SetPoint(n_g_xL_B0++, xL_truth_pz, xL_reco_pz);
                 }
+                if (is_mc_subsample) {
+                    h_theta_reco_mc_B0->Fill(theta_reco_mrad);
+                } else {
+                    h_theta_reco_pdata_B0->Fill(theta_reco_mrad);
+                }
             }
         }
 
@@ -1533,6 +1727,15 @@ int main(int argc, char** argv) {
                     if (std::isfinite(t_reco_abs)) {
                         h_t_RP_histo->Fill(t_reco_abs);
                         h_dsigma_dt_RP->Fill(t_reco_abs);
+                        if (!has_reco_proton) {
+                            t_reco_best = t_reco_abs;
+                            has_reco_proton = true;
+                        }
+                    }
+                    if (is_mc_subsample) {
+                        if (std::isfinite(t_reco_abs)) h_t_reco_mc_RP->Fill(t_reco_abs);
+                    } else {
+                        if (std::isfinite(t_reco_abs)) h_t_reco_pdata_RP->Fill(t_reco_abs);
                     }
                     if (std::isfinite(t_truth_abs) && std::isfinite(t_reco_abs)) {
                         h_t_corr_RP->Fill(t_truth_abs, t_reco_abs);
@@ -1590,6 +1793,23 @@ int main(int argc, char** argv) {
                                     if (beta_truth_valid && beta_truth > 0.0 && beta_truth <= 1.0) {
                                         g_beta_EM_RP->SetPoint(n_g_beta_em_rp++, beta_truth, beta_reco);
                                         h_Response_beta_EM_RP->Fill(beta_truth, beta_reco);
+                                    }
+                                }
+                            }
+                            if (is_mc_subsample) {
+                                h_xpom_reco_mc_RP->Fill(xpom_reco_def);
+                                if (validEMX) {
+                                    const double beta_reco = electron_x_EM / xpom_reco_def;
+                                    if (beta_reco > 0.0 && beta_reco <= 1.0) {
+                                        h_beta_reco_mc_RP->Fill(beta_reco);
+                                    }
+                                }
+                            } else {
+                                h_xpom_reco_pdata_RP->Fill(xpom_reco_def);
+                                if (validEMX) {
+                                    const double beta_reco = electron_x_EM / xpom_reco_def;
+                                    if (beta_reco > 0.0 && beta_reco <= 1.0) {
+                                        h_beta_reco_pdata_RP->Fill(beta_reco);
                                     }
                                 }
                             }
@@ -1678,8 +1898,63 @@ int main(int argc, char** argv) {
                     if (std::isfinite(xL_truth_pz) && std::isfinite(xL_reco_pz)) {
                         g_xL_RP->SetPoint(n_g_xL_RP++, xL_truth_pz, xL_reco_pz);
                     }
+                    if (theta_mrad <= 5.0) {
+                        if (is_mc_subsample) {
+                            h_theta_reco_mc_RP->Fill(theta_mrad);
+                        } else {
+                            h_theta_reco_pdata_RP->Fill(theta_mrad);
+                        }
+                    }
                 }
             }
+        }
+
+        double xpom_reco_best = -1.0;
+        if (has_reco_proton && xpom_denominator_EM > 0.0 && valid_MX2_reco && std::isfinite(t_reco_best)) {
+            xpom_reco_best = (electron_Q2_EM + MX2_reco + t_reco_best) / xpom_denominator_EM;
+            if (!(std::isfinite(xpom_reco_best) && xpom_reco_best > 0.0)) {
+                xpom_reco_best = -1.0;
+            }
+        }
+        double beta_reco_best = -1.0;
+        if (validEMX && xpom_reco_best > 0.0) {
+            beta_reco_best = electron_x_EM / xpom_reco_best;
+            if (!(std::isfinite(beta_reco_best) && beta_reco_best > 0.0 && beta_reco_best <= 1.0)) {
+                beta_reco_best = -1.0;
+            }
+        }
+
+        if (is_mc_subsample) {
+            if (validTruthQ2) h_Q2_truth_mc->Fill(electron_Q2_truth);
+            if (validEMQ2) h_Q2_reco_mc->Fill(electron_Q2_EM);
+            if (validTruthX) h_x_truth_mc->Fill(electron_x_truth);
+            if (validEMX) h_x_reco_mc->Fill(electron_x_EM);
+            if (validTruthY) h_y_truth_mc->Fill(electron_y_truth);
+            if (validEMY) h_y_reco_mc->Fill(electron_y_EM);
+            if (valid_MX2_truth) h_MX2_truth_mc->Fill(MX2_truth);
+            if (valid_MX2_reco) h_MX2_reco_mc->Fill(MX2_reco);
+            if (t_truth_best > 0.0) h_t_truth_mc->Fill(t_truth_best);
+            if (t_reco_best > 0.0) h_t_reco_mc->Fill(t_reco_best);
+            if (xpom_truth_best > 0.0) h_xpom_truth_mc->Fill(xpom_truth_best);
+            if (xpom_reco_best > 0.0) h_xpom_reco_mc->Fill(xpom_reco_best);
+            if (beta_truth_best > 0.0) h_beta_truth_mc->Fill(beta_truth_best);
+            if (beta_reco_best > 0.0) h_beta_reco_mc->Fill(beta_reco_best);
+            if (validWTruth) h_W2_truth_mc->Fill(W2_truth);
+            if (validWEM) h_W2_reco_mc->Fill(W2_EM);
+        } else {
+            if (validEMQ2) h_Q2_reco_pdata->Fill(electron_Q2_EM);
+            if (validEMX) h_x_reco_pdata->Fill(electron_x_EM);
+            if (validEMY) h_y_reco_pdata->Fill(electron_y_EM);
+            if (valid_MX2_reco) h_MX2_reco_pdata->Fill(MX2_reco);
+            if (t_reco_best > 0.0) h_t_reco_pdata->Fill(t_reco_best);
+            if (xpom_reco_best > 0.0) h_xpom_reco_pdata->Fill(xpom_reco_best);
+            if (beta_reco_best > 0.0) h_beta_reco_pdata->Fill(beta_reco_best);
+            if (validWEM) h_W2_reco_pdata->Fill(W2_EM);
+            if (validTruthQ2) h_Q2_truth_pdata->Fill(electron_Q2_truth);
+            if (validTruthX) h_x_truth_pdata->Fill(electron_x_truth);
+            if (validTruthY) h_y_truth_pdata->Fill(electron_y_truth);
+            if (valid_MX2_truth) h_MX2_truth_pdata->Fill(MX2_truth);
+            if (validWTruth) h_W2_truth_pdata->Fill(W2_truth);
         }
 
     }
@@ -1907,6 +2182,68 @@ int main(int argc, char** argv) {
     h_beta_reco_DA_RP->Write();
     h_beta_reco_Sigma_B0->Write();
     h_beta_reco_Sigma_RP->Write();
+    h_t_truth_mc->Write();
+    h_t_reco_mc->Write();
+    h_t_reco_pdata->Write();
+    h_beta_truth_mc->Write();
+    h_beta_reco_mc->Write();
+    h_beta_reco_pdata->Write();
+    h_xpom_truth_mc->Write();
+    h_xpom_reco_mc->Write();
+    h_xpom_reco_pdata->Write();
+    h_Q2_truth_mc->Write();
+    h_Q2_reco_mc->Write();
+    h_Q2_reco_pdata->Write();
+    h_Q2_truth_pdata->Write();
+    h_MX2_truth_mc->Write();
+    h_MX2_reco_mc->Write();
+    h_MX2_reco_pdata->Write();
+    h_MX2_truth_pdata->Write();
+    h_x_truth_mc->Write();
+    h_x_reco_mc->Write();
+    h_x_reco_pdata->Write();
+    h_x_truth_pdata->Write();
+    h_y_truth_mc->Write();
+    h_y_reco_mc->Write();
+    h_y_reco_pdata->Write();
+    h_y_truth_pdata->Write();
+    h_W2_truth_mc->Write();
+    h_W2_reco_mc->Write();
+    h_W2_reco_pdata->Write();
+    h_W2_truth_pdata->Write();
+    h_t_truth_mc_B0->Write();
+    h_t_reco_mc_B0->Write();
+    h_t_reco_pdata_B0->Write();
+    h_t_truth_pdata_B0->Write();
+    h_t_truth_mc_RP->Write();
+    h_t_reco_mc_RP->Write();
+    h_t_reco_pdata_RP->Write();
+    h_t_truth_pdata_RP->Write();
+    h_beta_truth_mc_B0->Write();
+    h_beta_reco_mc_B0->Write();
+    h_beta_reco_pdata_B0->Write();
+    h_beta_truth_pdata_B0->Write();
+    h_beta_truth_mc_RP->Write();
+    h_beta_reco_mc_RP->Write();
+    h_beta_reco_pdata_RP->Write();
+    h_beta_truth_pdata_RP->Write();
+    h_xpom_truth_mc_B0->Write();
+    h_xpom_reco_mc_B0->Write();
+    h_xpom_reco_pdata_B0->Write();
+    h_xpom_truth_pdata_B0->Write();
+    h_xpom_truth_mc_RP->Write();
+    h_xpom_reco_mc_RP->Write();
+    h_xpom_reco_pdata_RP->Write();
+    h_xpom_truth_pdata_RP->Write();
+    h_theta_truth_mc_B0->Write();
+    h_theta_reco_mc_B0->Write();
+    h_theta_reco_pdata_B0->Write();
+    h_theta_truth_pdata_B0->Write();
+    h_theta_truth_mc_RP->Write();
+    h_theta_reco_mc_RP->Write();
+    h_theta_reco_pdata_RP->Write();
+    h_theta_truth_pdata_RP->Write();
+    h_theta_truth_pdata_all->Write();
     h_beta_Q2_truth->Write();
     h_t_Q2_truth->Write();
     h_xpom_Q2_truth->Write();

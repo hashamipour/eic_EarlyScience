@@ -9,6 +9,7 @@
 #include <TSystem.h>
 #include <TROOT.h>
 #include <TCanvas.h>
+#include <TLegend.h>
 #include <TLatex.h>
 #include <TTree.h>
 #include <TH2.h>
@@ -18,6 +19,8 @@
 #include <iostream>
 #include <fstream>
 #include <iomanip>
+#include <algorithm>
+#include <limits>
 #include <vector>
 #include <string>
 
@@ -170,6 +173,327 @@ static void PlotDensityFromHist(TFile* inputFile,
     delete c;
 }
 
+static void PlotEfficiencyCorrectedComparison(TFile* inputFile,
+                                              const char* effTruthHistName,
+                                              const char* recoHistName,
+                                              const char* pseudoHistName,
+                                              const char* plotTruthHistName,
+                                              const char* xLabel,
+                                              const char* title,
+                                              const char* saveName,
+                                              const bool logX,
+                                              const char* recoMethodLabel) {
+    if (!inputFile) return;
+    TH1* h_truth = (TH1*)inputFile->Get(effTruthHistName);
+    TH1* h_reco  = (TH1*)inputFile->Get(recoHistName);
+    TH1* h_pdata = (TH1*)inputFile->Get(pseudoHistName);
+    if (!h_truth || !h_reco || !h_pdata) {
+        std::cerr << "Warning: Missing hist(s) for efficiency correction: "
+                  << effTruthHistName << ", " << recoHistName << ", " << pseudoHistName << std::endl;
+        return;
+    }
+
+    TH1D* h_eff = (TH1D*)h_reco->Clone(Form("eff_%s", recoHistName));
+    h_eff->SetDirectory(nullptr);
+    h_eff->Divide(h_reco, h_truth, 1.0, 1.0, "B");
+
+    TH1D* h_truth_plot = nullptr;
+    if (plotTruthHistName && plotTruthHistName[0] != '\0') {
+        TH1* h_truth_overlay = (TH1*)inputFile->Get(plotTruthHistName);
+        if (!h_truth_overlay) {
+            std::cerr << "Warning: Truth overlay histogram " << plotTruthHistName
+                      << " not found; using efficiency truth." << std::endl;
+        } else {
+            h_truth_plot = (TH1D*)h_truth_overlay->Clone(Form("truth_overlay_%s", plotTruthHistName));
+            h_truth_plot->SetDirectory(nullptr);
+        }
+    }
+    if (!h_truth_plot) {
+        h_truth_plot = (TH1D*)h_truth->Clone(Form("truth_overlay_%s", effTruthHistName));
+        h_truth_plot->SetDirectory(nullptr);
+    }
+
+    TH1D* h_corr = (TH1D*)h_pdata->Clone(Form("corr_%s", pseudoHistName));
+    h_corr->SetDirectory(nullptr);
+    const int nbins = h_corr->GetNbinsX();
+    for (int i = 1; i <= nbins; ++i) {
+        const double eff = h_eff->GetBinContent(i);
+        const double pdata = h_pdata->GetBinContent(i);
+        const double pdata_err = h_pdata->GetBinError(i);
+        if (eff > 0.0) {
+            h_corr->SetBinContent(i, pdata / eff);
+            h_corr->SetBinError(i, pdata_err / eff);
+        } else {
+            h_corr->SetBinContent(i, 0.0);
+            h_corr->SetBinError(i, 0.0);
+        }
+    }
+
+    TCanvas* c = new TCanvas(Form("c_eff_%s", pseudoHistName), title, 1200, 900);
+    gStyle->SetOptStat(0);
+    if (logX) c->SetLogx();
+
+    h_pdata->SetStats(false);
+    h_pdata->SetTitle(title);
+    h_pdata->GetXaxis()->SetTitle(xLabel);
+    h_pdata->GetYaxis()->SetTitle("Counts");
+    h_pdata->GetXaxis()->SetTitleOffset(1.1);
+    h_pdata->GetYaxis()->SetTitleOffset(1.2);
+
+    h_pdata->SetMarkerStyle(24);
+    h_pdata->SetMarkerSize(1.1);
+    h_pdata->SetMarkerColor(kBlack);
+    h_pdata->SetLineColor(kBlack);
+
+    h_corr->SetMarkerStyle(20);
+    h_corr->SetMarkerSize(1.1);
+    h_corr->SetMarkerColor(kBlack);
+    h_corr->SetLineColor(kBlack);
+
+    double max_val = 0.0;
+    for (int i = 1; i <= h_pdata->GetNbinsX(); ++i) {
+        max_val = std::max(max_val, h_pdata->GetBinContent(i) + h_pdata->GetBinError(i));
+        max_val = std::max(max_val, h_corr->GetBinContent(i) + h_corr->GetBinError(i));
+        max_val = std::max(max_val, h_truth->GetBinContent(i));
+    }
+    if (max_val > 0.0) {
+        h_pdata->SetMaximum(max_val * 1.25);
+        h_pdata->SetMinimum(0.0);
+    }
+
+    h_truth_plot->SetLineColor(kRed+1);
+    h_truth_plot->SetLineWidth(2);
+    h_truth_plot->SetMarkerStyle(0);
+
+    h_pdata->Draw("PE");
+    h_truth_plot->Draw("HIST SAME");
+    h_corr->Draw("PE SAME");
+
+    TLegend* legend = new TLegend(0.6, 0.75, 0.88, 0.9);
+    legend->SetBorderSize(0);
+    legend->SetFillStyle(0);
+    legend->AddEntry(h_truth_plot, "Truth (Pseudo-data)", "l");
+    legend->AddEntry(h_pdata, Form("Reco (%s) uncorrected", recoMethodLabel), "p");
+    legend->AddEntry(h_corr, Form("Reco (%s) corrected", recoMethodLabel), "p");
+    legend->Draw();
+
+    TLatex latex;
+    latex.SetTextSize(0.04);
+    latex.SetNDC();
+    latex.SetTextColor(kBlack);
+    const std::string simLabel = BuildSimLabel(inputFile);
+    latex.DrawLatex(0.2, 0.92, simLabel.c_str());
+    latex.DrawLatex(0.65, 0.92, "#bf{Diff. DIS} 10x100 GeV");
+
+    c->Update();
+    SaveCanvas(c, saveName);
+    delete c;
+    delete h_eff;
+    delete h_corr;
+    delete h_truth_plot;
+}
+
+static void PlotEfficiencyCorrectedComparisonBR(TFile* inputFile,
+                                                const char* effTruthHistNameB0,
+                                                const char* recoHistNameB0,
+                                                const char* pseudoHistNameB0,
+                                                const char* effTruthHistNameRP,
+                                                const char* recoHistNameRP,
+                                                const char* pseudoHistNameRP,
+                                                const char* plotTruthHistNameB0,
+                                                const char* plotTruthHistNameRP,
+                                                const char* truthOverlayHistName,
+                                                const char* xLabel,
+                                                const char* title,
+                                                const char* saveName,
+                                                const bool logX,
+                                                const bool logY,
+                                                const char* recoMethodLabel) {
+    if (!inputFile) return;
+    TH1* h_truth_b0 = (TH1*)inputFile->Get(effTruthHistNameB0);
+    TH1* h_reco_b0 = (TH1*)inputFile->Get(recoHistNameB0);
+    TH1* h_pdata_b0 = (TH1*)inputFile->Get(pseudoHistNameB0);
+    TH1* h_truth_rp = (TH1*)inputFile->Get(effTruthHistNameRP);
+    TH1* h_reco_rp = (TH1*)inputFile->Get(recoHistNameRP);
+    TH1* h_pdata_rp = (TH1*)inputFile->Get(pseudoHistNameRP);
+
+    if (!h_truth_b0 || !h_reco_b0 || !h_pdata_b0 ||
+        !h_truth_rp || !h_reco_rp || !h_pdata_rp) {
+        std::cerr << "Warning: Missing hist(s) for B0/RP efficiency correction: "
+                  << effTruthHistNameB0 << ", "
+                  << recoHistNameB0 << ", " << pseudoHistNameB0 << ", "
+                  << effTruthHistNameRP << ", " << recoHistNameRP << ", "
+                  << pseudoHistNameRP << std::endl;
+        return;
+    }
+
+    TH1D* h_truth_plot = nullptr;
+    if (truthOverlayHistName && truthOverlayHistName[0] != '\0') {
+        TH1* h_truth_overlay = (TH1*)inputFile->Get(truthOverlayHistName);
+        if (!h_truth_overlay) {
+            std::cerr << "Warning: Truth overlay histogram " << truthOverlayHistName
+                      << " not found; falling back to pseudo-data truth sum." << std::endl;
+        } else {
+            h_truth_plot = (TH1D*)h_truth_overlay->Clone(Form("truth_overlay_%s", truthOverlayHistName));
+            h_truth_plot->SetDirectory(nullptr);
+        }
+    }
+    if (!h_truth_plot) {
+        TH1* h_plot_truth_b0 = (TH1*)inputFile->Get(plotTruthHistNameB0);
+        TH1* h_plot_truth_rp = (TH1*)inputFile->Get(plotTruthHistNameRP);
+        if (!h_plot_truth_b0 || !h_plot_truth_rp) {
+            std::cerr << "Warning: Missing plot-truth hist(s) for B0/RP overlay: "
+                      << plotTruthHistNameB0 << ", " << plotTruthHistNameRP
+                      << "; using efficiency truth sum." << std::endl;
+            h_truth_plot = (TH1D*)h_truth_b0->Clone(Form("truth_sum_%s", effTruthHistNameB0));
+            h_truth_plot->SetDirectory(nullptr);
+            h_truth_plot->Add(h_truth_rp);
+        } else {
+            h_truth_plot = (TH1D*)h_plot_truth_b0->Clone(Form("truth_sum_%s", plotTruthHistNameB0));
+            h_truth_plot->SetDirectory(nullptr);
+            h_truth_plot->Add(h_plot_truth_rp);
+        }
+    }
+
+    TH1D* h_eff_b0 = (TH1D*)h_reco_b0->Clone(Form("eff_%s", recoHistNameB0));
+    h_eff_b0->SetDirectory(nullptr);
+    h_eff_b0->Divide(h_reco_b0, h_truth_b0, 1.0, 1.0, "B");
+
+    TH1D* h_eff_rp = (TH1D*)h_reco_rp->Clone(Form("eff_%s", recoHistNameRP));
+    h_eff_rp->SetDirectory(nullptr);
+    h_eff_rp->Divide(h_reco_rp, h_truth_rp, 1.0, 1.0, "B");
+
+    TH1D* h_corr_b0 = (TH1D*)h_pdata_b0->Clone(Form("corr_%s", pseudoHistNameB0));
+    h_corr_b0->SetDirectory(nullptr);
+    TH1D* h_corr_rp = (TH1D*)h_pdata_rp->Clone(Form("corr_%s", pseudoHistNameRP));
+    h_corr_rp->SetDirectory(nullptr);
+
+    const int nbins = h_corr_b0->GetNbinsX();
+    for (int i = 1; i <= nbins; ++i) {
+        const double eff_b0 = h_eff_b0->GetBinContent(i);
+        const double eff_rp = h_eff_rp->GetBinContent(i);
+        const double pdata_b0 = h_pdata_b0->GetBinContent(i);
+        const double pdata_rp = h_pdata_rp->GetBinContent(i);
+        const double pdata_b0_err = h_pdata_b0->GetBinError(i);
+        const double pdata_rp_err = h_pdata_rp->GetBinError(i);
+
+        if (eff_b0 > 0.0) {
+            h_corr_b0->SetBinContent(i, pdata_b0 / eff_b0);
+            h_corr_b0->SetBinError(i, pdata_b0_err / eff_b0);
+        } else {
+            h_corr_b0->SetBinContent(i, 0.0);
+            h_corr_b0->SetBinError(i, 0.0);
+        }
+
+        if (eff_rp > 0.0) {
+            h_corr_rp->SetBinContent(i, pdata_rp / eff_rp);
+            h_corr_rp->SetBinError(i, pdata_rp_err / eff_rp);
+        } else {
+            h_corr_rp->SetBinContent(i, 0.0);
+            h_corr_rp->SetBinError(i, 0.0);
+        }
+    }
+
+    TCanvas* c = new TCanvas(Form("c_eff_%s", recoHistNameB0), title, 1200, 900);
+    gStyle->SetOptStat(0);
+    if (logX) c->SetLogx();
+    if (logY) c->SetLogy();
+
+    h_pdata_b0->SetStats(false);
+    h_pdata_b0->SetTitle(title);
+    h_pdata_b0->GetXaxis()->SetTitle(xLabel);
+    h_pdata_b0->GetYaxis()->SetTitle("Counts");
+    h_pdata_b0->GetXaxis()->SetTitleOffset(1.1);
+    h_pdata_b0->GetYaxis()->SetTitleOffset(1.2);
+
+    const int color_b0 = kRed + 1;
+    const int color_rp = kBlue + 1;
+
+    h_pdata_b0->SetMarkerStyle(24);
+    h_pdata_b0->SetMarkerSize(1.0);
+    h_pdata_b0->SetMarkerColor(color_b0);
+    h_pdata_b0->SetLineColor(color_b0);
+
+    h_corr_b0->SetMarkerStyle(20);
+    h_corr_b0->SetMarkerSize(1.0);
+    h_corr_b0->SetMarkerColor(color_b0);
+    h_corr_b0->SetLineColor(color_b0);
+
+    h_pdata_rp->SetMarkerStyle(24);
+    h_pdata_rp->SetMarkerSize(1.0);
+    h_pdata_rp->SetMarkerColor(color_rp);
+    h_pdata_rp->SetLineColor(color_rp);
+
+    h_corr_rp->SetMarkerStyle(20);
+    h_corr_rp->SetMarkerSize(1.0);
+    h_corr_rp->SetMarkerColor(color_rp);
+    h_corr_rp->SetLineColor(color_rp);
+
+    h_truth_plot->SetLineColor(kBlack);
+    h_truth_plot->SetLineWidth(2);
+    h_truth_plot->SetMarkerStyle(0);
+
+    double max_val = 0.0;
+    double min_pos = std::numeric_limits<double>::max();
+    for (int i = 1; i <= h_pdata_b0->GetNbinsX(); ++i) {
+        const double vals[] = {
+            h_pdata_b0->GetBinContent(i), h_corr_b0->GetBinContent(i),
+            h_pdata_rp->GetBinContent(i), h_corr_rp->GetBinContent(i),
+            h_truth_plot->GetBinContent(i)
+        };
+        max_val = std::max(max_val, h_pdata_b0->GetBinContent(i) + h_pdata_b0->GetBinError(i));
+        max_val = std::max(max_val, h_corr_b0->GetBinContent(i) + h_corr_b0->GetBinError(i));
+        max_val = std::max(max_val, h_pdata_rp->GetBinContent(i) + h_pdata_rp->GetBinError(i));
+        max_val = std::max(max_val, h_corr_rp->GetBinContent(i) + h_corr_rp->GetBinError(i));
+        max_val = std::max(max_val, h_truth_plot->GetBinContent(i));
+        for (double v : vals) {
+            if (v > 0.0 && v < min_pos) min_pos = v;
+        }
+    }
+    if (max_val > 0.0) {
+        h_pdata_b0->SetMaximum(max_val * 1.25);
+        if (logY) {
+            const double min_y = (min_pos < std::numeric_limits<double>::max()) ? (min_pos * 0.5) : 1e-6;
+            h_pdata_b0->SetMinimum(std::max(min_y, 1e-6));
+        } else {
+            h_pdata_b0->SetMinimum(0.0);
+        }
+    }
+
+    h_pdata_b0->Draw("PE");
+    h_truth_plot->Draw("HIST SAME");
+    h_corr_b0->Draw("PE SAME");
+    h_pdata_rp->Draw("PE SAME");
+    h_corr_rp->Draw("PE SAME");
+
+    TLegend* legend = new TLegend(0.55, 0.65, 0.9, 0.9);
+    legend->SetBorderSize(0);
+    legend->SetFillStyle(0);
+    legend->AddEntry(h_truth_plot, "Truth (Pseudo-data)", "l");
+    legend->AddEntry(h_pdata_b0, Form("B0 (%s) uncorrected", recoMethodLabel), "p");
+    legend->AddEntry(h_corr_b0, Form("B0 (%s) corrected", recoMethodLabel), "p");
+    legend->AddEntry(h_pdata_rp, Form("RP (%s) uncorrected", recoMethodLabel), "p");
+    legend->AddEntry(h_corr_rp, Form("RP (%s) corrected", recoMethodLabel), "p");
+    legend->Draw();
+
+    TLatex latex;
+    latex.SetTextSize(0.04);
+    latex.SetNDC();
+    latex.SetTextColor(kBlack);
+    const std::string simLabel = BuildSimLabel(inputFile);
+    latex.DrawLatex(0.2, 0.92, simLabel.c_str());
+    latex.DrawLatex(0.65, 0.92, "#bf{Diff. DIS} 10x100 GeV");
+
+    c->Update();
+    SaveCanvas(c, saveName);
+    delete c;
+    delete h_eff_b0;
+    delete h_eff_rp;
+    delete h_corr_b0;
+    delete h_corr_rp;
+    delete h_truth_plot;
+}
+
 int main(int argc, char** argv) {
     if (argc < 2) {
         std::cerr << "Usage: " << argv[0] << " <combined.root>" << std::endl;
@@ -216,11 +540,13 @@ int main(int argc, char** argv) {
     gSystem->mkdir("figs/inclusive/resolution", kTRUE);
     gSystem->mkdir("figs/inclusive/resolution/profile", kTRUE);
     gSystem->mkdir("figs/inclusive/response", kTRUE);
+    gSystem->mkdir("figs/inclusive/efficiency", kTRUE);
     gSystem->mkdir("figs/diffractive", kTRUE);
     gSystem->mkdir("figs/diffractive/histos", kTRUE);
     gSystem->mkdir("figs/diffractive/resolution", kTRUE);
     gSystem->mkdir("figs/diffractive/resolution/profile", kTRUE);
     gSystem->mkdir("figs/diffractive/response", kTRUE);
+    gSystem->mkdir("figs/diffractive/efficiency", kTRUE);
 
     // Acceptance/purity plots (if tracking histograms exist)
     TH1D* h_gen_Q2 = (TH1D*)inputFile->Get("h_gen_Q2");
@@ -232,6 +558,121 @@ int main(int argc, char** argv) {
     TH1D* h_reco_Q2_Sigma = (TH1D*)inputFile->Get("h_reco_Q2_Sigma");
 
     PlotXQ2Density(inputFile);
+    PlotEfficiencyCorrectedComparisonBR(inputFile,
+                                        "t_truth_mc_B0",
+                                        "t_reco_mc_B0",
+                                        "t_reco_pdata_B0",
+                                        "t_truth_mc_RP",
+                                        "t_reco_mc_RP",
+                                        "t_reco_pdata_RP",
+                                        "t_truth_pdata_B0",
+                                        "t_truth_pdata_RP",
+                                        "",
+                                        "|t| [GeV^{2}]",
+                                        "|t| Efficiency Correction",
+                                        "figs/diffractive/efficiency/t_effcorr.png",
+                                        true,
+                                        false,
+                                        "Proton");
+    PlotEfficiencyCorrectedComparisonBR(inputFile,
+                                        "beta_truth_mc_B0",
+                                        "beta_reco_mc_B0",
+                                        "beta_reco_pdata_B0",
+                                        "beta_truth_mc_RP",
+                                        "beta_reco_mc_RP",
+                                        "beta_reco_pdata_RP",
+                                        "beta_truth_pdata_B0",
+                                        "beta_truth_pdata_RP",
+                                        "",
+                                        "#beta",
+                                        "#beta Efficiency Correction (EM)",
+                                        "figs/diffractive/efficiency/beta_effcorr.png",
+                                        false,
+                                        false,
+                                        "EM");
+    PlotEfficiencyCorrectedComparisonBR(inputFile,
+                                        "xpom_truth_mc_B0",
+                                        "xpom_reco_mc_B0",
+                                        "xpom_reco_pdata_B0",
+                                        "xpom_truth_mc_RP",
+                                        "xpom_reco_mc_RP",
+                                        "xpom_reco_pdata_RP",
+                                        "xpom_truth_pdata_B0",
+                                        "xpom_truth_pdata_RP",
+                                        "",
+                                        "x_{pom}",
+                                        "x_{pom} Efficiency Correction (EM)",
+                                        "figs/diffractive/efficiency/xpom_effcorr.png",
+                                        true,
+                                        false,
+                                        "EM");
+    PlotEfficiencyCorrectedComparisonBR(inputFile,
+                                        "theta_truth_mc_B0",
+                                        "theta_reco_mc_B0",
+                                        "theta_reco_pdata_B0",
+                                        "theta_truth_mc_RP",
+                                        "theta_reco_mc_RP",
+                                        "theta_reco_pdata_RP",
+                                        "theta_truth_pdata_B0",
+                                        "theta_truth_pdata_RP",
+                                        "theta_truth_pdata_all",
+                                        "#theta [mrad]",
+                                        "#theta Efficiency Correction",
+                                        "figs/diffractive/efficiency/theta_effcorr.png",
+                                        false,
+                                        true,
+                                        "Proton");
+
+    PlotEfficiencyCorrectedComparison(inputFile,
+                                      "Q2_truth_mc",
+                                      "Q2_reco_mc",
+                                      "Q2_reco_pdata",
+                                      "Q2_truth_pdata",
+                                      "Q^{2} [GeV^{2}]",
+                                      "Q^{2} Efficiency Correction (EM)",
+                                      "figs/inclusive/efficiency/q2_effcorr.png",
+                                      true,
+                                      "EM");
+    PlotEfficiencyCorrectedComparison(inputFile,
+                                      "x_truth_mc",
+                                      "x_reco_mc",
+                                      "x_reco_pdata",
+                                      "x_truth_pdata",
+                                      "x_{Bj}",
+                                      "x_{Bj} Efficiency Correction (EM)",
+                                      "figs/inclusive/efficiency/xbj_effcorr.png",
+                                      true,
+                                      "EM");
+    PlotEfficiencyCorrectedComparison(inputFile,
+                                      "y_truth_mc",
+                                      "y_reco_mc",
+                                      "y_reco_pdata",
+                                      "y_truth_pdata",
+                                      "y",
+                                      "y Efficiency Correction (EM)",
+                                      "figs/inclusive/efficiency/y_effcorr.png",
+                                      false,
+                                      "EM");
+    PlotEfficiencyCorrectedComparison(inputFile,
+                                      "W2_truth_mc",
+                                      "W2_reco_mc",
+                                      "W2_reco_pdata",
+                                      "W2_truth_pdata",
+                                      "W^{2} [GeV^{2}]",
+                                      "W^{2} Efficiency Correction (EM)",
+                                      "figs/inclusive/efficiency/w2_effcorr.png",
+                                      true,
+                                      "EM");
+    PlotEfficiencyCorrectedComparison(inputFile,
+                                      "MX2_truth_mc",
+                                      "MX2_reco_mc",
+                                      "MX2_reco_pdata",
+                                      "MX2_truth_pdata",
+                                      "M_{X}^{2} [GeV^{2}]",
+                                      "M_{X}^{2} Efficiency Correction",
+                                      "figs/diffractive/efficiency/mx2_effcorr.png",
+                                      true,
+                                      "Hadrons");
     PlotDensityFromHist(inputFile, "beta_Q2_truth", "#beta", "Q^{2} [GeV^{2}]",
                         "figs/diffractive/histos/beta_q2_density.png", false, true);
     PlotDensityFromHist(inputFile, "t_Q2_truth", "|t| [GeV^{2}]", "Q^{2} [GeV^{2}]",
