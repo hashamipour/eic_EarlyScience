@@ -24,6 +24,7 @@ add_library(eicplot STATIC
     plotting/PlotOptionsCombinedCorrelation.cpp
     plotting/PlotOptionsRelRes.cpp
     plotting/PlotOptionsResponseMatrix.cpp
+    plotting/PlotOptions2D.cpp
 
     utility/Utility.cpp
     utility/RecoMethods.cpp

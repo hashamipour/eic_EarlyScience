@@ -13,14 +13,20 @@
 #include <TLatex.h>
 #include <TTree.h>
 #include <TH2.h>
+#include <TH3.h>
 #include <TMath.h>
 #include <TString.h>
+#include <TLine.h>
+#include <TColor.h>
 
 #include <iostream>
 #include <fstream>
 #include <iomanip>
+#include <sstream>
 #include <algorithm>
 #include <limits>
+#include <cstring>
+#include <cmath>
 #include <vector>
 #include <string>
 
@@ -32,10 +38,15 @@ static void PlotXQ2Density(TFile* inputFile) {
         return;
     }
 
-    if (!tree->GetBranch("x_truth") || !tree->GetBranch("Q2_truth")) {
-        TH2D* h_existing = (TH2D*)inputFile->Get("xQ2_truth");
+    const bool hasRecoBranches = tree->GetBranch("x_EM") && tree->GetBranch("Q2_EM");
+    const bool hasTruthBranches = tree->GetBranch("x_truth") && tree->GetBranch("Q2_truth");
+    if (!hasRecoBranches && !hasTruthBranches) {
+        TH2D* h_existing = (TH2D*)inputFile->Get("xQ2_reco");
         if (!h_existing) {
-            std::cerr << "Warning: Missing branches x_truth/Q2_truth and no xQ2_truth histogram found; "
+            h_existing = (TH2D*)inputFile->Get("xQ2_truth");
+        }
+        if (!h_existing) {
+            std::cerr << "Warning: Missing branches x_EM/Q2_EM and x_truth/Q2_truth and no xQ2_reco/xQ2_truth histogram found; "
                          "skipping x-Q2 density plot." << std::endl;
             return;
         }
@@ -68,15 +79,19 @@ static void PlotXQ2Density(TFile* inputFile) {
         SaveCanvas(c, "figs/inclusive/histos/xbj_q2_density.png");
         delete c;
 
-        std::cerr << "Note: Q2_tree lacks Q2_truth; using stored xQ2_truth histogram from skim output. "
-                     "Re-skim with Q2_truth in the tree for finer/unbinned x-Q2 plotting." << std::endl;
+        std::cerr << "Note: Q2_tree lacks reco/truth branches; using stored xQ2 histogram from skim output." << std::endl;
         return;
     }
 
-    float x_truth = -999.0f;
-    float Q2_truth = -999.0f;
-    tree->SetBranchAddress("x_truth", &x_truth);
-    tree->SetBranchAddress("Q2_truth", &Q2_truth);
+    float x_val = -999.0f;
+    float Q2_val = -999.0f;
+    if (hasRecoBranches) {
+        tree->SetBranchAddress("x_EM", &x_val);
+        tree->SetBranchAddress("Q2_EM", &Q2_val);
+    } else {
+        tree->SetBranchAddress("x_truth", &x_val);
+        tree->SetBranchAddress("Q2_truth", &Q2_val);
+    }
 
     const int n_x_bins = 120;
     const int n_q2_bins = 120;
@@ -93,9 +108,9 @@ static void PlotXQ2Density(TFile* inputFile) {
     const Long64_t nEntries = tree->GetEntries();
     for (Long64_t i = 0; i < nEntries; ++i) {
         tree->GetEntry(i);
-        if (std::isfinite(x_truth) && x_truth > 0.0f && x_truth < 1.0f &&
-            std::isfinite(Q2_truth) && Q2_truth > 0.0f) {
-            h->Fill(x_truth, Q2_truth);
+        if (std::isfinite(x_val) && x_val > 0.0f && x_val < 1.0f &&
+            std::isfinite(Q2_val) && Q2_val > 0.0f) {
+            h->Fill(x_val, Q2_val);
         }
     }
 
@@ -140,8 +155,19 @@ static void PlotDensityFromHist(TFile* inputFile,
     if (!inputFile) return;
     TH2* h = (TH2*)inputFile->Get(histName);
     if (!h) {
-        std::cerr << "Warning: Histogram " << histName << " not found; skipping density plot." << std::endl;
-        return;
+        if (strstr(histName, "_reco") != nullptr) {
+            std::string fallback = histName;
+            fallback.replace(fallback.find("_reco"), 5, "_truth");
+            h = (TH2*)inputFile->Get(fallback.c_str());
+            if (h) {
+                std::cerr << "Warning: Histogram " << histName << " not found; using " << fallback << " instead."
+                          << std::endl;
+            }
+        }
+        if (!h) {
+            std::cerr << "Warning: Histogram " << histName << " not found; skipping density plot." << std::endl;
+            return;
+        }
     }
 
     TCanvas* c = new TCanvas(Form("c_%s", histName), histName, 1200, 1000);
@@ -171,6 +197,265 @@ static void PlotDensityFromHist(TFile* inputFile,
     c->Update();
     SaveCanvas(c, saveName);
     delete c;
+}
+
+static std::vector<double> BuildLogEdges(double minVal, double maxVal, int nSlices) {
+    std::vector<double> edges;
+    if (nSlices <= 0 || minVal <= 0.0 || maxVal <= 0.0 || maxVal <= minVal) {
+        return edges;
+    }
+    edges.reserve(nSlices + 1);
+    const double logMin = TMath::Log10(minVal);
+    const double logMax = TMath::Log10(maxVal);
+    const double step = (logMax - logMin) / nSlices;
+    for (int i = 0; i <= nSlices; ++i) {
+        edges.push_back(TMath::Power(10.0, logMin + step * i));
+    }
+    return edges;
+}
+
+static std::vector<double> BuildLinEdges(double minVal, double maxVal, int nSlices) {
+    std::vector<double> edges;
+    if (nSlices <= 0 || maxVal <= minVal) {
+        return edges;
+    }
+    edges.reserve(nSlices + 1);
+    const double step = (maxVal - minVal) / nSlices;
+    for (int i = 0; i <= nSlices; ++i) {
+        edges.push_back(minVal + step * i);
+    }
+    return edges;
+}
+
+static std::string FormatRange(double lo, double hi) {
+    auto fmt = [](double v) {
+        std::ostringstream oss;
+        if (v >= 0.01 && v < 1000.0) {
+            oss << std::fixed << std::setprecision(2) << v;
+        } else {
+            oss << std::scientific << std::setprecision(2) << v;
+        }
+        return oss.str();
+    };
+    std::ostringstream out;
+    out << "[" << fmt(lo) << ", " << fmt(hi) << "]";
+    return out.str();
+}
+
+static void SetGreenYellowRedPalette() {
+    const Int_t nRGBs = 4;
+    const Int_t nCont = 256;
+    Double_t stops[nRGBs] = {0.0, 0.5, 0.75, 1.0};
+    Double_t red[nRGBs]   = {0.18, 0.98, 0.98, 0.90};
+    Double_t green[nRGBs] = {0.68, 0.90, 0.60, 0.20};
+    Double_t blue[nRGBs]  = {0.38, 0.20, 0.20, 0.20};
+    TColor::CreateGradientColorTable(nRGBs, stops, red, green, blue, nCont);
+    gStyle->SetNumberContours(nCont);
+}
+
+// Adapted from analysis/Plot_BinningScheme_WithCounts.cpp
+static void DrawBinningGridWithCounts(TH2D* hist,
+                                      const std::vector<double>& xbins,
+                                      const std::vector<double>& ybins,
+                                      bool logX,
+                                      bool logY) {
+    if (!hist || xbins.size() < 2 || ybins.size() < 2) return;
+
+    const double xmin = hist->GetXaxis()->GetXmin();
+    const double xmax = hist->GetXaxis()->GetXmax();
+    const double ymin = hist->GetYaxis()->GetXmin();
+    const double ymax = hist->GetYaxis()->GetXmax();
+
+    const int lineColor = kRed;
+    const int lineWidth = 2;
+    const int lineStyle = 1;
+
+    for (double xval : xbins) {
+        if (xval <= 0.0) continue;
+        if (xval < xmin || xval > xmax) continue;
+        TLine* line = new TLine(xval, ymin, xval, ymax);
+        line->SetLineColor(lineColor);
+        line->SetLineWidth(lineWidth);
+        line->SetLineStyle(lineStyle);
+        line->Draw("same");
+    }
+
+    for (double yval : ybins) {
+        if (yval <= 0.0) continue;
+        if (yval < ymin || yval > ymax) continue;
+        TLine* line = new TLine(xmin, yval, xmax, yval);
+        line->SetLineColor(lineColor);
+        line->SetLineWidth(lineWidth);
+        line->SetLineStyle(lineStyle);
+        line->Draw("same");
+    }
+
+    TLatex latex;
+    latex.SetTextColor(kBlack);
+    latex.SetTextSize(0.022);
+    latex.SetTextAlign(22);
+    latex.SetTextFont(42);
+
+    const double tiny = 1e-12;
+    for (size_t ix = 0; ix + 1 < xbins.size(); ++ix) {
+        const double xlow = xbins[ix];
+        const double xhigh = xbins[ix + 1];
+        if (xhigh <= xmin || xlow >= xmax) continue;
+        const double xlo = std::max(xlow, xmin);
+        const double xhi = std::min(xhigh, xmax);
+        const double xcenter = logX ? std::sqrt(xlo * xhi) : 0.5 * (xlo + xhi);
+        const int binxlow = hist->GetXaxis()->FindBin(xlo + tiny);
+        const int binxhigh = hist->GetXaxis()->FindBin(xhi - tiny);
+
+        for (size_t iy = 0; iy + 1 < ybins.size(); ++iy) {
+            const double ylow = ybins[iy];
+            const double yhigh = ybins[iy + 1];
+            if (yhigh <= ymin || ylow >= ymax) continue;
+            const double ylo = std::max(ylow, ymin);
+            const double yhi = std::min(yhigh, ymax);
+            const double ycenter = logY ? std::sqrt(ylo * yhi) : 0.5 * (ylo + yhi);
+            const int binylow = hist->GetYaxis()->FindBin(ylo + tiny);
+            const int binyhigh = hist->GetYaxis()->FindBin(yhi - tiny);
+
+            const double count = hist->Integral(binxlow, binxhigh, binylow, binyhigh);
+            if (count > 0.0) {
+                latex.DrawLatex(xcenter, ycenter, Form("%d", (int)std::lround(count)));
+            }
+        }
+    }
+}
+
+static void DrawSliceGrid(TH3D* h3,
+                          int sliceAxis,
+                          const std::vector<double>& edges,
+                          const char* projOpt,
+                          const char* xTitle,
+                          const char* yTitle,
+                          const char* sliceLabel,
+                          const char* saveName,
+                          bool logX,
+                          bool logY,
+                          const std::vector<double>* overlayXBins = nullptr,
+                          const std::vector<double>* overlayYBins = nullptr,
+                          bool overlayLogX = false,
+                          bool overlayLogY = false) {
+    if (!h3 || edges.size() < 2) return;
+    const int nSlices = static_cast<int>(edges.size()) - 1;
+    const int nCols = 2;
+    const int nRows = (nSlices + nCols - 1) / nCols;
+
+    TCanvas* c = new TCanvas(Form("c_phase_slices_%d", sliceAxis), saveName, 1200, 1000);
+    c->Divide(nCols, nRows, 0.002, 0.002);
+
+    TAxis* axis = nullptr;
+    if (sliceAxis == 1) axis = h3->GetXaxis();
+    if (sliceAxis == 2) axis = h3->GetYaxis();
+    if (sliceAxis == 3) axis = h3->GetZaxis();
+    if (!axis) {
+        delete c;
+        return;
+    }
+
+    std::vector<TH2D*> projections;
+    projections.reserve(nSlices);
+
+    for (int i = 0; i < nSlices; ++i) {
+        const double lo = edges[i];
+        const double hi = edges[i + 1];
+        const double tiny = 1e-12;
+        const int binLo = axis->FindBin(lo + tiny);
+        const int binHi = axis->FindBin(hi - tiny);
+        axis->SetRange(binLo, binHi);
+
+        TH2D* h2raw = (TH2D*)h3->Project3D(projOpt);
+        if (!h2raw) continue;
+        TH2D* h2 = (TH2D*)h2raw->Clone(Form("slice_%s_%d", projOpt, i));
+        h2->SetDirectory(nullptr);
+        delete h2raw;
+        h2->SetTitle("");
+        h2->GetXaxis()->SetTitle(xTitle);
+        h2->GetYaxis()->SetTitle(yTitle);
+        h2->GetXaxis()->SetTitleOffset(1.1);
+        h2->GetYaxis()->SetTitleOffset(1.2);
+        if (strcmp(xTitle, "#beta") == 0) {
+            h2->GetXaxis()->SetRangeUser(0.0, 1.0);
+        }
+        if (strcmp(yTitle, "#beta") == 0) {
+            h2->GetYaxis()->SetRangeUser(0.0, 1.0);
+        }
+
+        TPad* pad = (TPad*)c->cd(i + 1);
+        pad->SetRightMargin(0.14);
+        pad->SetLeftMargin(0.14);
+        pad->SetTopMargin(0.12);
+        pad->SetBottomMargin(0.12);
+        if (logX) pad->SetLogx();
+        if (logY) pad->SetLogy();
+        h2->Draw("COLZ");
+
+        if (overlayXBins && overlayYBins) {
+            DrawBinningGridWithCounts(h2, *overlayXBins, *overlayYBins, overlayLogX, overlayLogY);
+        }
+
+        TLatex latex;
+        latex.SetTextSize(0.06);
+        latex.SetNDC();
+        latex.SetTextColor(kBlack);
+        const std::string label = std::string(sliceLabel) + " " + FormatRange(lo, hi);
+        latex.DrawLatex(0.15, 0.88, label.c_str());
+        projections.push_back(h2);
+    }
+
+    axis->SetRange(0, 0);
+    c->Update();
+    SaveCanvas(c, saveName);
+    for (TH2D* proj : projections) {
+        delete proj;
+    }
+    delete c;
+}
+
+static void PlotPhaseSpaceSlices(TFile* inputFile) {
+    if (!inputFile) return;
+    TH3D* h3 = (TH3D*)inputFile->Get("phase3D_reco");
+    if (!h3) {
+        std::cerr << "Warning: phase3D_reco not found; skipping phase-space slices." << std::endl;
+        return;
+    }
+
+    const int nSlices = 4;
+    std::vector<double> q2_edges = BuildLogEdges(h3->GetXaxis()->GetXmin(), h3->GetXaxis()->GetXmax(), nSlices);
+    std::vector<double> xpom_edges = BuildLogEdges(h3->GetYaxis()->GetXmin(), h3->GetYaxis()->GetXmax(), nSlices);
+    std::vector<double> beta_edges = BuildLinEdges(h3->GetZaxis()->GetXmin(), h3->GetZaxis()->GetXmax(), nSlices);
+
+    // Editable bin edges for (x_pom, Q^2) overlays in beta slices
+    // Modify these vectors to move/add/remove bins; counts update on recompile+plot.
+    const int n_xpom_bins_overlay = 4;
+    const int n_q2_bins_overlay = 10;
+    std::vector<double> xpom_overlay_bins = BuildLogEdges(h3->GetYaxis()->GetXmin(),
+                                                         h3->GetYaxis()->GetXmax(),
+                                                         n_xpom_bins_overlay);
+    std::vector<double> q2_overlay_bins = BuildLogEdges(h3->GetXaxis()->GetXmin(),
+                                                       h3->GetXaxis()->GetXmax(),
+                                                       n_q2_bins_overlay);
+
+    DrawSliceGrid(h3, 1, q2_edges,
+                  "yz",
+                  "x_{pom}", "#beta", "Q^{2} [GeV^{2}]",
+                  "figs/diffractive/histos/phase_slices_q2.png",
+                  true, false);
+    DrawSliceGrid(h3, 2, xpom_edges,
+                  "xz",
+                  "#beta", "Q^{2} [GeV^{2}]", "x_{pom}",
+                  "figs/diffractive/histos/phase_slices_xpom.png",
+                  false, true);
+    DrawSliceGrid(h3, 3, beta_edges,
+                  "xy",
+                  "x_{pom}", "Q^{2} [GeV^{2}]", "#beta",
+                  "figs/diffractive/histos/phase_slices_beta.png",
+                  true, true,
+                  &xpom_overlay_bins, &q2_overlay_bins,
+                  true, true);
 }
 
 static void PlotEfficiencyCorrectedComparison(TFile* inputFile,
@@ -308,7 +593,8 @@ static void PlotEfficiencyCorrectedComparisonBR(TFile* inputFile,
                                                 const char* saveName,
                                                 const bool logX,
                                                 const bool logY,
-                                                const char* recoMethodLabel) {
+                                                const char* recoMethodLabel,
+                                                const bool includeSum) {
     if (!inputFile) return;
     TH1* h_truth_b0 = (TH1*)inputFile->Get(effTruthHistNameB0);
     TH1* h_reco_b0 = (TH1*)inputFile->Get(recoHistNameB0);
@@ -394,6 +680,17 @@ static void PlotEfficiencyCorrectedComparisonBR(TFile* inputFile,
         }
     }
 
+    TH1D* h_sum_uncorr = nullptr;
+    TH1D* h_sum_corr = nullptr;
+    if (includeSum) {
+        h_sum_uncorr = (TH1D*)h_pdata_b0->Clone(Form("sum_uncorr_%s", pseudoHistNameB0));
+        h_sum_uncorr->SetDirectory(nullptr);
+        h_sum_uncorr->Add(h_pdata_rp);
+        h_sum_corr = (TH1D*)h_corr_b0->Clone(Form("sum_corr_%s", pseudoHistNameB0));
+        h_sum_corr->SetDirectory(nullptr);
+        h_sum_corr->Add(h_corr_rp);
+    }
+
     TCanvas* c = new TCanvas(Form("c_eff_%s", recoHistNameB0), title, 1200, 900);
     gStyle->SetOptStat(0);
     if (logX) c->SetLogx();
@@ -429,6 +726,18 @@ static void PlotEfficiencyCorrectedComparisonBR(TFile* inputFile,
     h_corr_rp->SetMarkerColor(color_rp);
     h_corr_rp->SetLineColor(color_rp);
 
+    if (includeSum) {
+        h_sum_uncorr->SetMarkerStyle(25);
+        h_sum_uncorr->SetMarkerSize(1.0);
+        h_sum_uncorr->SetMarkerColor(kGreen + 2);
+        h_sum_uncorr->SetLineColor(kGreen + 2);
+
+        h_sum_corr->SetMarkerStyle(21);
+        h_sum_corr->SetMarkerSize(1.0);
+        h_sum_corr->SetMarkerColor(kGreen + 2);
+        h_sum_corr->SetLineColor(kGreen + 2);
+    }
+
     h_truth_plot->SetLineColor(kBlack);
     h_truth_plot->SetLineWidth(2);
     h_truth_plot->SetMarkerStyle(0);
@@ -445,9 +754,19 @@ static void PlotEfficiencyCorrectedComparisonBR(TFile* inputFile,
         max_val = std::max(max_val, h_corr_b0->GetBinContent(i) + h_corr_b0->GetBinError(i));
         max_val = std::max(max_val, h_pdata_rp->GetBinContent(i) + h_pdata_rp->GetBinError(i));
         max_val = std::max(max_val, h_corr_rp->GetBinContent(i) + h_corr_rp->GetBinError(i));
+        if (includeSum) {
+            max_val = std::max(max_val, h_sum_uncorr->GetBinContent(i) + h_sum_uncorr->GetBinError(i));
+            max_val = std::max(max_val, h_sum_corr->GetBinContent(i) + h_sum_corr->GetBinError(i));
+        }
         max_val = std::max(max_val, h_truth_plot->GetBinContent(i));
         for (double v : vals) {
             if (v > 0.0 && v < min_pos) min_pos = v;
+        }
+        if (includeSum) {
+            const double sum_vals[] = {h_sum_uncorr->GetBinContent(i), h_sum_corr->GetBinContent(i)};
+            for (double v : sum_vals) {
+                if (v > 0.0 && v < min_pos) min_pos = v;
+            }
         }
     }
     if (max_val > 0.0) {
@@ -465,8 +784,16 @@ static void PlotEfficiencyCorrectedComparisonBR(TFile* inputFile,
     h_corr_b0->Draw("PE SAME");
     h_pdata_rp->Draw("PE SAME");
     h_corr_rp->Draw("PE SAME");
+    if (includeSum) {
+        h_sum_uncorr->Draw("PE SAME");
+        h_sum_corr->Draw("PE SAME");
+    }
 
-    TLegend* legend = new TLegend(0.55, 0.65, 0.9, 0.9);
+    const bool legend_top_left = (strstr(saveName, "xpom_effcorr") != nullptr) ||
+                                 (strstr(saveName, "t_effcorr") != nullptr);
+    TLegend* legend = legend_top_left
+        ? new TLegend(0.15, 0.7, 0.45, 0.9)
+        : new TLegend(0.55, 0.65, 0.9, 0.9);
     legend->SetBorderSize(0);
     legend->SetFillStyle(0);
     legend->AddEntry(h_truth_plot, "Truth (Pseudo-data)", "l");
@@ -474,6 +801,10 @@ static void PlotEfficiencyCorrectedComparisonBR(TFile* inputFile,
     legend->AddEntry(h_corr_b0, Form("B0 (%s) corrected", recoMethodLabel), "p");
     legend->AddEntry(h_pdata_rp, Form("RP (%s) uncorrected", recoMethodLabel), "p");
     legend->AddEntry(h_corr_rp, Form("RP (%s) corrected", recoMethodLabel), "p");
+    if (includeSum) {
+        legend->AddEntry(h_sum_uncorr, Form("B0+RP (%s) uncorrected", recoMethodLabel), "p");
+        legend->AddEntry(h_sum_corr, Form("B0+RP (%s) corrected", recoMethodLabel), "p");
+    }
     legend->Draw();
 
     TLatex latex;
@@ -492,6 +823,8 @@ static void PlotEfficiencyCorrectedComparisonBR(TFile* inputFile,
     delete h_corr_b0;
     delete h_corr_rp;
     delete h_truth_plot;
+    delete h_sum_uncorr;
+    delete h_sum_corr;
 }
 
 int main(int argc, char** argv) {
@@ -514,6 +847,7 @@ int main(int argc, char** argv) {
     gStyle->SetPadGridX(1);
     gStyle->SetPadGridY(1);
     gStyle->SetOptFit(111);
+    SetGreenYellowRedPalette();
 
     TFile* inputFile = TFile::Open(inputFileName);
     if (!inputFile || inputFile->IsZombie()) {
@@ -567,13 +901,14 @@ int main(int argc, char** argv) {
                                         "t_reco_pdata_RP",
                                         "t_truth_pdata_B0",
                                         "t_truth_pdata_RP",
-                                        "",
+                                        "t_truth_pdata_all",
                                         "|t| [GeV^{2}]",
                                         "|t| Efficiency Correction",
                                         "figs/diffractive/efficiency/t_effcorr.png",
                                         true,
                                         false,
-                                        "Proton");
+                                        "Proton",
+                                        false);
     PlotEfficiencyCorrectedComparisonBR(inputFile,
                                         "beta_truth_mc_B0",
                                         "beta_reco_mc_B0",
@@ -583,13 +918,14 @@ int main(int argc, char** argv) {
                                         "beta_reco_pdata_RP",
                                         "beta_truth_pdata_B0",
                                         "beta_truth_pdata_RP",
-                                        "",
+                                        "beta_truth_pdata_all",
                                         "#beta",
                                         "#beta Efficiency Correction (EM)",
                                         "figs/diffractive/efficiency/beta_effcorr.png",
                                         false,
                                         false,
-                                        "EM");
+                                        "EM",
+                                        true);
     PlotEfficiencyCorrectedComparisonBR(inputFile,
                                         "xpom_truth_mc_B0",
                                         "xpom_reco_mc_B0",
@@ -599,13 +935,14 @@ int main(int argc, char** argv) {
                                         "xpom_reco_pdata_RP",
                                         "xpom_truth_pdata_B0",
                                         "xpom_truth_pdata_RP",
-                                        "",
+                                        "xpom_truth_pdata_all",
                                         "x_{pom}",
                                         "x_{pom} Efficiency Correction (EM)",
                                         "figs/diffractive/efficiency/xpom_effcorr.png",
                                         true,
                                         false,
-                                        "EM");
+                                        "EM",
+                                        true);
     PlotEfficiencyCorrectedComparisonBR(inputFile,
                                         "theta_truth_mc_B0",
                                         "theta_reco_mc_B0",
@@ -621,7 +958,8 @@ int main(int argc, char** argv) {
                                         "figs/diffractive/efficiency/theta_effcorr.png",
                                         false,
                                         true,
-                                        "Proton");
+                                        "Proton",
+                                        false);
 
     PlotEfficiencyCorrectedComparison(inputFile,
                                       "Q2_truth_mc",
@@ -673,24 +1011,25 @@ int main(int argc, char** argv) {
                                       "figs/diffractive/efficiency/mx2_effcorr.png",
                                       true,
                                       "Hadrons");
-    PlotDensityFromHist(inputFile, "beta_Q2_truth", "#beta", "Q^{2} [GeV^{2}]",
+    PlotDensityFromHist(inputFile, "beta_Q2_reco", "#beta", "Q^{2} [GeV^{2}]",
                         "figs/diffractive/histos/beta_q2_density.png", false, true);
-    PlotDensityFromHist(inputFile, "t_Q2_truth", "|t| [GeV^{2}]", "Q^{2} [GeV^{2}]",
+    PlotDensityFromHist(inputFile, "t_Q2_reco", "|t| [GeV^{2}]", "Q^{2} [GeV^{2}]",
                         "figs/diffractive/histos/t_q2_density.png", true, true);
-    PlotDensityFromHist(inputFile, "xpom_Q2_truth", "x_{pom}", "Q^{2} [GeV^{2}]",
+    PlotDensityFromHist(inputFile, "xpom_Q2_reco", "x_{pom}", "Q^{2} [GeV^{2}]",
                         "figs/diffractive/histos/xpom_q2_density.png", true, true);
-    PlotDensityFromHist(inputFile, "beta_t_truth", "#beta", "|t| [GeV^{2}]",
+    PlotDensityFromHist(inputFile, "beta_t_reco", "#beta", "|t| [GeV^{2}]",
                         "figs/diffractive/histos/beta_t_density.png", false, true);
-    PlotDensityFromHist(inputFile, "xbj_t_truth", "x_{Bj}", "|t| [GeV^{2}]",
+    PlotDensityFromHist(inputFile, "xbj_t_reco", "x_{Bj}", "|t| [GeV^{2}]",
                         "figs/diffractive/histos/xbj_t_density.png", true, true);
-    PlotDensityFromHist(inputFile, "xpom_t_truth", "x_{pom}", "|t| [GeV^{2}]",
+    PlotDensityFromHist(inputFile, "xpom_t_reco", "x_{pom}", "|t| [GeV^{2}]",
                         "figs/diffractive/histos/xpom_t_density.png", true, true);
-    PlotDensityFromHist(inputFile, "xpom_beta_truth", "x_{pom}", "#beta",
+    PlotDensityFromHist(inputFile, "xpom_beta_reco", "x_{pom}", "#beta",
                         "figs/diffractive/histos/xpom_beta_density.png", true, false);
-    PlotDensityFromHist(inputFile, "xbj_beta_truth", "x_{Bj}", "#beta",
+    PlotDensityFromHist(inputFile, "xbj_beta_reco", "x_{Bj}", "#beta",
                         "figs/diffractive/histos/xbj_beta_density.png", true, false);
-    PlotDensityFromHist(inputFile, "xbj_xpom_truth", "x_{Bj}", "x_{pom}",
+    PlotDensityFromHist(inputFile, "xbj_xpom_reco", "x_{Bj}", "x_{pom}",
                         "figs/diffractive/histos/xbj_xpom_density.png", true, true);
+    PlotPhaseSpaceSlices(inputFile);
 
     if (h_gen_Q2 && h_gen_and_reco_after_cuts_Q2_EM && h_reco_Q2_EM) {
         TH1D* h_acceptance_Q2_EM = (TH1D*)h_gen_and_reco_after_cuts_Q2_EM->Clone("h_acceptance_Q2_EM");
