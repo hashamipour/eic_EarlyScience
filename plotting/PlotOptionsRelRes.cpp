@@ -2,17 +2,78 @@
 #include <TF1.h>
 #include <TLatex.h>
 #include <iostream>
+#include <cmath>
 #include "Utility.hpp"
+
+namespace {
+
+TString NormalizeFitFunction(const char* fitFunction) {
+    TString normalized = fitFunction ? fitFunction : "gaus";
+    normalized.ToLower();
+    return normalized;
+}
+
+bool UseCrystalBall(const TString& fitFunction) {
+    return fitFunction == "crystalball" || fitFunction == "crystal_ball" || fitFunction == "cb";
+}
+
+double CrystalBallCore(double* x, double* p) {
+    const double amplitude = p[0];
+    const double mean = p[1];
+    const double sigma = std::max(std::abs(p[2]), 1e-9);
+    const double alpha = p[3];
+    const double n = std::max(p[4], 1.01);
+
+    double t = (x[0] - mean) / sigma;
+    if (alpha < 0.) {
+        t = -t;
+    }
+
+    const double absAlpha = std::max(std::abs(alpha), 1e-9);
+    if (t > -absAlpha) {
+        return amplitude * std::exp(-0.5 * t * t);
+    }
+
+    const double A = std::pow(n / absAlpha, n) * std::exp(-0.5 * absAlpha * absAlpha);
+    const double B = (n / absAlpha) - absAlpha;
+    return amplitude * A * std::pow(B - t, -n);
+}
+
+TF1* BuildRelResFitFunction(const TString& fitFunction,
+                            const TString& functionName,
+                            const double xMinFit,
+                            const double xMaxFit,
+                            const double amplitude,
+                            const double mean,
+                            const double sigma) {
+    if (UseCrystalBall(fitFunction)) {
+        TF1* fit = new TF1(functionName, CrystalBallCore, xMinFit, xMaxFit, 5);
+        fit->SetParNames("A", "Mean", "Sigma", "Alpha", "n");
+        fit->SetParameters(amplitude, mean, std::max(sigma, 1e-6), 1.5, 3.0);
+        fit->SetParLimits(2, 1e-6, 10.0);
+        fit->SetParLimits(3, 0.01, 25.0);
+        fit->SetParLimits(4, 1.01, 100.0);
+        return fit;
+    }
+
+    TF1* fit = new TF1(functionName, "gaus", xMinFit, xMaxFit);
+    fit->SetParameters(amplitude, mean, sigma);
+    return fit;
+}
+
+}  // namespace
 
 PlotOptionsRelRes::PlotOptionsRelRes(const TString& histName,
                                      const char* xLabel,
                                      const char* yLabel,
                                      double xMinFit,
                                      double xMaxFit,
-                                     const char* saveName)
+                                     const char* saveName,
+                                     const char* fitFunction)
     : m_histName(histName),
       m_xLabel(xLabel),
       m_yLabel(yLabel),
+      m_fitFunction(NormalizeFitFunction(fitFunction)),
       m_xMinFit(xMinFit),
       m_xMaxFit(xMaxFit),
       m_saveName(saveName),
@@ -247,15 +308,22 @@ void PlotOptionsRelRes::Plot(TFile* inputFile) {
     m_bestSigma = hist->GetRMS();
     m_bestAmplitude = hist->GetMaximum();
     
-    TF1* gaussianFit = new TF1("gaussianFit", "gaus", m_xMinFit, m_xMaxFit);
-    gaussianFit->SetParameters(m_bestAmplitude, m_bestMean, m_bestSigma);
+    TF1* fitFunction = BuildRelResFitFunction(
+        m_fitFunction,
+        "relres_fit",
+        m_xMinFit,
+        m_xMaxFit,
+        m_bestAmplitude,
+        m_bestMean,
+        m_bestSigma
+    );
     
-    hist->Fit("gaussianFit", "RQ+");
+    hist->Fit(fitFunction, "RQ+");
 
-    gaussianFit->SetLineColor(kRed);
-    gaussianFit->SetLineWidth(2);
-    hist->GetYaxis()->SetRangeUser(0, gaussianFit->GetMaximum() * 1.1);
-    gaussianFit->Draw("same");
+    fitFunction->SetLineColor(kRed);
+    fitFunction->SetLineWidth(2);
+    hist->GetYaxis()->SetRangeUser(0, fitFunction->GetMaximum() * 1.1);
+    fitFunction->Draw("same");
 
     TLatex* latex = new TLatex();
     latex->SetNDC();
@@ -268,4 +336,5 @@ void PlotOptionsRelRes::Plot(TFile* inputFile) {
     SaveCanvas(c, m_saveName);
     delete c;
     delete latex;
+    delete fitFunction;
 }

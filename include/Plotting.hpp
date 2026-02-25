@@ -77,6 +77,7 @@ private:
     TString m_histName;
     const char* m_xLabel;
     const char* m_yLabel;
+    TString m_fitFunction;
     double m_xMinFit;
     double m_xMaxFit;
     const char* m_saveName;
@@ -93,7 +94,8 @@ public:
                       const char* yLabel,
                       double xMinFit,
                       double xMaxFit,
-                      const char* saveName
+                      const char* saveName,
+                      const char* fitFunction = "gaus"
                     );
     
     void Plot(TFile* inputFile) override;
