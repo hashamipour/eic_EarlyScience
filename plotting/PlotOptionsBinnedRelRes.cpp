@@ -3,7 +3,73 @@
 #include <TLine.h>
 #include <TLatex.h>
 #include <TPaveText.h>
+#include <algorithm>
+#include <cmath>
 #include <iostream>
+
+namespace {
+
+TString NormalizeFitFunction(const char* fitFunction) {
+    TString normalized = fitFunction ? fitFunction : "gaus";
+    normalized.ToLower();
+    return normalized;
+}
+
+bool UseCrystalBall(const TString& fitFunction) {
+    return fitFunction == "crystalball" || fitFunction == "crystal_ball" || fitFunction == "cb";
+}
+
+double CrystalBallCore(double* x, double* p) {
+    const double amplitude = p[0];
+    const double mean = p[1];
+    const double sigma = std::max(std::abs(p[2]), 1e-9);
+    const double alpha = p[3];
+    const double n = std::max(p[4], 1.01);
+
+    double t = (x[0] - mean) / sigma;
+    if (alpha < 0.) {
+        t = -t;
+    }
+
+    const double absAlpha = std::max(std::abs(alpha), 1e-9);
+    if (t > -absAlpha) {
+        return amplitude * std::exp(-0.5 * t * t);
+    }
+
+    const double A = std::pow(n / absAlpha, n) * std::exp(-0.5 * absAlpha * absAlpha);
+    const double B = (n / absAlpha) - absAlpha;
+    return amplitude * A * std::pow(B - t, -n);
+}
+
+TF1* BuildFitFunction(const TString& fitFunction,
+                      const TString& functionName,
+                      const double xMinFit,
+                      const double xMaxFit,
+                      TH1D* hist) {
+    const double amplitude = hist->GetMaximum();
+    const double mean = hist->GetMean();
+    const double sigma = std::max(hist->GetRMS(), 1e-6);
+
+    if (UseCrystalBall(fitFunction)) {
+        TF1* fit = new TF1(functionName, CrystalBallCore, xMinFit, xMaxFit, 5);
+        fit->SetParNames("A", "Mean", "Sigma", "Alpha", "n");
+        fit->SetParameters(amplitude, mean, sigma, 1.5, 3.0);
+        fit->SetParLimits(2, 1e-6, 10.0);
+        fit->SetParLimits(3, 0.01, 25.0);
+        fit->SetParLimits(4, 1.01, 100.0);
+        return fit;
+    }
+
+    TF1* fit = new TF1(functionName, "gaus", xMinFit, xMaxFit);
+    fit->SetParameters(amplitude, mean, sigma);
+    return fit;
+}
+
+const char* FitLegendLabel(const TString& fitFunction) {
+    return UseCrystalBall(fitFunction) ? "CrystalBall Fit" : "Gaussian Fit";
+}
+
+}  // namespace
 
 PlotOptionsBinnedRelRes::PlotOptionsBinnedRelRes(const TString& histName,
                                                  const char* title,
@@ -13,12 +79,14 @@ PlotOptionsBinnedRelRes::PlotOptionsBinnedRelRes(const TString& histName,
                                                  const char* saveName,
                                                  const char* binSavePrefix,
                                                  const std::pair<double, double>& x_axis_range,
-                                                 const bool isLogX
+                                                 const bool isLogX,
+                                                 const char* fitFunction
                                                 )
     : m_histName(histName),
       m_title(title),
       m_xLabel(xLabel),
       m_yLabel(yLabel),
+      m_fitFunction(NormalizeFitFunction(fitFunction)),
       m_fitRanges(fitRanges),
       m_xMinFit(0.0),
       m_xMaxFit(0.0),
@@ -208,7 +276,7 @@ void PlotOptionsBinnedRelRes::Plot(TFile* inputFile) {
             }
         }
         
-        TF1* gaus = nullptr;
+        TF1* fitFunc = nullptr;
         double mean = 0.0;
         double sigma = 0.0;
         
@@ -227,12 +295,17 @@ void PlotOptionsBinnedRelRes::Plot(TFile* inputFile) {
                 }
             }
             
-            gaus = new TF1("gaus", "gaus", m_xMinFit, m_xMaxFit);
-            gaus->SetParameters(projY->GetMaximum(), projY->GetMean(), projY->GetRMS());
-            projY->Fit(gaus, "RQ");
+            fitFunc = BuildFitFunction(
+                m_fitFunction,
+                Form("fit_bin_%d", j),
+                m_xMinFit,
+                m_xMaxFit,
+                projY
+            );
+            projY->Fit(fitFunc, "RQ");
             
-            mean = gaus->GetParameter(1);
-            sigma = gaus->GetParameter(2);
+            mean = fitFunc->GetParameter(1);
+            sigma = std::abs(fitFunc->GetParameter(2));
         }
         
         // Always create and save the projection plot
@@ -244,10 +317,10 @@ void PlotOptionsBinnedRelRes::Plot(TFile* inputFile) {
         projY->Draw();
         
         double ymax = 1.1 * projY->GetMaximum();
-        if (gaus) {
-            ymax = 1.1 * std::fmax(projY->GetMaximum(), gaus->GetMaximum());
-            gaus->SetLineColor(kRed);
-            gaus->Draw("same");
+        if (fitFunc) {
+            ymax = 1.1 * std::fmax(projY->GetMaximum(), fitFunc->GetMaximum());
+            fitFunc->SetLineColor(kRed);
+            fitFunc->Draw("same");
         }
         projY->GetYaxis()->SetRangeUser(0, ymax);
         
@@ -263,10 +336,10 @@ void PlotOptionsBinnedRelRes::Plot(TFile* inputFile) {
         statsBox->AddText(Form("#mu: %.5f", projY->GetMean()));
         statsBox->AddText(Form("RMS: %.5f", projY->GetRMS()));
 
-        if (gaus) {
-            statsBox->AddText(Form("#chi^{2}/ndf: %.1f/%d", gaus->GetChisquare(), gaus->GetNDF()));
-            statsBox->AddText(Form("Fit #mu: %.5f #pm %.5f", mean, gaus->GetParError(1)));
-            statsBox->AddText(Form("Fit #sigma: %.4f #pm %.5f", sigma, gaus->GetParError(2)));
+        if (fitFunc) {
+            statsBox->AddText(Form("#chi^{2}/ndf: %.1f/%d", fitFunc->GetChisquare(), fitFunc->GetNDF()));
+            statsBox->AddText(Form("Fit #mu: %.5f #pm %.5f", mean, fitFunc->GetParError(1)));
+            statsBox->AddText(Form("Fit #sigma: %.4f #pm %.5f", sigma, fitFunc->GetParError(2)));
             statsBox->AddText(Form("Fit range: [%.3f, %.3f]", m_xMinFit, m_xMaxFit));
         } else {
             statsBox->AddText("(Fit skipped)");
@@ -294,7 +367,7 @@ void PlotOptionsBinnedRelRes::Plot(TFile* inputFile) {
 
         delete c_proj;
         delete statsBox;
-        if (gaus) delete gaus;
+        if (fitFunc) delete fitFunc;
         delete projY;
     }
     
@@ -329,7 +402,7 @@ void PlotOptionsBinnedRelRes::Plot(TFile* inputFile) {
 
     TLegend* legend = new TLegend(m_legendLB->first, m_legendLB->second, m_legendRT->first, m_legendRT->second);
     legend->AddEntry(g_RMS, "Histograms", "ep");
-    legend->AddEntry(g, "Gaussian Fit", "ep");
+    legend->AddEntry(g, FitLegendLabel(m_fitFunction), "ep");
     legend->Draw();
 
     DrawSimLabels(inputFile);

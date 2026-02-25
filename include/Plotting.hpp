@@ -106,6 +106,7 @@ private:
     const char* m_title;
     const char* m_xLabel;
     const char* m_yLabel;
+    TString m_fitFunction;
     std::vector<std::pair<double, double>> m_fitRanges;
     double m_xMinFit;
     double m_xMaxFit;
@@ -125,7 +126,8 @@ public:
                             const char* saveName,
                             const char* binSavePrefix,
                             const std::pair<double, double>& x_axis_range = {-999., -999.},
-                            const bool  isLogX = false
+                            const bool  isLogX = false,
+                            const char* fitFunction = "gaus"
                         );
     
     void Plot(TFile* inputFile) override;

@@ -2753,13 +2753,14 @@ int main(int argc, char** argv) {
         "y_{#Sigma}",
         "",
         {
-            {-0.2,0.05},{-0.15,0.05},{-0.1,0.05},{-0.05,0.02},{-0.02,0.02},
-            {0,0},{0,0},{0,0},{0,0},{0,0}
+            {-0.6,0.15},{-0.6,0.0},{-0.6,0.0},{-0.6,0.02},{-0.5,0.0},
+            {-0.5,0.02},{-0.5,0},{-0.5,0},{-0.3,0},{-0.2,0}
         },
         "figs/inclusive/resolution/y_relres_binned_sigma.png",
         "figs/inclusive/resolution/profile/y_relres_binned_sigma",
         std::make_pair(0.0, 1.0),
-        false
+        false,
+        "crystalball"
     );
     binned_plot_ptr->SetLegendPosition(0.15, 0.15, 0.3, 0.3);
     plots.push_back(binned_plot_ptr);
