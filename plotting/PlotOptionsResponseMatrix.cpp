@@ -40,6 +40,7 @@ void PlotOptionsResponseMatrix::Plot(TFile* inputFile) {
     TCanvas* c = new TCanvas("c_response_matrix", "Response Matrix", 1200, 1000);
     gStyle->SetPaintTextFormat(".0f");
     gStyle->SetOptStat(0);
+    gStyle->SetOptTitle(0);
     c->SetRightMargin(0.15);
     c->SetLeftMargin(0.15);
     c->SetTopMargin(0.1);
@@ -123,13 +124,7 @@ void PlotOptionsResponseMatrix::Plot(TFile* inputFile) {
         }
     }
 
-    TLatex latex;
-    latex.SetTextSize(0.04);
-    latex.SetNDC();
-    latex.SetTextColor(kBlack);
-    const std::string simLabel = BuildSimLabel(inputFile);
-    latex.DrawLatex(0.2, 0.92, simLabel.c_str());
-    latex.DrawLatex(0.65, 0.92, "#bf{Diff. DIS} #10x100 GeV");
+    DrawSimLabels(inputFile);
 
     SetCustomPalette("SolarBloom");
     TColor::InvertPalette(); // Invert the palette for better visibility

@@ -98,16 +98,25 @@ int main(int argc, char** argv) {
 
     TChain* events = new TChain("events");
     Int_t nFiles{0};
+    std::vector<std::string> addedFiles;
     while(getline(fileListStream, fileName)){
         TString tmp = fileName;
-        if (!std::filesystem::exists(tmp.Data())) {
+        const bool is_remote = tmp.BeginsWith("root://") || tmp.BeginsWith("xroot://")
+                               || tmp.BeginsWith("http://") || tmp.BeginsWith("https://");
+        if (!is_remote && !std::filesystem::exists(tmp.Data())) {
             std::cerr << "Error: File does not exist: " << fileName << std::endl;
             continue;
         }
-        auto inputRootFile = TFile::Open(tmp);
-        events->Add((TString)fileName);
+        TFile* inputRootFile = TFile::Open(tmp);
+        if(!inputRootFile || inputRootFile->IsZombie()) {
+            std::cerr << "Error: Cannot open file: " << fileName << std::endl;
+            if(inputRootFile) inputRootFile->Close();
+            continue;
+        }
+        events->Add(tmp);
         inputRootFile->Close();
         nFiles++;
+        addedFiles.push_back(fileName);
     }
     std::cout << "No. of files: " << nFiles << "; no. of events: " << events->GetEntries() << std::endl;
 
@@ -167,54 +176,81 @@ int main(int argc, char** argv) {
     TTreeReaderArray<float>  rp_mass_array        = {tree_reader, "ForwardRomanPotRecParticles.mass"};
     TTreeReaderArray<int>    rp_pdg_array         = {tree_reader, "ForwardRomanPotRecParticles.PDG"};
 
-    Float_t electron_Q2_EM, electron_Q2_truth;
-    Float_t electron_x_EM, electron_x_truth;
-    Float_t electron_y_EM, electron_y_truth;
-    Float_t electron_W_EM, electron_W_truth;
+    TTreeReaderArray<float> kin_Q2_EM(tree_reader, "InclusiveKinematicsElectron.Q2");
+    TTreeReaderArray<float> kin_Q2_truth(tree_reader, "InclusiveKinematicsTruth.Q2");
+    TTreeReaderArray<float> kin_x_EM(tree_reader, "InclusiveKinematicsElectron.x");
+    TTreeReaderArray<float> kin_x_truth(tree_reader, "InclusiveKinematicsTruth.x");
+    TTreeReaderArray<float> kin_y_EM(tree_reader, "InclusiveKinematicsElectron.y");
+    TTreeReaderArray<float> kin_y_truth(tree_reader, "InclusiveKinematicsTruth.y");
+    TTreeReaderArray<float> kin_W_EM(tree_reader, "InclusiveKinematicsElectron.W");
+    TTreeReaderArray<float> kin_W_truth(tree_reader, "InclusiveKinematicsTruth.W");
 
-    events->SetBranchAddress("InclusiveKinematicsElectron.Q2", &electron_Q2_EM);
-    events->SetBranchAddress("InclusiveKinematicsTruth.Q2"   , &electron_Q2_truth);
-    events->SetBranchAddress("InclusiveKinematicsElectron.x", &electron_x_EM);
-    events->SetBranchAddress("InclusiveKinematicsTruth.x"   , &electron_x_truth);
-    events->SetBranchAddress("InclusiveKinematicsElectron.y", &electron_y_EM);
-    events->SetBranchAddress("InclusiveKinematicsTruth.y"   , &electron_y_truth);
-    events->SetBranchAddress("InclusiveKinematicsElectron.W", &electron_W_EM);
-    events->SetBranchAddress("InclusiveKinematicsTruth.W"   , &electron_W_truth);
-
-    std::cout << "Finding beam particles..." << std::endl;
     BeamInfo beams;
-    P3MVector beame4_acc(0,0,0,0), beamp4_acc(0,0,0,0);
+    double eBeamGeV = 0.0;
+    double pBeamGeV = 0.0;
+    std::string firstMatchedBeamFile;
+    std::string mismatchBeamFile;
+    const bool parsedFromFilename = InferBeamEnergiesFromFileList(
+        addedFiles, eBeamGeV, pBeamGeV, &firstMatchedBeamFile, &mismatchBeamFile
+    );
 
-    while(tree_reader.Next()){
-        for(int i = 0; i < mc_px_array.GetSize(); i++){
-            if(mc_genStatus_array[i] != 4) continue;
-
-            if(mc_pdg_array[i] == 2212){
-                P3MVector p(mc_px_array[i], mc_py_array[i], mc_pz_array[i], beams.fMass_proton);
-                beamp4_acc += p;
-            }
-            else if(mc_pdg_array[i] == 11){
-                P3MVector p(mc_px_array[i], mc_py_array[i], mc_pz_array[i], beams.fMass_electron);
-                beame4_acc += p;
-            }
-        }
+    bool usingFilenameBeams = false;
+    if (parsedFromFilename && eBeamGeV > beams.fMass_electron && pBeamGeV > beams.fMass_proton) {
+        const double ePz = -std::sqrt(std::max(0.0, eBeamGeV * eBeamGeV -
+                                                     beams.fMass_electron * beams.fMass_electron));
+        const double pPz = std::sqrt(std::max(0.0, pBeamGeV * pBeamGeV -
+                                                    beams.fMass_proton * beams.fMass_proton));
+        beams.e_beam.SetCoordinates(0.0, 0.0, ePz, beams.fMass_electron);
+        beams.p_beam.SetCoordinates(0.0, 0.0, pPz, beams.fMass_proton);
+        usingFilenameBeams = true;
+        std::cout << "Using beam energies from filename tag (" << eBeamGeV << "x"
+                  << pBeamGeV << " GeV), first match: " << firstMatchedBeamFile << std::endl;
     }
 
-    auto nEntries = std::max<Long64_t>(1, events->GetEntries());
-    beams.e_beam.SetCoordinates(
-        beame4_acc.X()/nEntries,
-        beame4_acc.Y()/nEntries,
-        beame4_acc.Z()/nEntries,
-        beams.fMass_electron
-    );
-    beams.p_beam.SetCoordinates(
-        beamp4_acc.X()/nEntries,
-        beamp4_acc.Y()/nEntries,
-        beamp4_acc.Z()/nEntries,
-        beams.fMass_proton
-    );
+    if (!usingFilenameBeams) {
+        if (!mismatchBeamFile.empty()) {
+            std::cerr << "WARNING: Inconsistent beam-energy tags in file names (first match: "
+                      << firstMatchedBeamFile << ", mismatch: " << mismatchBeamFile
+                      << "). Falling back to beam-particle scan." << std::endl;
+        } else {
+            std::cout << "Beam-energy tag not found in file names; falling back to beam-particle scan." << std::endl;
+        }
 
-    std::cout << "Found beam energies " << beams.e_beam.E() << "x" << beams.p_beam.E() << " GeV" << std::endl;
+        std::cout << "Finding beam particles..." << std::endl;
+        P3MVector beame4_acc(0,0,0,0), beamp4_acc(0,0,0,0);
+
+        while(tree_reader.Next()){
+            for(int i = 0; i < mc_px_array.GetSize(); i++){
+                if(mc_genStatus_array[i] != 4) continue;
+
+                if(mc_pdg_array[i] == 2212){
+                    P3MVector p(mc_px_array[i], mc_py_array[i], mc_pz_array[i], beams.fMass_proton);
+                    beamp4_acc += p;
+                }
+                else if(mc_pdg_array[i] == 11){
+                    P3MVector p(mc_px_array[i], mc_py_array[i], mc_pz_array[i], beams.fMass_electron);
+                    beame4_acc += p;
+                }
+            }
+        }
+
+        auto nEntries = std::max<Long64_t>(1, events->GetEntries());
+        beams.e_beam.SetCoordinates(
+            beame4_acc.X()/nEntries,
+            beame4_acc.Y()/nEntries,
+            beame4_acc.Z()/nEntries,
+            beams.fMass_electron
+        );
+        beams.p_beam.SetCoordinates(
+            beamp4_acc.X()/nEntries,
+            beamp4_acc.Y()/nEntries,
+            beamp4_acc.Z()/nEntries,
+            beams.fMass_proton
+        );
+
+        std::cout << "Found beam energies " << beams.e_beam.E() << "x" << beams.p_beam.E() << " GeV" << std::endl;
+    }
+
     undoAfterburnAndCalc(beams.p_beam, beams.e_beam);
     tree_reader.Restart();
 
@@ -226,6 +262,15 @@ int main(int argc, char** argv) {
         }
         tree_reader.Next();
         events->GetEntry(i);
+
+        const float electron_Q2_EM = (kin_Q2_EM.GetSize() > 0) ? kin_Q2_EM[0] : -999.0f;
+        const float electron_Q2_truth = (kin_Q2_truth.GetSize() > 0) ? kin_Q2_truth[0] : -999.0f;
+        const float electron_x_EM = (kin_x_EM.GetSize() > 0) ? kin_x_EM[0] : -999.0f;
+        const float electron_x_truth = (kin_x_truth.GetSize() > 0) ? kin_x_truth[0] : -999.0f;
+        const float electron_y_EM = (kin_y_EM.GetSize() > 0) ? kin_y_EM[0] : -999.0f;
+        const float electron_y_truth = (kin_y_truth.GetSize() > 0) ? kin_y_truth[0] : -999.0f;
+        const float electron_W_EM = (kin_W_EM.GetSize() > 0) ? kin_W_EM[0] : -999.0f;
+        const float electron_W_truth = (kin_W_truth.GetSize() > 0) ? kin_W_truth[0] : -999.0f;
 
         // Scattered electron index
         int scat_e_idx = -1;

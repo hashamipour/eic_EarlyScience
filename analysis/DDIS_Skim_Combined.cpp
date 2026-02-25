@@ -161,6 +161,7 @@ int main(int argc, char** argv) {
     //---------------------------------------------------------
     TChain* events = new TChain("events");
     Int_t nFiles{0};
+    std::vector<std::string> addedFiles;
     while(getline(fileListStream, fileName)){
         TString tmp = fileName;
         if (!std::filesystem::exists(tmp.Data())) {
@@ -171,6 +172,7 @@ int main(int argc, char** argv) {
         events->Add((TString)fileName);
         inputRootFile->Close();
         nFiles++;
+        addedFiles.push_back(fileName);
     }
     std::cout<<"\nNo. of files: "<<nFiles<<"; no. of events: "<<events->GetEntries()<<std::endl;
     
@@ -519,41 +521,71 @@ int main(int argc, char** argv) {
     //---------------------------------------------------------
     // FIND BEAM PARTICLES
     //---------------------------------------------------------
-    std::cout << "Finding beam particles..." << std::endl;
-    
     BeamInfo beams;
-    P3MVector beame4_acc(0,0,0,0), beamp4_acc(0,0,0,0);
-    
-    while(tree_reader.Next()){
-        for(int i = 0; i < mc_px_array.GetSize(); i++){
-            if(mc_genStatus_array[i] != 4) continue;
-            
-            if(mc_pdg_array[i] == 2212){
-                P3MVector p(mc_px_array[i], mc_py_array[i], mc_pz_array[i], beams.fMass_proton);
-                beamp4_acc += p;
-            }
-            else if(mc_pdg_array[i] == 11){
-                P3MVector p(mc_px_array[i], mc_py_array[i], mc_pz_array[i], beams.fMass_electron);
-                beame4_acc += p;
+    double eBeamGeV = 0.0;
+    double pBeamGeV = 0.0;
+    std::string firstMatchedBeamFile;
+    std::string mismatchBeamFile;
+    const bool parsedFromFilename = InferBeamEnergiesFromFileList(
+        addedFiles, eBeamGeV, pBeamGeV, &firstMatchedBeamFile, &mismatchBeamFile
+    );
+
+    bool usingFilenameBeams = false;
+    if (parsedFromFilename && eBeamGeV > beams.fMass_electron && pBeamGeV > beams.fMass_proton) {
+        const double ePz = -std::sqrt(std::max(0.0, eBeamGeV * eBeamGeV -
+                                                     beams.fMass_electron * beams.fMass_electron));
+        const double pPz = std::sqrt(std::max(0.0, pBeamGeV * pBeamGeV -
+                                                    beams.fMass_proton * beams.fMass_proton));
+        beams.e_beam.SetCoordinates(0.0, 0.0, ePz, beams.fMass_electron);
+        beams.p_beam.SetCoordinates(0.0, 0.0, pPz, beams.fMass_proton);
+        usingFilenameBeams = true;
+        std::cout << "Using beam energies from filename tag (" << eBeamGeV << "x"
+                  << pBeamGeV << " GeV), first match: " << firstMatchedBeamFile << std::endl;
+    }
+
+    if (!usingFilenameBeams) {
+        if (!mismatchBeamFile.empty()) {
+            std::cerr << "WARNING: Inconsistent beam-energy tags in file names (first match: "
+                      << firstMatchedBeamFile << ", mismatch: " << mismatchBeamFile
+                      << "). Falling back to beam-particle scan." << std::endl;
+        } else {
+            std::cout << "Beam-energy tag not found in file names; falling back to beam-particle scan." << std::endl;
+        }
+
+        std::cout << "Finding beam particles..." << std::endl;
+        P3MVector beame4_acc(0,0,0,0), beamp4_acc(0,0,0,0);
+
+        while(tree_reader.Next()){
+            for(int i = 0; i < mc_px_array.GetSize(); i++){
+                if(mc_genStatus_array[i] != 4) continue;
+
+                if(mc_pdg_array[i] == 2212){
+                    P3MVector p(mc_px_array[i], mc_py_array[i], mc_pz_array[i], beams.fMass_proton);
+                    beamp4_acc += p;
+                }
+                else if(mc_pdg_array[i] == 11){
+                    P3MVector p(mc_px_array[i], mc_py_array[i], mc_pz_array[i], beams.fMass_electron);
+                    beame4_acc += p;
+                }
             }
         }
+
+        auto nEntries = std::max<Long64_t>(1, events->GetEntries());
+        beams.e_beam.SetCoordinates(
+            beame4_acc.X()/nEntries,
+            beame4_acc.Y()/nEntries,
+            beame4_acc.Z()/nEntries,
+            beams.fMass_electron
+        );
+        beams.p_beam.SetCoordinates(
+            beamp4_acc.X()/nEntries,
+            beamp4_acc.Y()/nEntries,
+            beamp4_acc.Z()/nEntries,
+            beams.fMass_proton
+        );
+
+        std::cout << "Found beam energies " << beams.e_beam.E() << "x" << beams.p_beam.E() << " GeV" << std::endl;
     }
-    
-    auto nEntries = std::max<Long64_t>(1, events->GetEntries());
-    beams.e_beam.SetCoordinates(
-        beame4_acc.X()/nEntries, 
-        beame4_acc.Y()/nEntries, 
-        beame4_acc.Z()/nEntries, 
-        beams.fMass_electron
-    );
-    beams.p_beam.SetCoordinates(
-        beamp4_acc.X()/nEntries, 
-        beamp4_acc.Y()/nEntries, 
-        beamp4_acc.Z()/nEntries, 
-        beams.fMass_proton
-    );
-    
-    std::cout << "Found beam energies " << beams.e_beam.E() << "x" << beams.p_beam.E() << " GeV" << std::endl;
     
     undoAfterburnAndCalc(beams.p_beam, beams.e_beam);
     

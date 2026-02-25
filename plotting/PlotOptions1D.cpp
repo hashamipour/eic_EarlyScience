@@ -42,6 +42,7 @@ PlotOptions1D::PlotOptions1D(const std::vector<TString>& histNames,
 void PlotOptions1D::Plot(TFile* inputFile) {
     // unique canvas name to avoid clashes
     TCanvas* c = new TCanvas(Form("c_%p", this), m_canvasTitle, 1200, 900);
+    gStyle->SetOptTitle(0);
 
     if (m_isLogX) c->SetLogx();
     if (m_isLogY) c->SetLogy();
@@ -158,6 +159,7 @@ void PlotOptions1D::Plot(TFile* inputFile) {
 
     // ---------- Axes labels and ranges ----------
     if (firstHist) {
+        firstHist->SetTitle("");
         firstHist->GetXaxis()->SetTitle(m_xLabel);
         firstHist->GetYaxis()->SetTitle(m_yLabel);
         firstHist->GetXaxis()->SetTitleSize(0.04);
@@ -175,13 +177,8 @@ void PlotOptions1D::Plot(TFile* inputFile) {
     }
 
     // ---------- Add ePIC simulation labels ----------
-    TLatex latex;
-    latex.SetTextSize(0.04);
-    latex.SetNDC();
-    latex.SetTextColor(kBlack);
-    const std::string simLabel = BuildSimLabel(inputFile);
-    latex.DrawLatex(0.2, 0.92, simLabel.c_str());
-    latex.DrawLatex(0.65, 0.92, "#bf{Diff. DIS} 10x100 GeV");
+    gStyle->SetOptTitle(0);
+    DrawSimLabels(inputFile);
 
     // ---------- Draw legend and save ----------
     // legend->Draw();

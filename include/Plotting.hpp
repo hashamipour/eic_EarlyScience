@@ -13,6 +13,7 @@
 #include <TStyle.h>
 #include <TColor.h>
 #include <string>
+#include <optional>
 #include "Utility.hpp"  // Use your existing utility functions
 
 // Base class for plot options
@@ -215,5 +216,6 @@ public:
 
 void SaveCanvas(TCanvas* canvas, const char* filename);
 std::string BuildSimLabel(TFile* inputFile);
+void DrawSimLabels(TFile* inputFile);
 
 #endif // PLOTTING_HPP

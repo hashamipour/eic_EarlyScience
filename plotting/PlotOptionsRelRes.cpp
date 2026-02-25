@@ -185,6 +185,7 @@ void PlotOptionsRelRes::SetFitRangeByBins(TH1D* hist) {
 void PlotOptionsRelRes::Plot(TFile* inputFile) {
     TCanvas* c = new TCanvas("c_relres", "", 1200, 800);
     c->SetBottomMargin(0.2);
+    gStyle->SetOptTitle(0);
 
     TH1D* hist = (TH1D*)inputFile->Get(m_histName);
     if (!hist) {
@@ -193,6 +194,7 @@ void PlotOptionsRelRes::Plot(TFile* inputFile) {
         return;
     }
 
+    hist->SetTitle("");
     hist->GetXaxis()->SetTitle(m_xLabel);
     hist->GetYaxis()->SetTitle(m_yLabel);
     hist->GetXaxis()->SetTitleSize(0.05);
@@ -215,14 +217,7 @@ void PlotOptionsRelRes::Plot(TFile* inputFile) {
     if (skipFit) {
         Logger::info("Skipping fitting as per user request: [" + std::string(m_saveName) + "]");
 
-        // Add ePIC simulation labels
-        TLatex latex;
-        latex.SetTextSize(0.04);
-        latex.SetNDC();
-        latex.SetTextColor(kBlack);
-        const std::string simLabel = BuildSimLabel(inputFile);
-        latex.DrawLatex(0.15, 0.92, simLabel.c_str());
-        latex.DrawLatex(0.15, 0.86, "#bf{Diff. DIS} 10x100 GeV");
+        DrawSimLabels(inputFile);
 
         SaveCanvas(c, m_saveName);
         delete c;
@@ -238,14 +233,7 @@ void PlotOptionsRelRes::Plot(TFile* inputFile) {
         if (autoFitRange) {
             Logger::warning("Skipping fitting as no fit range found. If you want a fit please provide fit range: [" + std::string(m_saveName) + "]");
 
-            // Add ePIC simulation labels
-            TLatex latex;
-            latex.SetTextSize(0.04);
-            latex.SetNDC();
-            latex.SetTextColor(kBlack);
-            const std::string simLabel = BuildSimLabel(inputFile);
-            latex.DrawLatex(0.15, 0.92, simLabel.c_str());
-            latex.DrawLatex(0.15, 0.86, "#bf{Diff. DIS} 10x100 GeV");
+            DrawSimLabels(inputFile);
 
             SaveCanvas(c, m_saveName);
             delete c;
@@ -275,11 +263,7 @@ void PlotOptionsRelRes::Plot(TFile* inputFile) {
     latex->SetTextColor(kRed);
     latex->DrawLatex(0.2, 0.8, Form("RMS = %.2f", hist->GetRMS()));
 
-    // Add ePIC simulation labels
-    latex->SetTextColor(kBlack);
-    const std::string simLabel = BuildSimLabel(inputFile);
-    latex->DrawLatex(0.15, 0.92, simLabel.c_str());
-    latex->DrawLatex(0.15, 0.86, "#bf{Diff. DIS} 10x100 GeV");
+    DrawSimLabels(inputFile);
 
     SaveCanvas(c, m_saveName);
     delete c;

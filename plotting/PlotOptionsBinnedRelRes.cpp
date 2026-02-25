@@ -178,7 +178,7 @@ void PlotOptionsBinnedRelRes::Plot(TFile* inputFile) {
         std::cerr << "Error: 2D Histogram " << m_histName << " not found." << std::endl;
         return;
     }
-    const std::string simLabel = BuildSimLabel(inputFile);
+    gStyle->SetOptTitle(0);
 
     TCanvas* c = new TCanvas("c_binned", "", 1200, 800);
     c->SetLeftMargin(0.15);
@@ -238,9 +238,7 @@ void PlotOptionsBinnedRelRes::Plot(TFile* inputFile) {
         // Always create and save the projection plot
         TCanvas* c_proj = new TCanvas(Form("c_proj_%s_%d", m_binSavePrefix, j),
                                       Form("Bin Projection %d", j), 800, 600);
-        projY->SetTitle(Form("%s Bin: %.1e-%.1e", m_xLabel, 
-                     h_RelRes_binned->GetXaxis()->GetBinLowEdge(j), 
-                     h_RelRes_binned->GetXaxis()->GetBinUpEdge(j)));
+        projY->SetTitle("");
         
         projY->SetStats(0);
         projY->Draw();
@@ -275,16 +273,10 @@ void PlotOptionsBinnedRelRes::Plot(TFile* inputFile) {
         }
         statsBox->Draw();
 
-        // Add ePIC simulation labels
-        TLatex latex_proj;
-        latex_proj.SetTextSize(0.035);
-        latex_proj.SetNDC();
-        latex_proj.SetTextColor(kBlack);
-        latex_proj.DrawLatex(0.15, 0.85, simLabel.c_str());
-        latex_proj.DrawLatex(0.15, 0.80, "#bf{Diff. DIS} 10x100 GeV");
+        DrawSimLabels(inputFile);
 
         c_proj->Update();
-        SaveCanvas(c_proj, Form("figs/%s_bin_%d.png", m_binSavePrefix, j));
+        SaveCanvas(c_proj, Form("%s_bin_%d.png", m_binSavePrefix, j));
         
         // Add to fit graph only if fit was performed
         if (!skipFit) {
@@ -307,7 +299,7 @@ void PlotOptionsBinnedRelRes::Plot(TFile* inputFile) {
     }
     
     // Rest of the plotting code remains the same...
-    g_RMS->SetTitle(m_title);
+    g_RMS->SetTitle("");
     g_RMS->SetMarkerStyle(20);
     g_RMS->SetMarkerColor(kBlack);
     g_RMS->SetLineColor(kBlack);
@@ -320,14 +312,14 @@ void PlotOptionsBinnedRelRes::Plot(TFile* inputFile) {
     }
     g_RMS->Draw("AP");
 
-    g->SetTitle(m_title);
+    g->SetTitle("");
     g->SetMarkerStyle(20);
     g->SetMarkerColor(kBlue + 2);
     g->SetLineColor(kBlue + 2);
     g->SetLineWidth(2);
     g->Draw("PSAME");
 
-    g_RMS->SetTitle(m_title);
+    g_RMS->SetTitle("");
 
     TLine* line = new TLine(0, 0, g_RMS->GetXaxis()->GetXmax(), 0);
     line->SetLineColor(kRed);
@@ -340,13 +332,7 @@ void PlotOptionsBinnedRelRes::Plot(TFile* inputFile) {
     legend->AddEntry(g, "Gaussian Fit", "ep");
     legend->Draw();
 
-    // Add ePIC simulation labels
-    TLatex latex;
-    latex.SetTextSize(0.035);
-    latex.SetNDC();
-    latex.SetTextColor(kBlack);
-    latex.DrawLatex(0.15, 0.85, simLabel.c_str());
-    latex.DrawLatex(0.15, 0.80, "#bf{Diff. DIS} 10x100 GeV");
+    DrawSimLabels(inputFile);
 
     c->Update();
     SaveCanvas(c, m_saveName);

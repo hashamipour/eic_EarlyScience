@@ -39,6 +39,7 @@ void PlotOptionsCombinedCorrelation::Plot(TFile* inputFile) {
     c->SetBottomMargin(0.1);
     c->SetLogx(m_isLogX);
     c->SetLogy(m_isLogY);
+    gStyle->SetOptTitle(0);
 
     gStyle->SetOptStat(0);
 
@@ -123,13 +124,7 @@ void PlotOptionsCombinedCorrelation::Plot(TFile* inputFile) {
         diagLine->Draw("same");
     }
 
-    TLatex latex;
-    latex.SetTextSize(0.04);
-    latex.SetNDC();
-    latex.SetTextColor(kBlack);
-    const std::string simLabel = BuildSimLabel(inputFile);
-    latex.DrawLatex(0.17, 0.92, simLabel.c_str());
-    latex.DrawLatex(0.65, 0.92, "#bf{Diff. DIS} 10x100 GeV");
+    DrawSimLabels(inputFile);
     
     c->Update();
     SaveCanvas(c, m_saveName);

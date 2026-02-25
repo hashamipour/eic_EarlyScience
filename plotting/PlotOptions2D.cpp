@@ -29,6 +29,7 @@ void PlotOptions2D::Plot(TFile* inputFile) {
 
     TCanvas* c = new TCanvas("c_density", "2D Density", 1200, 1000);
     gStyle->SetOptStat(0);
+    gStyle->SetOptTitle(0);
     c->SetRightMargin(0.15);
     c->SetLeftMargin(0.15);
     c->SetTopMargin(0.1);
@@ -54,13 +55,7 @@ void PlotOptions2D::Plot(TFile* inputFile) {
 
     hist->Draw("COLZ");
 
-    TLatex latex;
-    latex.SetTextSize(0.04);
-    latex.SetNDC();
-    latex.SetTextColor(kBlack);
-    const std::string simLabel = BuildSimLabel(inputFile);
-    latex.DrawLatex(0.2, 0.92, simLabel.c_str());
-    latex.DrawLatex(0.65, 0.92, "#bf{Diff. DIS} 10x100 GeV");
+    DrawSimLabels(inputFile);
 
     c->Update();
     SaveCanvas(c, m_saveName);
