@@ -28,6 +28,7 @@
 #include <random>
 #include <cctype>
 #include <sstream>
+#include <limits>
 #include <TTreeReader.h>
 #include <TTreeReaderArray.h>
 #include "Utility.hpp"
@@ -168,6 +169,59 @@ static std::vector<double> UniqueSorted(std::vector<double> vals) {
     return vals;
 }
 
+struct CutflowConfig {
+    bool apply_dis_cuts = true;// all cuts
+    bool apply_proton_tag_cuts = true;
+    bool use_em_for_dis_selection = false; // y-method switch can override later
+
+    double q2_min = 1.0;
+    double q2_max = std::numeric_limits<double>::infinity();
+    double y_min = 0.01;
+    double y_max = 0.95;
+
+    bool apply_epz_cut = true;
+    bool apply_epz_cut_to_truth = false;
+    double epz_min = 16.0;// this is for 18x275 GeV2 , for 10x100 GeV2 it could be 16-24 GeV
+    double epz_max = 24.0;
+
+    double theta_rp_max_mrad = 5.0;
+    double theta_b0_min_mrad = 5.5;
+    double theta_b0_max_mrad = 20.0;
+};
+
+static bool PassDISKinematicCuts(const CutflowConfig& cfg,
+                                 const bool validQ2,
+                                 const bool validY,
+                                 const double q2,
+                                 const double y,
+                                 const double epz,
+                                 const bool isTruth) {
+    if (!validQ2 || !validY) return false;
+    if (!cfg.apply_dis_cuts) return true;
+
+    if (!(q2 > cfg.q2_min && q2 < cfg.q2_max)) return false;
+    if (!(y > cfg.y_min && y < cfg.y_max)) return false;
+
+    const bool applyEPz = cfg.apply_epz_cut && (!isTruth || cfg.apply_epz_cut_to_truth);
+    if (applyEPz) {
+        if (!(std::isfinite(epz) && epz > cfg.epz_min && epz < cfg.epz_max)) return false;
+    }
+
+    return true;
+}
+
+static bool PassRPAcceptance(const CutflowConfig& cfg, const double theta_mrad) {
+    if (!std::isfinite(theta_mrad)) return false;
+    if (!cfg.apply_proton_tag_cuts) return true;
+    return theta_mrad <= cfg.theta_rp_max_mrad;
+}
+
+static bool PassB0Acceptance(const CutflowConfig& cfg, const double theta_mrad) {
+    if (!std::isfinite(theta_mrad)) return false;
+    if (!cfg.apply_proton_tag_cuts) return true;
+    return theta_mrad > cfg.theta_b0_min_mrad && theta_mrad < cfg.theta_b0_max_mrad;
+}
+
 static void CollectEdges(const std::vector<BinDef>& bins,
                          std::vector<double>& q2_edges,
                          std::vector<double>& beta_edges,
@@ -183,6 +237,49 @@ static void CollectEdges(const std::vector<BinDef>& bins,
     q2_edges = UniqueSorted(q2_edges);
     beta_edges = UniqueSorted(beta_edges);
     xpom_edges = UniqueSorted(xpom_edges);
+}
+
+// Smooth DA->EM blend for W^2 reconstruction:
+// alpha=1 at low W^2 (DA-dominated), alpha->0 at high W^2 (EM-dominated).
+static constexpr double kW2BestW0 = 320.0;
+static constexpr double kW2BestGamma = 4.0;
+
+static double ComputeW2BestAlpha(const double w2_proxy) {
+    if (!std::isfinite(w2_proxy) || w2_proxy <= 0.0) return 0.5;
+    const double ratio = w2_proxy / kW2BestW0;
+    const double powTerm = std::pow(ratio, kW2BestGamma);
+    const double alpha = 1.0 / (1.0 + powTerm);
+    return std::clamp(alpha, 0.0, 1.0);
+}
+
+static bool ComputeW2Best(const double w2_em,
+                          const double w2_da,
+                          double& w2_best,
+                          double& alpha,
+                          double& w2_proxy) {
+    const bool validEM = std::isfinite(w2_em) && w2_em > 0.0;
+    const bool validDA = std::isfinite(w2_da) && w2_da > 0.0;
+
+    if (!validEM && !validDA) return false;
+
+    if (validEM && validDA) {
+        w2_proxy = std::sqrt(w2_em * w2_da);
+        alpha = ComputeW2BestAlpha(w2_proxy);
+        w2_best = alpha * w2_da + (1.0 - alpha) * w2_em;
+        return std::isfinite(w2_best) && w2_best > 0.0;
+    }
+
+    if (validDA) {
+        w2_proxy = w2_da;
+        alpha = 1.0;
+        w2_best = w2_da;
+        return true;
+    }
+
+    w2_proxy = w2_em;
+    alpha = 0.0;
+    w2_best = w2_em;
+    return true;
 }
 
 //==============================================================
@@ -268,6 +365,77 @@ static bool WriteBinsTSV(const std::string& path, const std::vector<BinDef>& bin
             << b.Q2_min << "\t" << b.Q2_max << "\t"
             << b.beta_min << "\t" << b.beta_max << "\t"
             << b.xpom_min << "\t" << b.xpom_max << "\n";
+    }
+    return true;
+}
+
+static bool EdgesMatchWithinTolerance(double a, double b) {
+    const double scale = std::max(1.0, std::max(std::abs(a), std::abs(b)));
+    return std::abs(a - b) <= 1e-12 * scale;
+}
+
+static int FindLowerEdgeIndex(const std::vector<double>& edges, double value) {
+    if (edges.size() < 2) return -1;
+    for (size_t i = 0; i + 1 < edges.size(); ++i) {
+        if (EdgesMatchWithinTolerance(edges[i], value)) {
+            return static_cast<int>(i);
+        }
+    }
+    return -1;
+}
+
+static int GetGlobalBinFromBinDef(const BinDef& b) {
+    const int iQ2 = FindLowerEdgeIndex(kRelResQ2Bins, b.Q2_min);
+    const int iXpom = FindLowerEdgeIndex(kRelResXpomBins, b.xpom_min);
+    const int iBeta = FindLowerEdgeIndex(kRelResBetaBins, b.beta_min);
+    if (iQ2 < 0 || iXpom < 0 || iBeta < 0) return -1;
+
+    if (iQ2 + 1 >= static_cast<int>(kRelResQ2Bins.size()) ||
+        iXpom + 1 >= static_cast<int>(kRelResXpomBins.size()) ||
+        iBeta + 1 >= static_cast<int>(kRelResBetaBins.size())) {
+        return -1;
+    }
+
+    if (!EdgesMatchWithinTolerance(kRelResQ2Bins[iQ2 + 1], b.Q2_max) ||
+        !EdgesMatchWithinTolerance(kRelResXpomBins[iXpom + 1], b.xpom_max) ||
+        !EdgesMatchWithinTolerance(kRelResBetaBins[iBeta + 1], b.beta_max)) {
+        return -1;
+    }
+
+    return iBeta + iXpom * kRelResNBeta + iQ2 * (kRelResNBeta * kRelResNXpom);
+}
+
+static bool WriteBinOccupancyYAML(const std::string& path,
+                                  const std::vector<BinDef>& bins,
+                                  const std::vector<int>& occupancy) {
+    std::ofstream out(path);
+    if (!out.is_open()) return false;
+
+    long long totalAssigned = 0;
+    for (const int c : occupancy) totalAssigned += c;
+
+    out << "metadata:\n";
+    out << "  description: \"Per-bin occupancy from truth global bin assignment (Q2_truth, x_pom_truth, beta_truth).\"\n";
+    out << "  n_bins: " << bins.size() << "\n";
+    out << "  total_assigned_events: " << totalAssigned << "\n";
+    out << "  k_index_convention: \"one_based\"\n";
+    out << "bins:\n";
+    out << std::setprecision(8);
+
+    for (const auto& b : bins) {
+        const int kZeroBased = GetGlobalBinFromBinDef(b);
+        const int occ = (kZeroBased >= 0 && kZeroBased < static_cast<int>(occupancy.size()))
+                            ? occupancy[kZeroBased]
+                            : 0;
+        out << "  - bin_id: " << b.bin_id << "\n";
+        out << "    k_index: " << (kZeroBased >= 0 ? kZeroBased + 1 : -1) << "\n";
+        out << "    occupancy: " << occ << "\n";
+        out << "    Q2_min: " << b.Q2_min << "\n";
+        out << "    Q2_max: " << b.Q2_max << "\n";
+        out << "    x_pom_min: " << b.xpom_min << "\n";
+        out << "    x_pom_max: " << b.xpom_max << "\n";
+        out << "    beta_min: " << b.beta_min << "\n";
+        out << "    beta_max: " << b.beta_max << "\n";
     }
     return true;
 }
@@ -618,12 +786,12 @@ int main(int argc, char** argv) {
 
     // Relative resolution histograms
     TH1D* h_RelRes_x_EM     = new TH1D("x_RelRes_EM",     "electron method;#frac{x(Reco)-x(MC)}{x(MC)}", 101, -0.15, 0.15);
-    TH1D* h_RelRes_x_DA     = new TH1D("x_RelRes_DA",     "DA method;#frac{x(Reco)-x(MC)}{x(MC)}",       101, -0.15, 0.15);
-    TH1D* h_RelRes_x_Sigma = new TH1D("x_RelRes_Sigma", "Sigma method;#frac{x(Reco)-x(MC)}{x(MC)}",   101, -0.15, 0.15);
+    TH1D* h_RelRes_x_DA     = new TH1D("x_RelRes_DA",     "DA method;#frac{x(Reco)-x(MC)}{x(MC)}"      , 41, -0.5, 0.5);
+    TH1D* h_RelRes_x_Sigma  = new TH1D("x_RelRes_Sigma",  "Sigma method;#frac{x(Reco)-x(MC)}{x(MC)}"   , 41, -0.5, 0.5);
 
     TH1D* h_RelRes_y_EM     = new TH1D("y_RelRes_EM",     "electron method;#frac{y(Reco)-y(MC)}{y(MC)}", 101, -0.15, 0.15);
-    TH1D* h_RelRes_y_DA     = new TH1D("y_RelRes_DA",     "DA method;#frac{y(Reco)-y(MC)}{y(MC)}",       101, -0.15, 0.15);
-    TH1D* h_RelRes_y_Sigma = new TH1D("y_RelRes_Sigma", "Sigma method;#frac{y(Reco)-y(MC)}{y(MC)}",   101, -0.15, 0.15);
+    TH1D* h_RelRes_y_DA     = new TH1D("y_RelRes_DA",     "DA method;#frac{y(Reco)-y(MC)}{y(MC)}"      , 51, -0.5, 0.5);
+    TH1D* h_RelRes_y_Sigma  = new TH1D("y_RelRes_Sigma", "Sigma method;#frac{y(Reco)-y(MC)}{y(MC)}"    , 51, -0.5, 0.5);
 
     // 2D binned relres vs truth
     int n_binned = 51;
@@ -685,9 +853,9 @@ int main(int argc, char** argv) {
         "y Rel. Res. binned in (x, Q^{2}) (Sigma);x;Q^{2} [GeV^{2}]",
         x_bins.size()-1, x_bins.data(), n_bins, bin_edges_Q2.data(), "s");
 
-    TH1D* h_RelRes_Q2_EM = new TH1D("Q2_RelRes_EM","electron method;#frac{Q^{2}(Reco)-Q^{2}(MC)}{Q^{2}(MC)}",101,-0.15,0.15);
-    TH1D* h_RelRes_Q2_DA = new TH1D("Q2_RelRes_DA","DA method;#frac{Q^{2}(DA)-Q^{2}(MC)}{Q^{2}(MC)}",101,-0.15,0.15);
-    TH1D* h_RelRes_Q2_Sigma = new TH1D("Q2_RelRes_Sigma","Sigma method;#frac{Q^{2}(Sigma)-Q^{2}(MC)}{Q^{2}(MC)}",101,-0.15,0.15);
+    TH1D* h_RelRes_Q2_EM = new TH1D("Q2_RelRes_EM","electron method;#frac{Q^{2}(Reco)-Q^{2}(MC)}{Q^{2}(MC)}",71,-0.15,0.15);
+    TH1D* h_RelRes_Q2_DA = new TH1D("Q2_RelRes_DA","DA method;#frac{Q^{2}(DA)-Q^{2}(MC)}{Q^{2}(MC)}",71,-0.15,0.15);
+    TH1D* h_RelRes_Q2_Sigma = new TH1D("Q2_RelRes_Sigma","Sigma method;#frac{Q^{2}(Sigma)-Q^{2}(MC)}{Q^{2}(MC)}",43,-0.4,0.15);
     
     TH2D* h_RelRes_Q2_binned_EM = new TH2D("Q2_RelRes_binned_EM",";Q^{2} [GeV^{2}];#frac{Q^{2}(EM)-Q^{2}(MC)}{Q^{2}(MC)}",
         n_bins, bin_edges_Q2.data(), n_binned,-0.15,0.15);
@@ -718,6 +886,34 @@ int main(int argc, char** argv) {
     ResAccum res_beta_EM_RP_k(kRelResNBins);
     ResAccum res_beta_DA_RP_k(kRelResNBins);
     ResAccum res_beta_Sigma_RP_k(kRelResNBins);
+    std::vector<int> occupancy_truth_k(kRelResNBins, 0);
+    TH1D* h_phase_bin_gen = new TH1D("phase_bin_gen",
+                                     "Generated counts per global bin;Global bin k;Counts",
+                                     kRelResNBins, 0.5, kRelResNBins + 0.5);
+    TH1D* h_phase_bin_meas = new TH1D("phase_bin_meas",
+                                      "Measured counts per global bin (after selections);Global bin k;Counts",
+                                      kRelResNBins, 0.5, kRelResNBins + 0.5);
+    TH1D* h_phase_bin_gen_meas_same = new TH1D("phase_bin_gen_meas_same",
+                                               "Generated and measured in same global bin;Global bin k;Counts",
+                                               kRelResNBins, 0.5, kRelResNBins + 0.5);
+    TH1D* h_phase_bin_gen_setA = new TH1D("phase_bin_gen_setA",
+                                          "Generated counts per global bin (Set A);Global bin k;Counts",
+                                          kRelResNBins, 0.5, kRelResNBins + 0.5);
+    TH1D* h_phase_bin_meas_setA = new TH1D("phase_bin_meas_setA",
+                                           "Measured counts per global bin (Set A);Global bin k;Counts",
+                                           kRelResNBins, 0.5, kRelResNBins + 0.5);
+    TH1D* h_phase_bin_gen_meas_same_setA = new TH1D("phase_bin_gen_meas_same_setA",
+                                                    "Generated and measured in same global bin (Set A);Global bin k;Counts",
+                                                    kRelResNBins, 0.5, kRelResNBins + 0.5);
+    TH1D* h_phase_bin_gen_setB = new TH1D("phase_bin_gen_setB",
+                                          "Generated counts per global bin (Set B);Global bin k;Counts",
+                                          kRelResNBins, 0.5, kRelResNBins + 0.5);
+    TH1D* h_phase_bin_meas_setB = new TH1D("phase_bin_meas_setB",
+                                           "Measured counts per global bin (Set B);Global bin k;Counts",
+                                           kRelResNBins, 0.5, kRelResNBins + 0.5);
+    TH1D* h_phase_bin_gen_meas_same_setB = new TH1D("phase_bin_gen_meas_same_setB",
+                                                    "Generated and measured in same global bin (Set B);Global bin k;Counts",
+                                                    kRelResNBins, 0.5, kRelResNBins + 0.5);
 
     
     TH1D* h_Q2_truth    = new TH1D("h_Q2_truth","Q^2;# of events",n_bins, bin_edges_Q2.data());
@@ -742,10 +938,35 @@ int main(int argc, char** argv) {
     }
     TH1D* h_W2_EM    = new TH1D("W2_EM",    "Electron method;W^{2} [GeV^{2}]", w2_bins.size()-1, w2_bins.data());
     TH1D* h_W2_DA    = new TH1D("W2_DA",    "DA method;W^{2} [GeV^{2}]",       w2_bins.size()-1, w2_bins.data());
+    TH1D* h_W2_Best  = new TH1D("W2_Best",  "Best blend (DA#rightarrowEM);W^{2} [GeV^{2}]", w2_bins.size()-1, w2_bins.data());
     TH1D* h_W2_Sigma = new TH1D("W2_Sigma", "Sigma method;W^{2} [GeV^{2}]",    w2_bins.size()-1, w2_bins.data());
     TH1D* h_W2_truth = new TH1D("W2_truth", "Truth;W^{2} [GeV^{2}]",           w2_bins.size()-1, w2_bins.data());
-    TH1D* h_RelRes_W2_EM = new TH1D("W2_RelRes_EM", "electron method;#frac{W^{2}_{EM}-W^{2}_{MC}}{W^{2}_{MC}}", 101, -1.0, 1.0);
-    TH1D* h_RelRes_W2_DA = new TH1D("W2_RelRes_DA", "DA method;#frac{W^{2}_{DA}-W^{2}_{MC}}{W^{2}_{MC}}", 101, -1.0, 1.0);
+    std::vector<double> w2_relres_em_edges;
+    {
+        // Piecewise test binning:
+        // coarse [-0.2, -0.02], tight [-0.02, 0.02], coarse [0.02, 0.2].
+        const int n_coarse_left = 18;   // width 0.01
+        const int n_tight_mid = 20;     // 
+        const int n_coarse_right = 18;  // width 0.01
+
+        auto append_linear_segment = [&w2_relres_em_edges](double x0, double x1, int nBins, bool includeStart) {
+            for (int i = includeStart ? 0 : 1; i <= nBins; ++i) {
+                w2_relres_em_edges.push_back(x0 + (x1 - x0) * static_cast<double>(i) / nBins);
+            }
+        };
+
+        append_linear_segment(-0.1, -0.005, n_coarse_left, true);
+        append_linear_segment(-0.005, 0.005, n_tight_mid, false);
+        append_linear_segment(0.005, 0.1, n_coarse_right, false);
+    }
+    TH1D* h_RelRes_W2_EM = new TH1D(
+        "W2_RelRes_EM",
+        "electron method;#frac{W^{2}_{EM}-W^{2}_{MC}}{W^{2}_{MC}}",
+        static_cast<int>(w2_relres_em_edges.size()) - 1,
+        w2_relres_em_edges.data()
+    );
+    TH1D* h_RelRes_W2_DA = new TH1D("W2_RelRes_DA", "DA method;#frac{W^{2}_{DA}-W^{2}_{MC}}{W^{2}_{MC}}", 99, -1.0, 1.0);
+    TH1D* h_RelRes_W2_Best = new TH1D("W2_RelRes_Best", "Best blend;#frac{W^{2}_{best}-W^{2}_{MC}}{W^{2}_{MC}}", 101, -1.0, 1.0);
     TH1D* h_RelRes_W2_Sigma = new TH1D("W2_RelRes_Sigma", "Sigma method;#frac{W^{2}_{#Sigma}-W^{2}_{MC}}{W^{2}_{MC}}", 101, -1.0, 1.0);
 
     TH2D* h_RelRes_W2_binned_EM = new TH2D("W2_RelRes_binned_EM",
@@ -753,6 +974,9 @@ int main(int argc, char** argv) {
         w2_bins.size()-1, w2_bins.data(), n_binned, -1.0, 1.0);
     TH2D* h_RelRes_W2_binned_DA = new TH2D("W2_RelRes_binned_DA",
         ";W^{2}_{MC} [GeV^{2}];#frac{W^{2}_{DA}-W^{2}_{MC}}{W^{2}_{MC}}",
+        w2_bins.size()-1, w2_bins.data(), n_binned, -1.0, 1.0);
+    TH2D* h_RelRes_W2_binned_Best = new TH2D("W2_RelRes_binned_Best",
+        ";W^{2}_{MC} [GeV^{2}];#frac{W^{2}_{best}-W^{2}_{MC}}{W^{2}_{MC}}",
         w2_bins.size()-1, w2_bins.data(), n_binned, -1.0, 1.0);
     TH2D* h_RelRes_W2_binned_Sigma = new TH2D("W2_RelRes_binned_Sigma",
         ";W^{2}_{MC} [GeV^{2}];#frac{W^{2}_{#Sigma}-W^{2}_{MC}}{W^{2}_{MC}}",
@@ -771,9 +995,27 @@ int main(int argc, char** argv) {
                                 "M_{X}^{2} Truth vs Reco;M_{X,truth}^{2} [GeV^{2}];M_{X,reco}^{2} [GeV^{2}]",
                                 mx2_bins.size() - 1, mx2_bins.data(),
                                 mx2_bins.size() - 1, mx2_bins.data());
+    std::vector<double> mx2_relres_edges;
+    {
+        // Piecewise binning with dense bins around zero:
+        // coarse [-1.0, -0.02], tight [-0.02, 0.02], coarse [0.02, 1.0].
+        const int n_coarse_left = 18;
+        const int n_tight_mid = 20;
+        const int n_coarse_right = 18;
+
+        auto append_linear_segment = [&mx2_relres_edges](double x0, double x1, int nBins, bool includeStart) {
+            for (int i = includeStart ? 0 : 1; i <= nBins; ++i) {
+                mx2_relres_edges.push_back(x0 + (x1 - x0) * static_cast<double>(i) / nBins);
+            }
+        };
+
+        append_linear_segment(-1.0, -0.05, n_coarse_left, true);
+        append_linear_segment(-0.05, 0.05, n_tight_mid, false);
+        append_linear_segment(0.05, 1.0, n_coarse_right, false);
+    }
     TH1D* h_MX2_RelRes = new TH1D("MX2_RelRes",
                                   "M_{X}^{2} relative resolution;#frac{M_{X,reco}^{2}-M_{X,truth}^{2}}{M_{X,truth}^{2}};Counts",
-                                  101, -1.0, 1.0);
+                                  static_cast<int>(mx2_relres_edges.size()) - 1, mx2_relres_edges.data());
     TH2D* h_MX2_RelRes_binned = new TH2D("MX2_RelRes_binned",
                                          "M_{X}^{2} relative resolution;M_{X,truth}^{2} [GeV^{2}];#frac{M_{X,reco}^{2}-M_{X,truth}^{2}}{M_{X,truth}^{2}}",
                                          mx2_bins.size() - 1, mx2_bins.data(), n_binned, -1.0, 1.0);
@@ -817,6 +1059,9 @@ int main(int argc, char** argv) {
     TH2D* h_Response_W2_DA = new TH2D("Response_W2_DA",
                                       "W^{2} Response Matrix (DA);W^{2}_{truth} [GeV^{2}];W^{2}_{reco} [GeV^{2}]",
                                       w2_bins.size()-1, w2_bins.data(), w2_bins.size()-1, w2_bins.data());
+    TH2D* h_Response_W2_Best = new TH2D("Response_W2_Best",
+                                        "W^{2} Response Matrix (best);W^{2}_{truth} [GeV^{2}];W^{2}_{reco} [GeV^{2}]",
+                                        w2_bins.size()-1, w2_bins.data(), w2_bins.size()-1, w2_bins.data());
     TH2D* h_Response_W2_Sigma = new TH2D("Response_W2_Sigma",
                                          "W^{2} Response Matrix (#Sigma);W^{2}_{truth} [GeV^{2}];W^{2}_{reco} [GeV^{2}]",
                                          w2_bins.size()-1, w2_bins.data(), w2_bins.size()-1, w2_bins.data());
@@ -836,6 +1081,7 @@ int main(int argc, char** argv) {
 
     TGraph* g_W2_EM = new TGraph(); g_W2_EM->SetName("g_W2_EM");
     TGraph* g_W2_DA = new TGraph(); g_W2_DA->SetName("g_W2_DA");
+    TGraph* g_W2_Best = new TGraph(); g_W2_Best->SetName("g_W2_Best");
     TGraph* g_W2_Sigma = new TGraph(); g_W2_Sigma->SetName("g_W2_Sigma");
 
     TGraph* g_Ep_e = new TGraph(); g_Ep_e->SetName("g_Ep_e");
@@ -845,7 +1091,7 @@ int main(int argc, char** argv) {
     int n_g_Q2_EM = 0, n_g_Q2_DA = 0, n_g_Q2_Sigma = 0;
     int n_g_x_EM = 0, n_g_x_DA = 0, n_g_x_Sigma = 0;
     int n_g_y_EM = 0, n_g_y_DA = 0, n_g_y_Sigma = 0;
-    int n_g_W2_EM = 0, n_g_W2_DA = 0, n_g_W2_Sigma = 0;
+    int n_g_W2_EM = 0, n_g_W2_DA = 0, n_g_W2_Best = 0, n_g_W2_Sigma = 0;
     int n_g_Ep_e = 0, n_g_phi_e = 0, n_g_pT_e = 0;
 
     //---------------------------------------------------------
@@ -886,8 +1132,8 @@ int main(int argc, char** argv) {
     TH1D* h_xL_MC = new TH1D("xL_MC", "Truth x_{L};x_{L};Counts", 30, 0.75, 1.05);
     TH1D* h_xL_B0 = new TH1D("xL_B0", "B0 Reco x_{L};x_{L};Counts", 30, 0.75, 1.05);
     TH1D* h_xL_RP = new TH1D("xL_RP", "RP Reco x_{L};x_{L};Counts", 30, 0.75, 1.05);
-    TH1D* h_xL_res_B0 = new TH1D("xL_res_B0", "B0 x_{L} Resolution;(x_{L,reco}-x_{L,truth})/x_{L,truth};Counts", 100, -2.0, 2.0);
-    TH1D* h_xL_res_RP = new TH1D("xL_res_RP", "RP x_{L} Resolution;(x_{L,reco}-x_{L,truth})/x_{L,truth};Counts", 100, -2.0, 2.0);
+    TH1D* h_xL_res_B0 = new TH1D("xL_res_B0", "B0 x_{L} Resolution;(x_{L,reco}-x_{L,truth})/x_{L,truth};Counts", 31, -0.5, 0.5);
+    TH1D* h_xL_res_RP = new TH1D("xL_res_RP", "RP x_{L} Resolution;(x_{L,reco}-x_{L,truth})/x_{L,truth};Counts", 31, -0.1, 0.1);
     TH2D* h_xL_corr_B0 = new TH2D("xL_corr_B0", "B0 x_{L} Correlation;Truth x_{L};Reco x_{L}", 100, 0.7, 1.1, 100, 0.7, 1.1);
     TH2D* h_xL_corr_RP = new TH2D("xL_corr_RP", "RP x_{L} Correlation;Truth x_{L};Reco x_{L}", 100, 0.7, 1.1, 100, 0.7, 1.1);
     TH2D* h_xL_RelRes_binned_B0 = new TH2D("xL_RelRes_binned_B0",
@@ -959,14 +1205,20 @@ int main(int argc, char** argv) {
                                     xpom_bins.size()-1, xpom_bins.data(), xpom_bins.size()-1, xpom_bins.data());
     TH2D* h_xpom_corr_RP = new TH2D("xpom_corr_RP", "RP x_{pom} Correlation (from x_{L});Truth x_{pom};Reco x_{pom}",
                                     xpom_bins.size()-1, xpom_bins.data(), xpom_bins.size()-1, xpom_bins.data());
-    TH1D* h_xpom_res_B0 = new TH1D("xpom_res_B0", "B0 x_{pom} Resolution (from x_{L});(x_{pom,reco}-x_{pom,truth})/x_{pom,truth};Counts", 100, -2.0, 2.0);
-    TH1D* h_xpom_res_RP = new TH1D("xpom_res_RP", "RP x_{pom} Resolution (from x_{L});(x_{pom,reco}-x_{pom,truth})/x_{pom,truth};Counts", 100, -2.0, 2.0);
+    TH1D* h_xpom_res_B0 = new TH1D("xpom_res_B0", "B0 x_{pom} Resolution (from x_{L});(x_{pom,reco}-x_{pom,truth})/x_{pom,truth};Counts", 30, -1.5, 1.5);
+    TH1D* h_xpom_res_RP = new TH1D("xpom_res_RP", "RP x_{pom} Resolution (from x_{L});(x_{pom,reco}-x_{pom,truth})/x_{pom,truth};Counts", 60, -1.5, 1.0);
     TH2D* h_xpom_RelRes_binned_B0 = new TH2D("xpom_RelRes_binned_B0",
                                              "x_{pom} relative resolution (B0);x_{pom,truth};#frac{x_{pom,reco}-x_{pom,truth}}{x_{pom,truth}}",
-                                             xpom_bins.size()-1, xpom_bins.data(), 100, -2.0, 2.0);
+                                             xpom_bins.size()-1, xpom_bins.data(), 21, -2.0, 2.0);
     TH2D* h_xpom_RelRes_binned_RP = new TH2D("xpom_RelRes_binned_RP",
                                              "x_{pom} relative resolution (RP);x_{pom,truth};#frac{x_{pom,reco}-x_{pom,truth}}{x_{pom,truth}}",
-                                             xpom_bins.size()-1, xpom_bins.data(), 100, -2.0, 2.0);
+                                             xpom_bins.size()-1, xpom_bins.data(), 21, -2.0, 2.0);
+    TH2D* h_xpom_RelRes_binned_W2Best_B0 = new TH2D("xpom_RelRes_binned_W2Best_B0",
+                                                    "x_{pom} relative resolution (W^{2}_{best}, B0);x_{pom,truth};#frac{x_{pom,reco}-x_{pom,truth}}{x_{pom,truth}}",
+                                                    xpom_bins.size()-1, xpom_bins.data(), 21, -2.0, 2.0);
+    TH2D* h_xpom_RelRes_binned_W2Best_RP = new TH2D("xpom_RelRes_binned_W2Best_RP",
+                                                    "x_{pom} relative resolution (W^{2}_{best}, RP);x_{pom,truth};#frac{x_{pom,reco}-x_{pom,truth}}{x_{pom,truth}}",
+                                                    xpom_bins.size()-1, xpom_bins.data(), 21, -2.0, 2.0);
 
     TH2D* h_Response_xpom_EM_B0 = new TH2D("Response_xpom_EM_B0", "x_{pom} Response EM (B0);Truth x_{pom};Reco x_{pom}",
                                           xpom_bins.size()-1, xpom_bins.data(),
@@ -986,6 +1238,12 @@ int main(int argc, char** argv) {
     TH2D* h_Response_xpom_Sigma_RP = new TH2D("Response_xpom_Sigma_RP", "x_{pom} Response #Sigma (RP);Truth x_{pom};Reco x_{pom}",
                                              xpom_bins.size()-1, xpom_bins.data(),
                                              xpom_bins.size()-1, xpom_bins.data());
+    TH2D* h_Response_xpom_W2Best_B0 = new TH2D("Response_xpom_W2Best_B0", "x_{pom} Response W^{2}_{best} (B0);Truth x_{pom};Reco x_{pom}",
+                                              xpom_bins.size()-1, xpom_bins.data(),
+                                              xpom_bins.size()-1, xpom_bins.data());
+    TH2D* h_Response_xpom_W2Best_RP = new TH2D("Response_xpom_W2Best_RP", "x_{pom} Response W^{2}_{best} (RP);Truth x_{pom};Reco x_{pom}",
+                                              xpom_bins.size()-1, xpom_bins.data(),
+                                              xpom_bins.size()-1, xpom_bins.data());
 
     const int n_beta_resp_bins = static_cast<int>(beta_bins.size()) - 1;
     TH2D* h_Response_beta_EM_B0 = new TH2D("Response_beta_EM_B0", "#beta Response EM (B0);Truth #beta;Reco #beta",
@@ -1000,6 +1258,10 @@ int main(int argc, char** argv) {
                                              n_beta_resp_bins, beta_bins.data(), n_beta_resp_bins, beta_bins.data());
     TH2D* h_Response_beta_Sigma_RP = new TH2D("Response_beta_Sigma_RP", "#beta Response #Sigma (RP);Truth #beta;Reco #beta",
                                              n_beta_resp_bins, beta_bins.data(), n_beta_resp_bins, beta_bins.data());
+    TH2D* h_Response_beta_W2Best_B0 = new TH2D("Response_beta_W2Best_B0", "#beta Response W^{2}_{best} (B0);Truth #beta;Reco #beta",
+                                              n_beta_resp_bins, beta_bins.data(), n_beta_resp_bins, beta_bins.data());
+    TH2D* h_Response_beta_W2Best_RP = new TH2D("Response_beta_W2Best_RP", "#beta Response W^{2}_{best} (RP);Truth #beta;Reco #beta",
+                                              n_beta_resp_bins, beta_bins.data(), n_beta_resp_bins, beta_bins.data());
 
     TH1D* h_beta_truth_all = new TH1D("beta_truth_all", "Truth #beta (All);#beta;Counts", beta_bins.size()-1, beta_bins.data());
     TH1D* h_beta_truth_B0 = new TH1D("beta_truth_B0", "Truth #beta (B0);#beta;Counts", beta_bins.size()-1, beta_bins.data());
@@ -1017,18 +1279,24 @@ int main(int argc, char** argv) {
     TH1D* h_beta_MC = new TH1D("beta_MC", "Truth #beta (from x_{pom} def);#beta;Counts", beta_bins.size()-1, beta_bins.data());
     TH1D* h_beta_B0 = new TH1D("beta_B0", "B0 Reco #beta (EM,x_{pom} def);#beta;Counts", beta_bins.size()-1, beta_bins.data());
     TH1D* h_beta_RP = new TH1D("beta_RP", "RP Reco #beta (EM,x_{pom} def);#beta;Counts", beta_bins.size()-1, beta_bins.data());
-    TH1D* h_beta_res_B0 = new TH1D("beta_res_B0", "B0 #beta Resolution;(#beta_{reco}-#beta_{truth})/#beta_{truth};Counts", 100, -2.0, 2.0);
-    TH1D* h_beta_res_RP = new TH1D("beta_res_RP", "RP #beta Resolution;(#beta_{reco}-#beta_{truth})/#beta_{truth};Counts", 100, -2.0, 2.0);
+    TH1D* h_beta_res_B0 = new TH1D("beta_res_B0", "B0 #beta Resolution;(#beta_{reco}-#beta_{truth})/#beta_{truth};Counts", 40, -0.4, 0.4);
+    TH1D* h_beta_res_RP = new TH1D("beta_res_RP", "RP #beta Resolution;(#beta_{reco}-#beta_{truth})/#beta_{truth};Counts", 40, -0.5, 0.5);
     TH2D* h_beta_corr_B0 = new TH2D("beta_corr_B0", "B0 #beta Correlation;Truth #beta;Reco #beta",
                                     beta_bins.size()-1, beta_bins.data(), beta_bins.size()-1, beta_bins.data());
     TH2D* h_beta_corr_RP = new TH2D("beta_corr_RP", "RP #beta Correlation;Truth #beta;Reco #beta",
                                     beta_bins.size()-1, beta_bins.data(), beta_bins.size()-1, beta_bins.data());
     TH2D* h_beta_RelRes_binned_B0 = new TH2D("beta_RelRes_binned_B0",
                                              "#beta relative resolution (B0);#beta_{truth};#frac{#beta_{reco}-#beta_{truth}}{#beta_{truth}}",
-                                             beta_bins.size()-1, beta_bins.data(), 100, -2.0, 2.0);
+                                             beta_bins.size()-1, beta_bins.data(), 21, -1.0, 1.0);
     TH2D* h_beta_RelRes_binned_RP = new TH2D("beta_RelRes_binned_RP",
                                              "#beta relative resolution (RP);#beta_{truth};#frac{#beta_{reco}-#beta_{truth}}{#beta_{truth}}",
-                                             beta_bins.size()-1, beta_bins.data(), 100, -2.0, 2.0);
+                                             beta_bins.size()-1, beta_bins.data(), 21, -1.0, 1.0);
+    TH2D* h_beta_RelRes_binned_W2Best_B0 = new TH2D("beta_RelRes_binned_W2Best_B0",
+                                                    "#beta relative resolution (W^{2}_{best}, B0);#beta_{truth};#frac{#beta_{reco}-#beta_{truth}}{#beta_{truth}}",
+                                                    beta_bins.size()-1, beta_bins.data(), 21, -1.0, 1.0);
+    TH2D* h_beta_RelRes_binned_W2Best_RP = new TH2D("beta_RelRes_binned_W2Best_RP",
+                                                    "#beta relative resolution (W^{2}_{best}, RP);#beta_{truth};#frac{#beta_{reco}-#beta_{truth}}{#beta_{truth}}",
+                                                    beta_bins.size()-1, beta_bins.data(), 21, -1.0, 1.0);
     TH2D* h_beta_vs_Q2 = new TH2D("beta_vs_Q2", "#beta vs Q^{2};Q^{2} [GeV^{2}];#beta",
                                   n_bins, bin_edges_Q2.data(), beta_bins.size()-1, beta_bins.data());
     TH2D* h_beta_vs_xpom = new TH2D("beta_vs_xpom", "#beta vs x_{pom};x_{pom};#beta",
@@ -1098,6 +1366,11 @@ int main(int argc, char** argv) {
                                           n_Q2_3d_bins, Q2_3d_bins.data(),
                                           n_beta_3d_bins, beta_3d_bins,
                                           n_xpom_3d_bins, xpom_3d_bins.data());
+    TH3D* h_d3sigma_same_mc_B0 = new TH3D("d3sigma_dQ2dbeta_dxpom_same_mc_B0",
+                                          "Generated and measured in same d^{3}#sigma bin (MC subsample, B0);Q^{2} [GeV^{2}];#beta;x_{pom}",
+                                          n_Q2_3d_bins, Q2_3d_bins.data(),
+                                          n_beta_3d_bins, beta_3d_bins,
+                                          n_xpom_3d_bins, xpom_3d_bins.data());
     TH3D* h_d3sigma_truth_mc_RP = new TH3D("d3sigma_dQ2dbeta_dxpom_truth_mc_RP",
                                            "Truth d^{3}#sigma inputs (MC subsample, RP);Q^{2} [GeV^{2}];#beta;x_{pom}",
                                            n_Q2_3d_bins, Q2_3d_bins.data(),
@@ -1105,6 +1378,11 @@ int main(int argc, char** argv) {
                                            n_xpom_3d_bins, xpom_3d_bins.data());
     TH3D* h_d3sigma_reco_mc_RP = new TH3D("d3sigma_dQ2dbeta_dxpom_reco_mc_RP",
                                           "Reco d^{3}#sigma inputs (MC subsample, RP);Q^{2} [GeV^{2}];#beta;x_{pom}",
+                                          n_Q2_3d_bins, Q2_3d_bins.data(),
+                                          n_beta_3d_bins, beta_3d_bins,
+                                          n_xpom_3d_bins, xpom_3d_bins.data());
+    TH3D* h_d3sigma_same_mc_RP = new TH3D("d3sigma_dQ2dbeta_dxpom_same_mc_RP",
+                                          "Generated and measured in same d^{3}#sigma bin (MC subsample, RP);Q^{2} [GeV^{2}];#beta;x_{pom}",
                                           n_Q2_3d_bins, Q2_3d_bins.data(),
                                           n_beta_3d_bins, beta_3d_bins,
                                           n_xpom_3d_bins, xpom_3d_bins.data());
@@ -1170,9 +1448,9 @@ int main(int argc, char** argv) {
 
     TH1D* h_W2_truth_mc = new TH1D("W2_truth_mc", "Truth W^{2} (MC);W^{2} [GeV^{2}];Counts",
                                   w2_bins.size()-1, w2_bins.data());
-    TH1D* h_W2_reco_mc = new TH1D("W2_reco_mc", "Reco W^{2} (MC);W^{2} [GeV^{2}];Counts",
+    TH1D* h_W2_reco_mc = new TH1D("W2_reco_mc", "Reco W^{2} (MC, best DA#rightarrowEM blend);W^{2} [GeV^{2}];Counts",
                                  w2_bins.size()-1, w2_bins.data());
-    TH1D* h_W2_reco_pdata = new TH1D("W2_reco_pdata", "Reco W^{2} (Pseudo-data);W^{2} [GeV^{2}];Counts",
+    TH1D* h_W2_reco_pdata = new TH1D("W2_reco_pdata", "Reco W^{2} (Pseudo-data, best DA#rightarrowEM blend);W^{2} [GeV^{2}];Counts",
                                     w2_bins.size()-1, w2_bins.data());
     TH1D* h_W2_truth_pdata = new TH1D("W2_truth_pdata", "Truth W^{2} (Pseudo-data);W^{2} [GeV^{2}];Counts",
                                      w2_bins.size()-1, w2_bins.data());
@@ -1181,6 +1459,8 @@ int main(int argc, char** argv) {
                                     t_bins.size()-1, t_bins.data());
     TH1D* h_t_reco_mc_B0 = new TH1D("t_reco_mc_B0", "Reco |t| (MC, B0);|t| [GeV^{2}];Counts",
                                    t_bins.size()-1, t_bins.data());
+    TH1D* h_t_same_mc_B0 = new TH1D("t_same_mc_B0", "Generated and measured in same |t| bin (MC, B0);|t| [GeV^{2}];Counts",
+                                    t_bins.size()-1, t_bins.data());
     TH1D* h_t_reco_pdata_B0 = new TH1D("t_reco_pdata_B0", "Reco |t| (Pseudo-data, B0);|t| [GeV^{2}];Counts",
                                       t_bins.size()-1, t_bins.data());
     TH1D* h_t_truth_pdata_B0 = new TH1D("t_truth_pdata_B0", "Truth |t| (Pseudo-data, B0);|t| [GeV^{2}];Counts",
@@ -1190,6 +1470,8 @@ int main(int argc, char** argv) {
                                     t_bins.size()-1, t_bins.data());
     TH1D* h_t_reco_mc_RP = new TH1D("t_reco_mc_RP", "Reco |t| (MC, RP);|t| [GeV^{2}];Counts",
                                    t_bins.size()-1, t_bins.data());
+    TH1D* h_t_same_mc_RP = new TH1D("t_same_mc_RP", "Generated and measured in same |t| bin (MC, RP);|t| [GeV^{2}];Counts",
+                                    t_bins.size()-1, t_bins.data());
     TH1D* h_t_reco_pdata_RP = new TH1D("t_reco_pdata_RP", "Reco |t| (Pseudo-data, RP);|t| [GeV^{2}];Counts",
                                       t_bins.size()-1, t_bins.data());
     TH1D* h_t_truth_pdata_RP = new TH1D("t_truth_pdata_RP", "Truth |t| (Pseudo-data, RP);|t| [GeV^{2}];Counts",
@@ -1321,8 +1603,8 @@ int main(int argc, char** argv) {
         }
     }
 
-    TH1D* h_t_res_B0 = new TH1D("t_res_B0", "B0 t Resolution;(|t|_{reco}-|t|_{truth})/|t|_{truth};Counts", 100, -2.0, 2.0);
-    TH1D* h_t_res_RP = new TH1D("t_res_RP", "RP t Resolution;(|t|_{reco}-|t|_{truth})/|t|_{truth};Counts", 100, -2.0, 2.0);
+    TH1D* h_t_res_B0 = new TH1D("t_res_B0", "B0 t Resolution;(|t|_{reco}-|t|_{truth})/|t|_{truth};Counts", 51, -0.3, 0.3);
+    TH1D* h_t_res_RP = new TH1D("t_res_RP", "RP t Resolution;(|t|_{reco}-|t|_{truth})/|t|_{truth};Counts", 41, -0.5, 0.5);
 
     TH2D* h_t_RelRes_binned_B0 = new TH2D("t_RelRes_binned_B0",
                                          "|t|: truth vs rel. res (B0);|t|_{truth} [GeV^{2}];(#t_{reco}-#t_{truth})/#t_{truth}",
@@ -1601,9 +1883,40 @@ int main(int argc, char** argv) {
     Long64_t nOutQ2EM = 0, nOutXEM = 0, nOutYEM = 0;
     Long64_t nOutQ2DA = 0, nOutXDA = 0, nOutYDA = 0;
     Long64_t nOutQ2Sigma = 0, nOutXSigma = 0, nOutYSigma = 0;
-    const double kThetaRPMaxMrad = 5.0;
-    const double kThetaB0MinMrad = 5.5;
-    const double kThetaB0MaxMrad = 20.0;
+    Long64_t nPassTruthDIS = 0, nPassEMDIS = 0, nPassDADIS = 0, nPassSigmaDIS = 0;
+
+    const CutflowConfig cutCfg{};
+    auto fillSameBin1D = [](TH1D* refHist, TH1D* sameHist, double truthVal, double recoVal) {
+        if (!refHist || !sameHist) return;
+        const int nBins = refHist->GetNbinsX();
+        const int truthBin = refHist->GetXaxis()->FindBin(truthVal);
+        const int recoBin = refHist->GetXaxis()->FindBin(recoVal);
+        if (truthBin < 1 || truthBin > nBins) return;
+        if (recoBin < 1 || recoBin > nBins) return;
+        if (truthBin == recoBin) sameHist->Fill(recoVal);
+    };
+    auto fillSameBin3D = [](TH3D* refHist,
+                            TH3D* sameHist,
+                            double q2Truth,
+                            double betaTruth,
+                            double xpomTruth,
+                            double q2Reco,
+                            double betaReco,
+                            double xpomReco) {
+        if (!refHist || !sameHist) return;
+        const int nX = refHist->GetNbinsX();
+        const int nY = refHist->GetNbinsY();
+        const int nZ = refHist->GetNbinsZ();
+        const int bxt = refHist->GetXaxis()->FindBin(q2Truth);
+        const int byt = refHist->GetYaxis()->FindBin(betaTruth);
+        const int bzt = refHist->GetZaxis()->FindBin(xpomTruth);
+        const int bxr = refHist->GetXaxis()->FindBin(q2Reco);
+        const int byr = refHist->GetYaxis()->FindBin(betaReco);
+        const int bzr = refHist->GetZaxis()->FindBin(xpomReco);
+        if (bxt < 1 || bxt > nX || byt < 1 || byt > nY || bzt < 1 || bzt > nZ) return;
+        if (bxr < 1 || bxr > nX || byr < 1 || byr > nY || bzr < 1 || bzr > nZ) return;
+        if (bxt == bxr && byt == byr && bzt == bzr) sameHist->Fill(q2Reco, betaReco, xpomReco);
+    };
     for (Long64_t i = 0; i < nentries; i++) {
         // Update the counter every 1000 events
         if (i % 1000 == 0) {
@@ -1676,39 +1989,86 @@ int main(int argc, char** argv) {
         const auto isValidX = [](float v) { return std::isfinite(v) && v > 0.0f && v < 1.0f; };
         const auto isValidY = [](float v) { return std::isfinite(v) && v > 0.0f && v < 1.0f; };
 
-        const bool validTruthQ2 = isValidQ2(electron_Q2_truth);
-        const bool validTruthX = isValidX(electron_x_truth);
-        const bool validTruthY = isValidY(electron_y_truth);
-        if (!validTruthQ2) nOutQ2Truth++;
-        if (!validTruthX) nOutXTruth++;
-        if (!validTruthY) nOutYTruth++;
-        if (validTruthQ2 && validTruthX && validTruthY) nTruthValid++;
+        const bool rawTruthQ2 = isValidQ2(electron_Q2_truth);
+        const bool rawTruthX = isValidX(electron_x_truth);
+        const bool rawTruthY = isValidY(electron_y_truth);
+        if (!rawTruthQ2) nOutQ2Truth++;
+        if (!rawTruthX) nOutXTruth++;
+        if (!rawTruthY) nOutYTruth++;
 
-        const bool validEMQ2 = isValidQ2(electron_Q2_EM);
-        const bool validEMX = isValidX(electron_x_EM);
-        const bool validEMY = isValidY(electron_y_EM);
-        if (!validEMQ2) nOutQ2EM++;
-        if (!validEMX) nOutXEM++;
-        if (!validEMY) nOutYEM++;
-        if (validEMQ2 && validEMX && validEMY) nEMValid++;
+        const bool rawEMQ2 = isValidQ2(electron_Q2_EM);
+        const bool rawEMX = isValidX(electron_x_EM);
+        const bool rawEMY = isValidY(electron_y_EM);
+        if (!rawEMQ2) nOutQ2EM++;
+        if (!rawEMX) nOutXEM++;
+        if (!rawEMY) nOutYEM++;
 
-        const bool validDAQ2 = isValidQ2(electron_Q2_DA);
-        const bool validDAX = isValidX(electron_x_DA);
-        const bool validDAY = isValidY(electron_y_DA);
-        if (!validDAQ2) nOutQ2DA++;
-        if (!validDAX) nOutXDA++;
-        if (!validDAY) nOutYDA++;
-        if (validDAQ2 && validDAX && validDAY) nDAValid++;
+        const bool rawDAQ2 = isValidQ2(electron_Q2_DA);
+        const bool rawDAX = isValidX(electron_x_DA);
+        const bool rawDAY = isValidY(electron_y_DA);
+        if (!rawDAQ2) nOutQ2DA++;
+        if (!rawDAX) nOutXDA++;
+        if (!rawDAY) nOutYDA++;
 
-        const bool validSigmaQ2 = isValidQ2(electron_Q2_Sigma);
-        const bool validSigmaX = isValidX(electron_x_Sigma);
-        const bool validSigmaY = isValidY(electron_y_Sigma);
+        const bool rawSigmaQ2 = isValidQ2(electron_Q2_Sigma);
+        const bool rawSigmaX = isValidX(electron_x_Sigma);
+        const bool rawSigmaY = isValidY(electron_y_Sigma);
         if (hasSigmaMethod) {
-            if (!validSigmaQ2) nOutQ2Sigma++;
-            if (!validSigmaX) nOutXSigma++;
-            if (!validSigmaY) nOutYSigma++;
-            if (validSigmaQ2 && validSigmaX && validSigmaY) nSigmaValid++;
+            if (!rawSigmaQ2) nOutQ2Sigma++;
+            if (!rawSigmaX) nOutXSigma++;
+            if (!rawSigmaY) nOutYSigma++;
         }
+
+        // Reco/truth E-pz (currently matched-particle based), used by configurable DIS cuts.
+        double sumEPz_truth_matched = 0.0;
+        double sumEPz_reco_matched = 0.0;
+        CalculateSumEPz_Matched(
+            re_px_array, re_py_array, re_pz_array, re_energy_array,
+            mc_px_array, mc_py_array, mc_pz_array, mc_mass_array,
+            assoc_rec_id, assoc_sim_id,
+            sumEPz_truth_matched, sumEPz_reco_matched
+        );
+        h_EPz_truth->Fill(sumEPz_truth_matched);
+        h_EPz->Fill(sumEPz_reco_matched);
+        h_EPz_2D->Fill(sumEPz_truth_matched, sumEPz_reco_matched);
+
+        const bool passTruthDIS = PassDISKinematicCuts(
+            cutCfg, rawTruthQ2, rawTruthY, electron_Q2_truth, electron_y_truth, sumEPz_truth_matched, true);
+        const bool passEMDIS = PassDISKinematicCuts(
+            cutCfg, rawEMQ2, rawEMY, electron_Q2_EM, electron_y_EM, sumEPz_reco_matched, false);
+        const bool passDADIS = PassDISKinematicCuts(
+            cutCfg, rawDAQ2, rawDAY, electron_Q2_DA, electron_y_DA, sumEPz_reco_matched, false);
+        const bool passSigmaDIS = hasSigmaMethod ? PassDISKinematicCuts(
+            cutCfg, rawSigmaQ2, rawSigmaY, electron_Q2_Sigma, electron_y_Sigma, sumEPz_reco_matched, false) : false;
+
+        if (passTruthDIS) nPassTruthDIS++;
+        if (passEMDIS) nPassEMDIS++;
+        if (passDADIS) nPassDADIS++;
+        if (hasSigmaMethod && passSigmaDIS) nPassSigmaDIS++;
+
+        // Centralized analysis-valid flags used everywhere below.
+        const bool validTruthQ2 = rawTruthQ2 && passTruthDIS;
+        const bool validTruthX = rawTruthX && passTruthDIS;
+        const bool validTruthY = rawTruthY && passTruthDIS;
+
+        const bool validEMQ2 = rawEMQ2 && passEMDIS;
+        const bool validEMX = rawEMX && passEMDIS;
+        const bool validEMY = rawEMY && passEMDIS;
+
+        const bool validDAQ2 = rawDAQ2 && passDADIS;
+        const bool validDAX = rawDAX && passDADIS;
+        const bool validDAY = rawDAY && passDADIS;
+
+        const bool validSigmaQ2 = rawSigmaQ2 && passSigmaDIS;
+        const bool validSigmaX = rawSigmaX && passSigmaDIS;
+        const bool validSigmaY = rawSigmaY && passSigmaDIS;
+
+        const bool passRecoDIS = cutCfg.use_em_for_dis_selection ? passEMDIS : (passEMDIS || passDADIS || passSigmaDIS);
+
+        if (validTruthQ2 && validTruthX && validTruthY) nTruthValid++;
+        if (validEMQ2 && validEMX && validEMY) nEMValid++;
+        if (validDAQ2 && validDAX && validDAY) nDAValid++;
+        if (hasSigmaMethod && validSigmaQ2 && validSigmaX && validSigmaY) nSigmaValid++;
 
         if (validTruthX) h_x_truth->Fill(electron_x_truth);
         if (validEMX) h_x_EM->Fill(electron_x_EM);
@@ -1720,7 +2080,8 @@ int main(int argc, char** argv) {
         if (validDAY) h_y_DA->Fill(electron_y_DA);
         if (hasSigmaMethod && validSigmaY) h_y_Sigma->Fill(electron_y_Sigma);
 
-        // Relative resolutions vs truth
+        // Relative resolutions vs truth (Set A only)
+        if (is_mc_subsample) {
         if (validTruthX && validEMX) {
             h_RelRes_x_EM->Fill((electron_x_EM - electron_x_truth) / electron_x_truth);
             h_RelRes_x_binned_EM->Fill(electron_x_truth, (electron_x_EM - electron_x_truth) / electron_x_truth);
@@ -1761,6 +2122,7 @@ int main(int argc, char** argv) {
         if (validTruthY && validEMY) g_y_EM->SetPoint(n_g_y_EM++, electron_y_truth, electron_y_EM);
         if (validTruthY && validDAY) g_y_DA->SetPoint(n_g_y_DA++, electron_y_truth, electron_y_DA);
         if (hasSigmaMethod && validTruthY && validSigmaY) g_y_Sigma->SetPoint(n_g_y_Sigma++, electron_y_truth, electron_y_Sigma);
+        } // end is_mc_subsample gate for x/y resolution
 
         if (validEMQ2) h_Q2_EM->Fill(electron_Q2_EM);
         if (validDAQ2) h_Q2_DA->Fill(electron_Q2_DA);
@@ -1792,6 +2154,8 @@ int main(int argc, char** argv) {
             h_xQ2_reco->Fill(electron_x_EM, electron_Q2_EM);
         }
 
+        // Q2/x/y resolution, correlations, and profile maps (Set A only)
+        if (is_mc_subsample) {
         if (validTruthQ2 && validEMQ2) {
             h_RelRes_Q2_EM->Fill((electron_Q2_EM - electron_Q2_truth) / electron_Q2_truth);
             h_RelRes_Q2_binned_EM->Fill(electron_Q2_truth, (electron_Q2_EM - electron_Q2_truth) / electron_Q2_truth);
@@ -1858,29 +2222,40 @@ int main(int argc, char** argv) {
         if (validTruthQ2 && validEMQ2) g_Q2_EM->SetPoint(n_g_Q2_EM++, electron_Q2_truth, electron_Q2_EM);
         if (validTruthQ2 && validDAQ2) g_Q2_DA->SetPoint(n_g_Q2_DA++, electron_Q2_truth, electron_Q2_DA);
         if (hasSigmaMethod && validTruthQ2 && validSigmaQ2) g_Q2_Sigma->SetPoint(n_g_Q2_Sigma++, electron_Q2_truth, electron_Q2_Sigma);
+        } // end is_mc_subsample gate for Q2/x/y resolution
 
         //=================================================================
         // NEW INCLUSIVE DIS FILLS
         //=================================================================
 
         // Fill W² histograms
-        const bool validWTruth = std::isfinite(electron_W_truth) && electron_W_truth > 0.0f;
-        const bool validWEM = std::isfinite(electron_W_EM) && electron_W_EM > 0.0f;
-        const bool validWDA = std::isfinite(electron_W_DA) && electron_W_DA > 0.0f;
-        const bool validWSigma = std::isfinite(electron_W_Sigma) && electron_W_Sigma > 0.0f;
+        const bool validWTruth = std::isfinite(electron_W_truth) && electron_W_truth > 0.0f && passTruthDIS;
+        const bool validWEM = std::isfinite(electron_W_EM) && electron_W_EM > 0.0f && passEMDIS;
+        const bool validWDA = std::isfinite(electron_W_DA) && electron_W_DA > 0.0f && passDADIS;
+        const bool validWSigma = std::isfinite(electron_W_Sigma) && electron_W_Sigma > 0.0f && passSigmaDIS;
 
         const double W2_truth = validWTruth ? electron_W_truth * electron_W_truth : -1.0;
         const double W2_EM = validWEM ? electron_W_EM * electron_W_EM : -1.0;
         const double W2_DA = validWDA ? electron_W_DA * electron_W_DA : -1.0;
         const double W2_Sigma = validWSigma ? electron_W_Sigma * electron_W_Sigma : -1.0;
+        double W2_best = -1.0;
+        double alpha_W2_best = 0.0;
+        double W2_proxy = -1.0;
+        const bool validWBest = ComputeW2Best(W2_EM, W2_DA, W2_best, alpha_W2_best, W2_proxy);
+        (void)alpha_W2_best;
+        (void)W2_proxy;
 
         if (validWEM) h_W2_EM->Fill(W2_EM);
         if (validWDA) h_W2_DA->Fill(W2_DA);
+        if (validWBest) h_W2_Best->Fill(W2_best);
         if (hasSigmaMethod && validWSigma) h_W2_Sigma->Fill(W2_Sigma);
         if (validWTruth) h_W2_truth->Fill(W2_truth);
 
+        // W2 correlations, resolution, and response (Set A only)
+        if (is_mc_subsample) {
         if (validWTruth && validWEM) g_W2_EM->SetPoint(n_g_W2_EM++, W2_truth, W2_EM);
         if (validWTruth && validWDA) g_W2_DA->SetPoint(n_g_W2_DA++, W2_truth, W2_DA);
+        if (validWTruth && validWBest) g_W2_Best->SetPoint(n_g_W2_Best++, W2_truth, W2_best);
         if (hasSigmaMethod && validWTruth && validWSigma) g_W2_Sigma->SetPoint(n_g_W2_Sigma++, W2_truth, W2_Sigma);
 
         if (validWTruth && validWEM && W2_truth > 0.0) {
@@ -1895,32 +2270,28 @@ int main(int argc, char** argv) {
             h_RelRes_W2_binned_DA->Fill(W2_truth, rel);
             h_Response_W2_DA->Fill(W2_truth, W2_DA);
         }
+        if (validWTruth && validWBest && W2_truth > 0.0) {
+            const double rel = (W2_best - W2_truth) / W2_truth;
+            h_RelRes_W2_Best->Fill(rel);
+            h_RelRes_W2_binned_Best->Fill(W2_truth, rel);
+            h_Response_W2_Best->Fill(W2_truth, W2_best);
+        }
         if (hasSigmaMethod && validWTruth && validWSigma && W2_truth > 0.0) {
             const double rel = (W2_Sigma - W2_truth) / W2_truth;
             h_RelRes_W2_Sigma->Fill(rel);
             h_RelRes_W2_binned_Sigma->Fill(W2_truth, rel);
             h_Response_W2_Sigma->Fill(W2_truth, W2_Sigma);
         }
+        } // end is_mc_subsample gate for W2 resolution
 
         const double m_p_sq = MASS_PROTON * MASS_PROTON;
         const double xpom_denominator_EM    = (validEMQ2 && validWEM)       ? (electron_Q2_EM    + W2_EM    - m_p_sq) : -1.0;
         const double xpom_denominator_truth = (validTruthQ2 && validWTruth) ? (electron_Q2_truth + W2_truth - m_p_sq) : -1.0;
         const double xpom_denominator_DA    = (validDAQ2 && validWDA)       ? (electron_Q2_DA    + W2_DA    - m_p_sq) : -1.0;
         const double xpom_denominator_Sigma = (hasSigmaMethod && validSigmaQ2 && validWSigma) ? (electron_Q2_Sigma + W2_Sigma - m_p_sq): -1.0;
+        const double xpom_denominator_W2Best = (validEMQ2 && validWBest) ? (electron_Q2_EM + W2_best - m_p_sq) : -1.0;
 
-        // E-pz and eta_max (matched reco/truth particles)
-        double sumEPz_truth_matched = 0.0;
-        double sumEPz_reco_matched = 0.0;
-        CalculateSumEPz_Matched(
-            re_px_array, re_py_array, re_pz_array, re_energy_array,
-            mc_px_array, mc_py_array, mc_pz_array, mc_mass_array,
-            assoc_rec_id, assoc_sim_id,
-            sumEPz_truth_matched, sumEPz_reco_matched
-        );
-        h_EPz_truth->Fill(sumEPz_truth_matched);
-        h_EPz->Fill(sumEPz_reco_matched);
-        h_EPz_2D->Fill(sumEPz_truth_matched, sumEPz_reco_matched);
-
+        // eta_max (matched reco/truth particles)
         double eta_max_reco = -1.0e9;
         double eta_max_truth = -1.0e9;
         for (unsigned int j = 0; j < re_energy_array.GetSize(); ++j) {
@@ -1942,10 +2313,12 @@ int main(int argc, char** argv) {
         if (eta_max_reco > -1.0e8) h_eta_max->Fill(eta_max_reco);
         if (eta_max_truth > -1.0e8) h_eta_max_truth->Fill(eta_max_truth);
 
-        // Response matrices (Electron method)
+        // Response matrices (Electron method) (Set A only)
+        if (is_mc_subsample) {
         if (validTruthQ2 && validEMQ2) h_Response_Q2->Fill(electron_Q2_truth, electron_Q2_EM);
         if (validTruthX && validEMX) h_Response_x->Fill(electron_x_truth, electron_x_EM);
         if (validTruthY && validEMY) h_Response_y->Fill(electron_y_truth, electron_y_EM);
+        } // end is_mc_subsample gate for response matrices
 
         // Scattered electron kinematics
         int scat_reco_idx = -1;
@@ -1975,10 +2348,12 @@ int main(int argc, char** argv) {
             reco_pT = TMath::Sqrt(px*px + py*py);
             reco_E = E;
 
-            h_Ep_e->Fill(E);
-            h_phi_e->Fill(reco_phi);
-            h_pT_e->Fill(reco_pT);
-            hasRecoElectron = true;
+            if (passRecoDIS) {
+                h_Ep_e->Fill(E);
+                h_phi_e->Fill(reco_phi);
+                h_pT_e->Fill(reco_pT);
+                hasRecoElectron = true;
+            }
         }
 
         bool hasTruthElectron = false;
@@ -1993,10 +2368,12 @@ int main(int argc, char** argv) {
             truth_pT    = TMath::Sqrt(mc_px*mc_px + mc_py*mc_py);
             truth_E = mc_E;
 
-            h_Ep_e_truth->Fill(mc_E);
-            h_phi_e_truth->Fill(truth_phi);
-            h_pT_e_truth->Fill(truth_pT);
-            hasTruthElectron = true;
+            if (passTruthDIS) {
+                h_Ep_e_truth->Fill(mc_E);
+                h_phi_e_truth->Fill(truth_phi);
+                h_pT_e_truth->Fill(truth_pT);
+                hasTruthElectron = true;
+            }
         }
 
         if (hasTruthElectron && hasRecoElectron) {
@@ -2073,6 +2450,8 @@ int main(int argc, char** argv) {
         const bool valid_MX2_truth = std::isfinite(MX2_truth) && MX2_truth >= 0.0;
         if (valid_MX2_reco) h_MX2_reco->Fill(MX2_reco);
         if (valid_MX2_truth) h_MX2_truth->Fill(MX2_truth);
+        // MX2 correlations and resolution (Set A only)
+        if (is_mc_subsample) {
         if (valid_MX2_reco && valid_MX2_truth) h_MX2_corr->Fill(MX2_truth, MX2_reco);
         if (valid_MX2_reco && valid_MX2_truth) g_MX2->SetPoint(n_g_MX2++, MX2_truth, MX2_reco);
         if (valid_MX2_reco && valid_MX2_truth && MX2_truth > 1e-9) {
@@ -2083,6 +2462,7 @@ int main(int argc, char** argv) {
                 h_MX2_RelRes_vs_MX2Q2->Fill(MX2_truth, electron_Q2_truth, rel_mx2);
             }
         }
+        } // end is_mc_subsample gate for MX2 resolution
 
         //=================================================================
         // DIFFRACTIVE: Mandelstam t analysis
@@ -2090,9 +2470,11 @@ int main(int argc, char** argv) {
         bool xpom_truth_b0_filled = false;
         bool xpom_truth_rp_filled = false;
         bool xpom_reco_em_b0_filled = false;
+        bool xpom_reco_w2best_b0_filled = false;
         bool xpom_reco_da_b0_filled = false;
         bool xpom_reco_sigma_b0_filled = false;
         bool xpom_reco_em_rp_filled = false;
+        bool xpom_reco_w2best_rp_filled = false;
         bool xpom_reco_da_rp_filled = false;
         bool xpom_reco_sigma_rp_filled = false;
         bool xpom_reco_em_all_filled = false;
@@ -2117,40 +2499,42 @@ int main(int argc, char** argv) {
             }
 
             const double t_val = TMath::Abs(CalcT(beams.p_beam, p));
-            if (std::isfinite(t_val)) {
-                h_t_MC->Fill(t_val);
-                h_dsigma_dt_MC->Fill(t_val);
-                if (valid_MX2_truth) {
-                    h_MX2_t_truth->Fill(MX2_truth, t_val);
-                }
-            }
             const double theta_mrad = p.Theta() * 1000.0;
-            h_theta_MC->Fill(theta_mrad);
-            if (!is_mc_subsample) {
-                h_theta_truth_pdata_all->Fill(theta_mrad);
-            }
-
-            const double xL_pz = p.Pz() / beams.p_beam.Pz();
-            if (std::isfinite(xL_pz)) {
-                h_xL_MC->Fill(xL_pz);
-                const double xpom_from_xL = 1.0 - xL_pz;
-                if (std::isfinite(xpom_from_xL) && xpom_from_xL > 0.0) {
-                    h_xpom_MC->Fill(xpom_from_xL);
-                }
-            }
-            if (xpom_denominator_truth > 0.0 && valid_MX2_truth && std::isfinite(t_val)) {
-                const double xpom_from_def = (electron_Q2_truth + MX2_truth + t_val) / xpom_denominator_truth;
-                if (std::isfinite(xpom_from_def) && xpom_from_def > 0.0) {
-                    h_xpom_def_MC->Fill(xpom_from_def);
-                    const double xL_for_comp = p.Pz() / beams.p_beam.Pz();
-                    const double xpom_from_xL = 1.0 - xL_for_comp;
-                    if (std::isfinite(xpom_from_xL) && xpom_from_xL > 0.0) {
-                        h_xpom_comp_MC->Fill(xpom_from_xL, xpom_from_def);
+            if (passTruthDIS) {
+                if (std::isfinite(t_val)) {
+                    h_t_MC->Fill(t_val);
+                    h_dsigma_dt_MC->Fill(t_val);
+                    if (valid_MX2_truth) {
+                        h_MX2_t_truth->Fill(MX2_truth, t_val);
                     }
-                    if (validTruthX) {
-                        const double beta_truth = electron_x_truth / xpom_from_def;
-                        if (std::isfinite(beta_truth) && beta_truth > 0.0 && beta_truth <= 1.0) {
-                            h_beta_MC->Fill(beta_truth);
+                }
+                h_theta_MC->Fill(theta_mrad);
+                if (!is_mc_subsample) {
+                    h_theta_truth_pdata_all->Fill(theta_mrad);
+                }
+
+                const double xL_pz = p.Pz() / beams.p_beam.Pz();
+                if (std::isfinite(xL_pz)) {
+                    h_xL_MC->Fill(xL_pz);
+                    const double xpom_from_xL = 1.0 - xL_pz;
+                    if (std::isfinite(xpom_from_xL) && xpom_from_xL > 0.0) {
+                        h_xpom_MC->Fill(xpom_from_xL);
+                    }
+                }
+                if (xpom_denominator_truth > 0.0 && valid_MX2_truth && std::isfinite(t_val)) {
+                    const double xpom_from_def = (electron_Q2_truth + MX2_truth + t_val) / xpom_denominator_truth;
+                    if (std::isfinite(xpom_from_def) && xpom_from_def > 0.0) {
+                        h_xpom_def_MC->Fill(xpom_from_def);
+                        const double xL_for_comp = p.Pz() / beams.p_beam.Pz();
+                        const double xpom_from_xL = 1.0 - xL_for_comp;
+                        if (std::isfinite(xpom_from_xL) && xpom_from_xL > 0.0) {
+                            h_xpom_comp_MC->Fill(xpom_from_xL, xpom_from_def);
+                        }
+                        if (validTruthX) {
+                            const double beta_truth = electron_x_truth / xpom_from_def;
+                            if (std::isfinite(beta_truth) && beta_truth > 0.0 && beta_truth <= 1.0) {
+                                h_beta_MC->Fill(beta_truth);
+                            }
                         }
                     }
                 }
@@ -2181,6 +2565,15 @@ int main(int argc, char** argv) {
             k_relres = GetRelResGlobalBin(electron_Q2_truth, xpom_truth_best, beta_truth_best);
         }
         if (k_relres >= 0) {
+            occupancy_truth_k[k_relres] += 1;
+            h_phase_bin_gen->Fill(k_relres + 1);
+            if (is_mc_subsample) {
+                h_phase_bin_gen_setA->Fill(k_relres + 1);
+            } else {
+                h_phase_bin_gen_setB->Fill(k_relres + 1);
+            }
+            // ResAccum fills (Set A only)
+            if (is_mc_subsample) {
             if (validEMQ2) {
                 res_Q2_EM_k.Fill(k_relres, (electron_Q2_EM - electron_Q2_truth) / electron_Q2_truth);
             }
@@ -2190,6 +2583,7 @@ int main(int argc, char** argv) {
             if (validSigmaQ2) {
                 res_Q2_Sigma_k.Fill(k_relres, (electron_Q2_Sigma - electron_Q2_truth) / electron_Q2_truth);
             }
+            } // end is_mc_subsample gate for ResAccum
         }
         if (validTruthQ2 && beta_truth_best > 0.0) {
             h_beta_Q2_truth->Fill(beta_truth_best, electron_Q2_truth);
@@ -2229,11 +2623,10 @@ int main(int argc, char** argv) {
             h_d3sigma_MC->Fill(electron_Q2_truth, beta_truth_best, xpom_truth_best);
         }
 
-        if (has_truth_lead) {
+        if (has_truth_lead && passTruthDIS) {
             const double lead_theta_mrad = lead_truth.Theta() * 1000.0;
-            const bool lead_in_rp_acceptance = (lead_theta_mrad <= kThetaRPMaxMrad);
-            const bool lead_in_b0_acceptance =
-                (lead_theta_mrad > kThetaB0MinMrad && lead_theta_mrad < kThetaB0MaxMrad);
+            const bool lead_in_rp_acceptance = PassRPAcceptance(cutCfg, lead_theta_mrad);
+            const bool lead_in_b0_acceptance = PassB0Acceptance(cutCfg, lead_theta_mrad);
             if (is_mc_subsample) {
                 if (lead_in_b0_acceptance) {
                     if (t_truth_best > 0.0) h_t_truth_mc_B0->Fill(t_truth_best);
@@ -2282,7 +2675,8 @@ int main(int argc, char** argv) {
                 const double theta_reco_mrad = p_reco.Theta() * 1000.0;
                 h_theta_all_TS->Fill(theta_reco_mrad);
 
-                if (theta_reco_mrad <= kThetaB0MinMrad || theta_reco_mrad >= kThetaB0MaxMrad) continue;
+                if (!PassB0Acceptance(cutCfg, theta_reco_mrad)) continue;
+                if (!passRecoDIS) continue;
                 h_theta_B0->Fill(theta_reco_mrad);
 
                 P3MVector p_truth(mc_px_array[mc_idx], mc_py_array[mc_idx], mc_pz_array[mc_idx], mc_mass_array[mc_idx]);
@@ -2300,9 +2694,14 @@ int main(int argc, char** argv) {
                 }
                 if (is_mc_subsample) {
                     if (std::isfinite(t_reco_abs)) h_t_reco_mc_B0->Fill(t_reco_abs);
+                    if (std::isfinite(t_truth_abs) && std::isfinite(t_reco_abs)) {
+                        fillSameBin1D(h_t_reco_mc_B0, h_t_same_mc_B0, t_truth_abs, t_reco_abs);
+                    }
                 } else {
                     if (std::isfinite(t_reco_abs)) h_t_reco_pdata_B0->Fill(t_reco_abs);
                 }
+                // t correlation and resolution (Set A only)
+                if (is_mc_subsample) {
                 if (std::isfinite(t_truth_abs) && std::isfinite(t_reco_abs)) {
                     h_t_corr_B0->Fill(t_truth_abs, t_reco_abs);
                     g_t_B0->SetPoint(n_g_t_B0++, t_truth_abs, t_reco_abs);
@@ -2312,6 +2711,7 @@ int main(int argc, char** argv) {
                         h_t_RelRes_binned_B0->Fill(t_truth_abs, rel);
                     }
                 }
+                } // end is_mc_subsample gate for B0 t resolution
                 if (std::isfinite(t_reco_abs) && valid_MX2_reco) {
                     h_MX2_t_B0->Fill(MX2_reco, t_reco_abs);
                 }
@@ -2327,7 +2727,7 @@ int main(int argc, char** argv) {
 
                 const bool beta_truth_valid = (validTruthX && xpom_truth_def > 0.0);
                 const double beta_truth = beta_truth_valid ? (electron_x_truth / xpom_truth_def) : -1.0;
-                if (validTruthQ2 && xpom_truth_def > 0.0 && t_truth_abs > 1e-6 && std::isfinite(t_reco_abs)) {
+                if (is_mc_subsample && validTruthQ2 && xpom_truth_def > 0.0 && t_truth_abs > 1e-6 && std::isfinite(t_reco_abs)) {
                     const double rel_t = (t_reco_abs - t_truth_abs) / t_truth_abs;
                     h_t_RelRes_vs_xpomQ2_B0->Fill(xpom_truth_def, electron_Q2_truth, rel_t);
                 }
@@ -2351,7 +2751,8 @@ int main(int argc, char** argv) {
                             h_xpom_comp_B0->Fill(xpom_from_xL_for_def, xpom_reco_def);
                         }
                         xpom_reco_em_b0_filled = true;
-                        if (xpom_truth_def > 0.0) {
+                        // xpom EM B0 response/resolution (Set A only)
+                        if (is_mc_subsample && xpom_truth_def > 0.0) {
                             h_Response_xpom_EM_B0->Fill(xpom_truth_def, xpom_reco_def);
                             g_xpom_EM_B0->SetPoint(n_g_xpom_em_b0++, xpom_truth_def, xpom_reco_def);
                             if (validTruthQ2) {
@@ -2360,7 +2761,7 @@ int main(int argc, char** argv) {
                             }
                         }
                         int k_rel = -1;
-                        if (beta_truth_valid && beta_truth > 0.0 && beta_truth <= 1.0 &&
+                        if (is_mc_subsample && beta_truth_valid && beta_truth > 0.0 && beta_truth <= 1.0 &&
                             xpom_truth_def > 0.0 && validTruthQ2) {
                             k_rel = GetRelResGlobalBin(electron_Q2_truth, xpom_truth_def, beta_truth);
                             if (k_rel >= 0) {
@@ -2379,9 +2780,20 @@ int main(int argc, char** argv) {
                                     h_d3sigma_B0->Fill(electron_Q2_EM, beta_reco, xpom_reco_def);
                                     if (is_mc_subsample) {
                                         h_d3sigma_reco_mc_B0->Fill(electron_Q2_EM, beta_reco, xpom_reco_def);
+                                        if (validTruthQ2 && xpom_truth_best > 0.0 && beta_truth_best > 0.0) {
+                                            fillSameBin3D(h_d3sigma_reco_mc_B0,
+                                                          h_d3sigma_same_mc_B0,
+                                                          electron_Q2_truth,
+                                                          beta_truth_best,
+                                                          xpom_truth_best,
+                                                          electron_Q2_EM,
+                                                          beta_reco,
+                                                          xpom_reco_def);
+                                        }
                                     }
                                 }
-                                if (beta_truth_valid && beta_truth > 0.0 && beta_truth <= 1.0) {
+                                // beta EM B0 response/resolution (Set A only)
+                                if (is_mc_subsample && beta_truth_valid && beta_truth > 0.0 && beta_truth <= 1.0) {
                                     g_beta_EM_B0->SetPoint(n_g_beta_em_b0++, beta_truth, beta_reco);
                                     h_Response_beta_EM_B0->Fill(beta_truth, beta_reco);
                                     h_beta_corr_B0->Fill(beta_truth, beta_reco);
@@ -2396,7 +2808,7 @@ int main(int argc, char** argv) {
                                 }
                             }
 
-                            if (k_rel >= 0 && beta_reco > 0.0 && beta_reco <= 1.0) {
+                            if (is_mc_subsample && k_rel >= 0 && beta_reco > 0.0 && beta_reco <= 1.0) {
                                 res_beta_EM_B0_k.Fill(k_rel, (beta_reco - beta_truth) / beta_truth);
                             }
                         }
@@ -2430,17 +2842,44 @@ int main(int argc, char** argv) {
                     }
                 }
 
+                if (!xpom_reco_w2best_b0_filled && xpom_denominator_W2Best > 0.0 && valid_MX2_reco && std::isfinite(t_reco_abs)) {
+                    const double xpom_reco_w2best = (electron_Q2_EM + MX2_reco + t_reco_abs) / xpom_denominator_W2Best;
+                    if (std::isfinite(xpom_reco_w2best) && xpom_reco_w2best > 0.0) {
+                        xpom_reco_w2best_b0_filled = true;
+                        // W2Best xpom/beta response/resolution (Set A only)
+                        if (is_mc_subsample && xpom_truth_def > 0.0) {
+                            h_Response_xpom_W2Best_B0->Fill(xpom_truth_def, xpom_reco_w2best);
+                            if (xpom_truth_def > 1e-9) {
+                                const double rel_xpom = (xpom_reco_w2best - xpom_truth_def) / xpom_truth_def;
+                                h_xpom_RelRes_binned_W2Best_B0->Fill(xpom_truth_def, rel_xpom);
+                            }
+                        }
+                        if (validEMX) {
+                            const double beta_reco_w2best = electron_x_EM / xpom_reco_w2best;
+                            if (is_mc_subsample && beta_reco_w2best > 0.0 && beta_reco_w2best <= 1.0 &&
+                                beta_truth_valid && beta_truth > 0.0 && beta_truth <= 1.0) {
+                                h_Response_beta_W2Best_B0->Fill(beta_truth, beta_reco_w2best);
+                                if (beta_truth > 1e-6) {
+                                    const double rel_beta = (beta_reco_w2best - beta_truth) / beta_truth;
+                                    h_beta_RelRes_binned_W2Best_B0->Fill(beta_truth, rel_beta);
+                                }
+                            }
+                        }
+                    }
+                }
+
                 if (!xpom_reco_da_b0_filled && xpom_denominator_DA > 0.0 && valid_MX2_reco && std::isfinite(t_reco_abs)) {
                     const double xpom_reco_def = (electron_Q2_DA + MX2_reco + t_reco_abs) / xpom_denominator_DA;
                     if (std::isfinite(xpom_reco_def) && xpom_reco_def > 0.0) {
                         h_xpom_reco_DA_B0->Fill(xpom_reco_def);
                         xpom_reco_da_b0_filled = true;
-                        if (xpom_truth_def > 0.0) {
+                        // DA B0 response/resolution (Set A only)
+                        if (is_mc_subsample && xpom_truth_def > 0.0) {
                             h_Response_xpom_DA_B0->Fill(xpom_truth_def, xpom_reco_def);
                             g_xpom_DA_B0->SetPoint(n_g_xpom_da_b0++, xpom_truth_def, xpom_reco_def);
                         }
                         int k_rel = -1;
-                        if (beta_truth_valid && beta_truth > 0.0 && beta_truth <= 1.0 &&
+                        if (is_mc_subsample && beta_truth_valid && beta_truth > 0.0 && beta_truth <= 1.0 &&
                             xpom_truth_def > 0.0 && validTruthQ2) {
                             k_rel = GetRelResGlobalBin(electron_Q2_truth, xpom_truth_def, beta_truth);
                             if (k_rel >= 0) {
@@ -2451,13 +2890,13 @@ int main(int argc, char** argv) {
                             const double beta_reco = electron_x_DA / xpom_reco_def;
                             if (beta_reco > 0.0 && beta_reco <= 1.0) {
                                 h_beta_reco_DA_B0->Fill(beta_reco);
-                                if (beta_truth_valid && beta_truth > 0.0 && beta_truth <= 1.0) {
+                                if (is_mc_subsample && beta_truth_valid && beta_truth > 0.0 && beta_truth <= 1.0) {
                                     g_beta_DA_B0->SetPoint(n_g_beta_da_b0++, beta_truth, beta_reco);
                                     h_Response_beta_DA_B0->Fill(beta_truth, beta_reco);
                                 }
                             }
 
-                            if (k_rel >= 0 && beta_reco > 0.0 && beta_reco <= 1.0) {
+                            if (is_mc_subsample && k_rel >= 0 && beta_reco > 0.0 && beta_reco <= 1.0) {
                                 res_beta_DA_B0_k.Fill(k_rel, (beta_reco - beta_truth) / beta_truth);
                             }
                         }
@@ -2479,12 +2918,13 @@ int main(int argc, char** argv) {
                     if (std::isfinite(xpom_reco_def) && xpom_reco_def > 0.0) {
                         h_xpom_reco_Sigma_B0->Fill(xpom_reco_def);
                         xpom_reco_sigma_b0_filled = true;
-                        if (xpom_truth_def > 0.0) {
+                        // Sigma B0 response/resolution (Set A only)
+                        if (is_mc_subsample && xpom_truth_def > 0.0) {
                             h_Response_xpom_Sigma_B0->Fill(xpom_truth_def, xpom_reco_def);
                             g_xpom_Sigma_B0->SetPoint(n_g_xpom_sigma_b0++, xpom_truth_def, xpom_reco_def);
                         }
                         int k_rel = -1;
-                        if (beta_truth_valid && beta_truth > 0.0 && beta_truth <= 1.0 &&
+                        if (is_mc_subsample && beta_truth_valid && beta_truth > 0.0 && beta_truth <= 1.0 &&
                             xpom_truth_def > 0.0 && validTruthQ2) {
                             k_rel = GetRelResGlobalBin(electron_Q2_truth, xpom_truth_def, beta_truth);
                             if (k_rel >= 0) {
@@ -2495,13 +2935,13 @@ int main(int argc, char** argv) {
                             const double beta_reco = electron_x_Sigma / xpom_reco_def;
                             if (beta_reco > 0.0 && beta_reco <= 1.0) {
                                 h_beta_reco_Sigma_B0->Fill(beta_reco);
-                                if (beta_truth_valid && beta_truth > 0.0 && beta_truth <= 1.0) {
+                                if (is_mc_subsample && beta_truth_valid && beta_truth > 0.0 && beta_truth <= 1.0) {
                                     g_beta_Sigma_B0->SetPoint(n_g_beta_sigma_b0++, beta_truth, beta_reco);
                                     h_Response_beta_Sigma_B0->Fill(beta_truth, beta_reco);
                                 }
                             }
 
-                            if (k_rel >= 0 && beta_reco > 0.0 && beta_reco <= 1.0) {
+                            if (is_mc_subsample && k_rel >= 0 && beta_reco > 0.0 && beta_reco <= 1.0) {
                                 res_beta_Sigma_B0_k.Fill(k_rel, (beta_reco - beta_truth) / beta_truth);
                             }
                         }
@@ -2524,6 +2964,12 @@ int main(int argc, char** argv) {
                     h_xL_B0->Fill(xL_reco_pz);
                 }
                 if (std::isfinite(xL_truth_pz) && std::isfinite(xL_reco_pz)) {
+                    const double xpom_reco_from_xL = 1.0 - xL_reco_pz;
+                    if (xpom_reco_from_xL > 0.0 && std::isfinite(xpom_reco_from_xL)) {
+                        h_xpom_B0->Fill(xpom_reco_from_xL);
+                    }
+                    // xL/xpom B0 correlation and resolution (Set A only)
+                    if (is_mc_subsample) {
                     g_xL_B0->SetPoint(n_g_xL_B0++, xL_truth_pz, xL_reco_pz);
                     h_xL_corr_B0->Fill(xL_truth_pz, xL_reco_pz);
                     if (xL_truth_pz > 1e-6) {
@@ -2535,10 +2981,6 @@ int main(int argc, char** argv) {
                         }
                     }
                     const double xpom_truth_from_xL = 1.0 - xL_truth_pz;
-                    const double xpom_reco_from_xL = 1.0 - xL_reco_pz;
-                    if (xpom_reco_from_xL > 0.0 && std::isfinite(xpom_reco_from_xL)) {
-                        h_xpom_B0->Fill(xpom_reco_from_xL);
-                    }
                     if (xpom_truth_from_xL > 1e-9 && std::isfinite(xpom_truth_from_xL) &&
                         xpom_reco_from_xL > 0.0 && std::isfinite(xpom_reco_from_xL)) {
                         h_xpom_corr_B0->Fill(xpom_truth_from_xL, xpom_reco_from_xL);
@@ -2546,6 +2988,7 @@ int main(int argc, char** argv) {
                         h_xpom_res_B0->Fill(rel_xpom);
                         h_xpom_RelRes_binned_B0->Fill(xpom_truth_from_xL, rel_xpom);
                     }
+                    } // end is_mc_subsample gate for B0 xL/xpom resolution
                 }
                 if (is_mc_subsample) {
                     h_theta_reco_mc_B0->Fill(theta_reco_mrad);
@@ -2561,9 +3004,9 @@ int main(int argc, char** argv) {
 
                 P3MVector p_rp((*rp_px_array)[j], (*rp_py_array)[j], (*rp_pz_array)[j], (*rp_mass_array)[j]);
                 const double theta_mrad = p_rp.Theta() * 1000.0;
-                if (theta_mrad <= kThetaRPMaxMrad) {
-                    h_theta_RP->Fill(theta_mrad);
-                }
+                if (!PassRPAcceptance(cutCfg, theta_mrad)) continue;
+                if (!passRecoDIS) continue;
+                h_theta_RP->Fill(theta_mrad);
 
                 P3MVector* best_match = nullptr;
                 double best_dr = 0.1;
@@ -2589,11 +3032,14 @@ int main(int argc, char** argv) {
                     }
                     if (is_mc_subsample) {
                         if (std::isfinite(t_reco_abs)) h_t_reco_mc_RP->Fill(t_reco_abs);
-                    } else {
-                        if (theta_mrad <= kThetaRPMaxMrad && std::isfinite(t_reco_abs)) {
-                            h_t_reco_pdata_RP->Fill(t_reco_abs);
+                        if (std::isfinite(t_truth_abs) && std::isfinite(t_reco_abs)) {
+                            fillSameBin1D(h_t_reco_mc_RP, h_t_same_mc_RP, t_truth_abs, t_reco_abs);
                         }
+                    } else {
+                        if (std::isfinite(t_reco_abs)) h_t_reco_pdata_RP->Fill(t_reco_abs);
                     }
+                    // t correlation and resolution (Set A only)
+                    if (is_mc_subsample) {
                     if (std::isfinite(t_truth_abs) && std::isfinite(t_reco_abs)) {
                         h_t_corr_RP->Fill(t_truth_abs, t_reco_abs);
                         g_t_RP->SetPoint(n_g_t_RP++, t_truth_abs, t_reco_abs);
@@ -2603,6 +3049,7 @@ int main(int argc, char** argv) {
                             h_t_RelRes_binned_RP->Fill(t_truth_abs, rel);
                         }
                     }
+                    } // end is_mc_subsample gate for RP t resolution
                     if (std::isfinite(t_reco_abs) && valid_MX2_reco) {
                         h_MX2_t_RP->Fill(MX2_reco, t_reco_abs);
                     }
@@ -2618,7 +3065,7 @@ int main(int argc, char** argv) {
 
                     const bool beta_truth_valid = (validTruthX && xpom_truth_def > 0.0);
                     const double beta_truth = beta_truth_valid ? (electron_x_truth / xpom_truth_def) : -1.0;
-                    if (validTruthQ2 && xpom_truth_def > 0.0 && t_truth_abs > 1e-6 && std::isfinite(t_reco_abs)) {
+                    if (is_mc_subsample && validTruthQ2 && xpom_truth_def > 0.0 && t_truth_abs > 1e-6 && std::isfinite(t_reco_abs)) {
                         const double rel_t = (t_reco_abs - t_truth_abs) / t_truth_abs;
                         h_t_RelRes_vs_xpomQ2_RP->Fill(xpom_truth_def, electron_Q2_truth, rel_t);
                     }
@@ -2642,7 +3089,8 @@ int main(int argc, char** argv) {
                                 h_xpom_comp_RP->Fill(xpom_from_xL_for_def, xpom_reco_def);
                             }
                             xpom_reco_em_rp_filled = true;
-                            if (xpom_truth_def > 0.0) {
+                            // xpom EM RP response/resolution (Set A only)
+                            if (is_mc_subsample && xpom_truth_def > 0.0) {
                                 h_Response_xpom_EM_RP->Fill(xpom_truth_def, xpom_reco_def);
                                 g_xpom_EM_RP->SetPoint(n_g_xpom_em_rp++, xpom_truth_def, xpom_reco_def);
                                 if (validTruthQ2) {
@@ -2651,7 +3099,7 @@ int main(int argc, char** argv) {
                                 }
                             }
                             int k_rel = -1;
-                            if (beta_truth_valid && beta_truth > 0.0 && beta_truth <= 1.0 &&
+                            if (is_mc_subsample && beta_truth_valid && beta_truth > 0.0 && beta_truth <= 1.0 &&
                                 xpom_truth_def > 0.0 && validTruthQ2) {
                                 k_rel = GetRelResGlobalBin(electron_Q2_truth, xpom_truth_def, beta_truth);
                                 if (k_rel >= 0) {
@@ -2670,9 +3118,20 @@ int main(int argc, char** argv) {
                                         h_d3sigma_RP->Fill(electron_Q2_EM, beta_reco, xpom_reco_def);
                                         if (is_mc_subsample) {
                                             h_d3sigma_reco_mc_RP->Fill(electron_Q2_EM, beta_reco, xpom_reco_def);
+                                            if (validTruthQ2 && xpom_truth_best > 0.0 && beta_truth_best > 0.0) {
+                                                fillSameBin3D(h_d3sigma_reco_mc_RP,
+                                                              h_d3sigma_same_mc_RP,
+                                                              electron_Q2_truth,
+                                                              beta_truth_best,
+                                                              xpom_truth_best,
+                                                              electron_Q2_EM,
+                                                              beta_reco,
+                                                              xpom_reco_def);
+                                            }
                                         }
                                     }
-                                    if (beta_truth_valid && beta_truth > 0.0 && beta_truth <= 1.0) {
+                                    // beta EM RP response/resolution (Set A only)
+                                    if (is_mc_subsample && beta_truth_valid && beta_truth > 0.0 && beta_truth <= 1.0) {
                                         g_beta_EM_RP->SetPoint(n_g_beta_em_rp++, beta_truth, beta_reco);
                                         h_Response_beta_EM_RP->Fill(beta_truth, beta_reco);
                                         h_beta_corr_RP->Fill(beta_truth, beta_reco);
@@ -2686,7 +3145,7 @@ int main(int argc, char** argv) {
                                         }
                                     }
                                 }
-                                if (k_rel >= 0 && beta_reco > 0.0 && beta_reco <= 1.0) {
+                                if (is_mc_subsample && k_rel >= 0 && beta_reco > 0.0 && beta_reco <= 1.0) {
                                     res_beta_EM_RP_k.Fill(k_rel, (beta_reco - beta_truth) / beta_truth);
                                 }
                             }
@@ -2720,17 +3179,44 @@ int main(int argc, char** argv) {
                         }
                     }
 
+                    if (!xpom_reco_w2best_rp_filled && xpom_denominator_W2Best > 0.0 && valid_MX2_reco && std::isfinite(t_reco_abs)) {
+                        const double xpom_reco_w2best = (electron_Q2_EM + MX2_reco + t_reco_abs) / xpom_denominator_W2Best;
+                        if (std::isfinite(xpom_reco_w2best) && xpom_reco_w2best > 0.0) {
+                            xpom_reco_w2best_rp_filled = true;
+                            // W2Best RP response/resolution (Set A only)
+                            if (is_mc_subsample && xpom_truth_def > 0.0) {
+                                h_Response_xpom_W2Best_RP->Fill(xpom_truth_def, xpom_reco_w2best);
+                                if (xpom_truth_def > 1e-9) {
+                                    const double rel_xpom = (xpom_reco_w2best - xpom_truth_def) / xpom_truth_def;
+                                    h_xpom_RelRes_binned_W2Best_RP->Fill(xpom_truth_def, rel_xpom);
+                                }
+                            }
+                            if (validEMX) {
+                                const double beta_reco_w2best = electron_x_EM / xpom_reco_w2best;
+                                if (is_mc_subsample && beta_reco_w2best > 0.0 && beta_reco_w2best <= 1.0 &&
+                                    beta_truth_valid && beta_truth > 0.0 && beta_truth <= 1.0) {
+                                    h_Response_beta_W2Best_RP->Fill(beta_truth, beta_reco_w2best);
+                                    if (beta_truth > 1e-6) {
+                                        const double rel_beta = (beta_reco_w2best - beta_truth) / beta_truth;
+                                        h_beta_RelRes_binned_W2Best_RP->Fill(beta_truth, rel_beta);
+                                    }
+                                }
+                            }
+                        }
+                    }
+
                     if (!xpom_reco_da_rp_filled && xpom_denominator_DA > 0.0 && valid_MX2_reco && std::isfinite(t_reco_abs)) {
                         const double xpom_reco_def = (electron_Q2_DA + MX2_reco + t_reco_abs) / xpom_denominator_DA;
                         if (std::isfinite(xpom_reco_def) && xpom_reco_def > 0.0) {
                             h_xpom_reco_DA_RP->Fill(xpom_reco_def);
                             xpom_reco_da_rp_filled = true;
-                            if (xpom_truth_def > 0.0) {
+                            // DA RP response/resolution (Set A only)
+                            if (is_mc_subsample && xpom_truth_def > 0.0) {
                                 h_Response_xpom_DA_RP->Fill(xpom_truth_def, xpom_reco_def);
                                 g_xpom_DA_RP->SetPoint(n_g_xpom_da_rp++, xpom_truth_def, xpom_reco_def);
                             }
                             int k_rel = -1;
-                            if (beta_truth_valid && beta_truth > 0.0 && beta_truth <= 1.0 &&
+                            if (is_mc_subsample && beta_truth_valid && beta_truth > 0.0 && beta_truth <= 1.0 &&
                                 xpom_truth_def > 0.0 && validTruthQ2) {
                                 k_rel = GetRelResGlobalBin(electron_Q2_truth, xpom_truth_def, beta_truth);
                                 if (k_rel >= 0) {
@@ -2741,12 +3227,12 @@ int main(int argc, char** argv) {
                                 const double beta_reco = electron_x_DA / xpom_reco_def;
                                 if (beta_reco > 0.0 && beta_reco <= 1.0) {
                                     h_beta_reco_DA_RP->Fill(beta_reco);
-                                    if (beta_truth_valid && beta_truth > 0.0 && beta_truth <= 1.0) {
+                                    if (is_mc_subsample && beta_truth_valid && beta_truth > 0.0 && beta_truth <= 1.0) {
                                         g_beta_DA_RP->SetPoint(n_g_beta_da_rp++, beta_truth, beta_reco);
                                         h_Response_beta_DA_RP->Fill(beta_truth, beta_reco);
                                     }
                                 }
-                                if (k_rel >= 0 && beta_reco > 0.0 && beta_reco <= 1.0) {
+                                if (is_mc_subsample && k_rel >= 0 && beta_reco > 0.0 && beta_reco <= 1.0) {
                                     res_beta_DA_RP_k.Fill(k_rel, (beta_reco - beta_truth) / beta_truth);
                                 }
                             }
@@ -2768,12 +3254,13 @@ int main(int argc, char** argv) {
                         if (std::isfinite(xpom_reco_def) && xpom_reco_def > 0.0) {
                             h_xpom_reco_Sigma_RP->Fill(xpom_reco_def);
                             xpom_reco_sigma_rp_filled = true;
-                            if (xpom_truth_def > 0.0) {
+                            // Sigma RP response/resolution (Set A only)
+                            if (is_mc_subsample && xpom_truth_def > 0.0) {
                                 h_Response_xpom_Sigma_RP->Fill(xpom_truth_def, xpom_reco_def);
                                 g_xpom_Sigma_RP->SetPoint(n_g_xpom_sigma_rp++, xpom_truth_def, xpom_reco_def);
                             }
                             int k_rel = -1;
-                            if (beta_truth_valid && beta_truth > 0.0 && beta_truth <= 1.0 &&
+                            if (is_mc_subsample && beta_truth_valid && beta_truth > 0.0 && beta_truth <= 1.0 &&
                                 xpom_truth_def > 0.0 && validTruthQ2) {
                                 k_rel = GetRelResGlobalBin(electron_Q2_truth, xpom_truth_def, beta_truth);
                                 if (k_rel >= 0) {
@@ -2784,12 +3271,12 @@ int main(int argc, char** argv) {
                                 const double beta_reco = electron_x_Sigma / xpom_reco_def;
                                 if (beta_reco > 0.0 && beta_reco <= 1.0) {
                                     h_beta_reco_Sigma_RP->Fill(beta_reco);
-                                    if (beta_truth_valid && beta_truth > 0.0 && beta_truth <= 1.0) {
+                                    if (is_mc_subsample && beta_truth_valid && beta_truth > 0.0 && beta_truth <= 1.0) {
                                         g_beta_Sigma_RP->SetPoint(n_g_beta_sigma_rp++, beta_truth, beta_reco);
                                         h_Response_beta_Sigma_RP->Fill(beta_truth, beta_reco);
                                     }
                                 }
-                                if (k_rel >= 0 && beta_reco > 0.0 && beta_reco <= 1.0) {
+                                if (is_mc_subsample && k_rel >= 0 && beta_reco > 0.0 && beta_reco <= 1.0) {
                                     res_beta_Sigma_RP_k.Fill(k_rel, (beta_reco - beta_truth) / beta_truth);
                                 }
                             }
@@ -2812,6 +3299,12 @@ int main(int argc, char** argv) {
                         h_xL_RP->Fill(xL_reco_pz);
                     }
                     if (std::isfinite(xL_truth_pz) && std::isfinite(xL_reco_pz)) {
+                        const double xpom_reco_from_xL = 1.0 - xL_reco_pz;
+                        if (xpom_reco_from_xL > 0.0 && std::isfinite(xpom_reco_from_xL)) {
+                            h_xpom_RP->Fill(xpom_reco_from_xL);
+                        }
+                        // xL/xpom RP correlation and resolution (Set A only)
+                        if (is_mc_subsample) {
                         g_xL_RP->SetPoint(n_g_xL_RP++, xL_truth_pz, xL_reco_pz);
                         h_xL_corr_RP->Fill(xL_truth_pz, xL_reco_pz);
                         if (xL_truth_pz > 1e-6) {
@@ -2823,10 +3316,6 @@ int main(int argc, char** argv) {
                             }
                         }
                         const double xpom_truth_from_xL = 1.0 - xL_truth_pz;
-                        const double xpom_reco_from_xL = 1.0 - xL_reco_pz;
-                        if (xpom_reco_from_xL > 0.0 && std::isfinite(xpom_reco_from_xL)) {
-                            h_xpom_RP->Fill(xpom_reco_from_xL);
-                        }
                         if (xpom_truth_from_xL > 1e-9 && std::isfinite(xpom_truth_from_xL) &&
                             xpom_reco_from_xL > 0.0 && std::isfinite(xpom_reco_from_xL)) {
                             h_xpom_corr_RP->Fill(xpom_truth_from_xL, xpom_reco_from_xL);
@@ -2834,13 +3323,12 @@ int main(int argc, char** argv) {
                             h_xpom_res_RP->Fill(rel_xpom);
                             h_xpom_RelRes_binned_RP->Fill(xpom_truth_from_xL, rel_xpom);
                         }
+                        } // end is_mc_subsample gate for RP xL/xpom resolution
                     }
-                    if (theta_mrad <= kThetaRPMaxMrad) {
-                        if (is_mc_subsample) {
-                            h_theta_reco_mc_RP->Fill(theta_mrad);
-                        } else {
-                            h_theta_reco_pdata_RP->Fill(theta_mrad);
-                        }
+                    if (is_mc_subsample) {
+                        h_theta_reco_mc_RP->Fill(theta_mrad);
+                    } else {
+                        h_theta_reco_pdata_RP->Fill(theta_mrad);
                     }
                 }
             }
@@ -2893,6 +3381,24 @@ int main(int argc, char** argv) {
             if (h_phase3D_reco_yaml) {
                 h_phase3D_reco_yaml->Fill(electron_Q2_EM, xpom_reco_best, beta_reco_best);
             }
+
+            const int k_meas_relres = GetRelResGlobalBin(electron_Q2_EM, xpom_reco_best, beta_reco_best);
+            if (k_meas_relres >= 0) {
+                h_phase_bin_meas->Fill(k_meas_relres + 1);
+                if (is_mc_subsample) {
+                    h_phase_bin_meas_setA->Fill(k_meas_relres + 1);
+                } else {
+                    h_phase_bin_meas_setB->Fill(k_meas_relres + 1);
+                }
+                if (k_relres >= 0 && k_relres == k_meas_relres) {
+                    h_phase_bin_gen_meas_same->Fill(k_relres + 1);
+                    if (is_mc_subsample) {
+                        h_phase_bin_gen_meas_same_setA->Fill(k_relres + 1);
+                    } else {
+                        h_phase_bin_gen_meas_same_setB->Fill(k_relres + 1);
+                    }
+                }
+            }
         }
 
         if (is_mc_subsample) {
@@ -2911,7 +3417,7 @@ int main(int argc, char** argv) {
             if (beta_truth_best > 0.0) h_beta_truth_mc->Fill(beta_truth_best);
             if (beta_reco_best > 0.0) h_beta_reco_mc->Fill(beta_reco_best);
             if (validWTruth) h_W2_truth_mc->Fill(W2_truth);
-            if (validWEM) h_W2_reco_mc->Fill(W2_EM);
+            if (validWBest) h_W2_reco_mc->Fill(W2_best);
         } else {
             if (validEMQ2) h_Q2_reco_pdata->Fill(electron_Q2_EM);
             if (validEMX) h_x_reco_pdata->Fill(electron_x_EM);
@@ -2920,7 +3426,7 @@ int main(int argc, char** argv) {
             if (t_reco_best > 0.0) h_t_reco_pdata->Fill(t_reco_best);
             if (xpom_reco_best > 0.0) h_xpom_reco_pdata->Fill(xpom_reco_best);
             if (beta_reco_best > 0.0) h_beta_reco_pdata->Fill(beta_reco_best);
-            if (validWEM) h_W2_reco_pdata->Fill(W2_EM);
+            if (validWBest) h_W2_reco_pdata->Fill(W2_best);
             if (validTruthQ2) h_Q2_truth_pdata->Fill(electron_Q2_truth);
             if (validTruthX) h_x_truth_pdata->Fill(electron_x_truth);
             if (validTruthY) h_y_truth_pdata->Fill(electron_y_truth);
@@ -2933,31 +3439,54 @@ int main(int argc, char** argv) {
 
     }
 
-    // Calculate and scale differential cross sections d(sigma)/dt
+    // Calculate and scale differential cross sections d(sigma)/dt.
     const double sigma_total = 4.22; // nb for 10x100 GeV configuration
-    const double N_gen = 100000.0;   // Number of generated events
+    const double N_gen = static_cast<double>(std::max<Long64_t>(1, nProcessed));
     const double scale_factor = sigma_total / N_gen;
 
-    // Apply Set-A efficiency corrections to reconstructed cross sections.
+    // Apply Set-A purity/efficiency corrections in each bin:
+    // N_corr = N_meas * (purity/efficiency), with
+    // purity = N_same / N_reco and efficiency = N_same / N_truth.
     for (int i = 1; i <= h_dsigma_dt_B0->GetNbinsX(); ++i) {
-        const double truth = h_t_truth_mc_B0->GetBinContent(i);
-        const double reco = h_t_reco_mc_B0->GetBinContent(i);
-        const double eff = (truth > 0.0) ? (reco / truth) : 0.0;
-        if (eff > 0.0) {
-            h_dsigma_dt_B0->SetBinContent(i, h_dsigma_dt_B0->GetBinContent(i) / eff);
-            h_dsigma_dt_B0->SetBinError(i, h_dsigma_dt_B0->GetBinError(i) / eff);
+        const double nTruth = h_t_truth_mc_B0->GetBinContent(i);
+        const double nReco = h_t_reco_mc_B0->GetBinContent(i);
+        const double nSame = h_t_same_mc_B0->GetBinContent(i);
+        double corr = 0.0;
+        if (nTruth > 0.0 && nReco > 0.0) {
+            if (nSame > 0.0) {
+                const double eff = nSame / nTruth;
+                const double pur = nSame / nReco;
+                corr = (eff > 0.0) ? (pur / eff) : 0.0;
+            } else {
+                // Same-bin occupancy can be empty in sparse bins; fall back to truth/reco.
+                corr = nTruth / nReco;
+            }
+        }
+        if (corr > 0.0) {
+            h_dsigma_dt_B0->SetBinContent(i, h_dsigma_dt_B0->GetBinContent(i) * corr);
+            h_dsigma_dt_B0->SetBinError(i, h_dsigma_dt_B0->GetBinError(i) * corr);
         } else {
             h_dsigma_dt_B0->SetBinContent(i, 0.0);
             h_dsigma_dt_B0->SetBinError(i, 0.0);
         }
     }
     for (int i = 1; i <= h_dsigma_dt_RP->GetNbinsX(); ++i) {
-        const double truth = h_t_truth_mc_RP->GetBinContent(i);
-        const double reco = h_t_reco_mc_RP->GetBinContent(i);
-        const double eff = (truth > 0.0) ? (reco / truth) : 0.0;
-        if (eff > 0.0) {
-            h_dsigma_dt_RP->SetBinContent(i, h_dsigma_dt_RP->GetBinContent(i) / eff);
-            h_dsigma_dt_RP->SetBinError(i, h_dsigma_dt_RP->GetBinError(i) / eff);
+        const double nTruth = h_t_truth_mc_RP->GetBinContent(i);
+        const double nReco = h_t_reco_mc_RP->GetBinContent(i);
+        const double nSame = h_t_same_mc_RP->GetBinContent(i);
+        double corr = 0.0;
+        if (nTruth > 0.0 && nReco > 0.0) {
+            if (nSame > 0.0) {
+                const double eff = nSame / nTruth;
+                const double pur = nSame / nReco;
+                corr = (eff > 0.0) ? (pur / eff) : 0.0;
+            } else {
+                corr = nTruth / nReco;
+            }
+        }
+        if (corr > 0.0) {
+            h_dsigma_dt_RP->SetBinContent(i, h_dsigma_dt_RP->GetBinContent(i) * corr);
+            h_dsigma_dt_RP->SetBinError(i, h_dsigma_dt_RP->GetBinError(i) * corr);
         } else {
             h_dsigma_dt_RP->SetBinContent(i, 0.0);
             h_dsigma_dt_RP->SetBinError(i, 0.0);
@@ -2967,12 +3496,22 @@ int main(int argc, char** argv) {
     for (int ix = 1; ix <= h_d3sigma_B0->GetNbinsX(); ++ix) {
         for (int iy = 1; iy <= h_d3sigma_B0->GetNbinsY(); ++iy) {
             for (int iz = 1; iz <= h_d3sigma_B0->GetNbinsZ(); ++iz) {
-                const double truth = h_d3sigma_truth_mc_B0->GetBinContent(ix, iy, iz);
-                const double reco = h_d3sigma_reco_mc_B0->GetBinContent(ix, iy, iz);
-                const double eff = (truth > 0.0) ? (reco / truth) : 0.0;
-                if (eff > 0.0) {
-                    h_d3sigma_B0->SetBinContent(ix, iy, iz, h_d3sigma_B0->GetBinContent(ix, iy, iz) / eff);
-                    h_d3sigma_B0->SetBinError(ix, iy, iz, h_d3sigma_B0->GetBinError(ix, iy, iz) / eff);
+                const double nTruth = h_d3sigma_truth_mc_B0->GetBinContent(ix, iy, iz);
+                const double nReco = h_d3sigma_reco_mc_B0->GetBinContent(ix, iy, iz);
+                const double nSame = h_d3sigma_same_mc_B0->GetBinContent(ix, iy, iz);
+                double corr = 0.0;
+                if (nTruth > 0.0 && nReco > 0.0) {
+                    if (nSame > 0.0) {
+                        const double eff = nSame / nTruth;
+                        const double pur = nSame / nReco;
+                        corr = (eff > 0.0) ? (pur / eff) : 0.0;
+                    } else {
+                        corr = nTruth / nReco;
+                    }
+                }
+                if (corr > 0.0) {
+                    h_d3sigma_B0->SetBinContent(ix, iy, iz, h_d3sigma_B0->GetBinContent(ix, iy, iz) * corr);
+                    h_d3sigma_B0->SetBinError(ix, iy, iz, h_d3sigma_B0->GetBinError(ix, iy, iz) * corr);
                 } else {
                     h_d3sigma_B0->SetBinContent(ix, iy, iz, 0.0);
                     h_d3sigma_B0->SetBinError(ix, iy, iz, 0.0);
@@ -2983,12 +3522,22 @@ int main(int argc, char** argv) {
     for (int ix = 1; ix <= h_d3sigma_RP->GetNbinsX(); ++ix) {
         for (int iy = 1; iy <= h_d3sigma_RP->GetNbinsY(); ++iy) {
             for (int iz = 1; iz <= h_d3sigma_RP->GetNbinsZ(); ++iz) {
-                const double truth = h_d3sigma_truth_mc_RP->GetBinContent(ix, iy, iz);
-                const double reco = h_d3sigma_reco_mc_RP->GetBinContent(ix, iy, iz);
-                const double eff = (truth > 0.0) ? (reco / truth) : 0.0;
-                if (eff > 0.0) {
-                    h_d3sigma_RP->SetBinContent(ix, iy, iz, h_d3sigma_RP->GetBinContent(ix, iy, iz) / eff);
-                    h_d3sigma_RP->SetBinError(ix, iy, iz, h_d3sigma_RP->GetBinError(ix, iy, iz) / eff);
+                const double nTruth = h_d3sigma_truth_mc_RP->GetBinContent(ix, iy, iz);
+                const double nReco = h_d3sigma_reco_mc_RP->GetBinContent(ix, iy, iz);
+                const double nSame = h_d3sigma_same_mc_RP->GetBinContent(ix, iy, iz);
+                double corr = 0.0;
+                if (nTruth > 0.0 && nReco > 0.0) {
+                    if (nSame > 0.0) {
+                        const double eff = nSame / nTruth;
+                        const double pur = nSame / nReco;
+                        corr = (eff > 0.0) ? (pur / eff) : 0.0;
+                    } else {
+                        corr = nTruth / nReco;
+                    }
+                }
+                if (corr > 0.0) {
+                    h_d3sigma_RP->SetBinContent(ix, iy, iz, h_d3sigma_RP->GetBinContent(ix, iy, iz) * corr);
+                    h_d3sigma_RP->SetBinError(ix, iy, iz, h_d3sigma_RP->GetBinError(ix, iy, iz) * corr);
                 } else {
                     h_d3sigma_RP->SetBinContent(ix, iy, iz, 0.0);
                     h_d3sigma_RP->SetBinError(ix, iy, iz, 0.0);
@@ -3034,7 +3583,7 @@ int main(int argc, char** argv) {
     }
     h_dsigma_dt_Sum = (TH1D*)h_dsigma_dt_B0->Clone("dsigma_dt_Sum");
     h_dsigma_dt_Sum->SetDirectory(nullptr);
-    h_dsigma_dt_Sum->SetTitle("B0+RP Reco d#sigma/dt (eff-corrected);|t| [GeV^{2}];d#sigma/dt [nb/GeV^{2}]");
+    h_dsigma_dt_Sum->SetTitle("B0+RP Reco d#sigma/dt (purity/eff-corrected);|t| [GeV^{2}];d#sigma/dt [nb/GeV^{2}]");
     h_dsigma_dt_Sum->Add(h_dsigma_dt_RP);
 
     // Scale triple differential cross sections d^3sigma/(dQ^2 d#beta dx_{pom})
@@ -3082,7 +3631,7 @@ int main(int argc, char** argv) {
     }
     h_d3sigma_Sum = (TH3D*)h_d3sigma_B0->Clone("d3sigma_dQ2dbeta_dxpom_Sum");
     h_d3sigma_Sum->SetDirectory(nullptr);
-    h_d3sigma_Sum->SetTitle("B0+RP Reco d^{3}#sigma/(dQ^{2}d#betadx_{pom}) (eff-corrected);Q^{2} [GeV^{2}];#beta;x_{pom}");
+    h_d3sigma_Sum->SetTitle("B0+RP Reco d^{3}#sigma/(dQ^{2}d#betadx_{pom}) (purity/eff-corrected);Q^{2} [GeV^{2}];#beta;x_{pom}");
     h_d3sigma_Sum->Add(h_d3sigma_RP);
 
     TH2D* h_Response_Q2_rowNorm = (TH2D*)h_Response_Q2->Clone("Response_Q2_rowNorm");
@@ -3095,6 +3644,8 @@ int main(int argc, char** argv) {
     TH2D* h_Response_W2_EM_colNorm = (TH2D*)h_Response_W2_EM->Clone("Response_W2_EM_colNorm");
     TH2D* h_Response_W2_DA_rowNorm = (TH2D*)h_Response_W2_DA->Clone("Response_W2_DA_rowNorm");
     TH2D* h_Response_W2_DA_colNorm = (TH2D*)h_Response_W2_DA->Clone("Response_W2_DA_colNorm");
+    TH2D* h_Response_W2_Best_rowNorm = (TH2D*)h_Response_W2_Best->Clone("Response_W2_Best_rowNorm");
+    TH2D* h_Response_W2_Best_colNorm = (TH2D*)h_Response_W2_Best->Clone("Response_W2_Best_colNorm");
     TH2D* h_Response_W2_Sigma_rowNorm = (TH2D*)h_Response_W2_Sigma->Clone("Response_W2_Sigma_rowNorm");
     TH2D* h_Response_W2_Sigma_colNorm = (TH2D*)h_Response_W2_Sigma->Clone("Response_W2_Sigma_colNorm");
 
@@ -3137,6 +3688,14 @@ int main(int argc, char** argv) {
         if(rowSum > 0) {
             for(int j = 1; j <= h_Response_W2_DA_rowNorm->GetNbinsY(); j++)
                 h_Response_W2_DA_rowNorm->SetBinContent(i, j, h_Response_W2_DA_rowNorm->GetBinContent(i, j) / rowSum);
+        }
+    }
+    for(int i = 1; i <= h_Response_W2_Best_rowNorm->GetNbinsX(); i++) {
+        double rowSum = 0;
+        for(int j = 1; j <= h_Response_W2_Best_rowNorm->GetNbinsY(); j++) rowSum += h_Response_W2_Best_rowNorm->GetBinContent(i, j);
+        if(rowSum > 0) {
+            for(int j = 1; j <= h_Response_W2_Best_rowNorm->GetNbinsY(); j++)
+                h_Response_W2_Best_rowNorm->SetBinContent(i, j, h_Response_W2_Best_rowNorm->GetBinContent(i, j) / rowSum);
         }
     }
     for(int i = 1; i <= h_Response_W2_Sigma_rowNorm->GetNbinsX(); i++) {
@@ -3187,6 +3746,14 @@ int main(int argc, char** argv) {
         if(colSum > 0) {
             for(int i = 1; i <= h_Response_W2_DA_colNorm->GetNbinsX(); i++)
                 h_Response_W2_DA_colNorm->SetBinContent(i, j, h_Response_W2_DA_colNorm->GetBinContent(i, j) / colSum);
+        }
+    }
+    for(int j = 1; j <= h_Response_W2_Best_colNorm->GetNbinsY(); j++) {
+        double colSum = 0;
+        for(int i = 1; i <= h_Response_W2_Best_colNorm->GetNbinsX(); i++) colSum += h_Response_W2_Best_colNorm->GetBinContent(i, j);
+        if(colSum > 0) {
+            for(int i = 1; i <= h_Response_W2_Best_colNorm->GetNbinsX(); i++)
+                h_Response_W2_Best_colNorm->SetBinContent(i, j, h_Response_W2_Best_colNorm->GetBinContent(i, j) / colSum);
         }
     }
     for(int j = 1; j <= h_Response_W2_Sigma_colNorm->GetNbinsY(); j++) {
@@ -3266,6 +3833,14 @@ int main(int argc, char** argv) {
     outputFile->cd();
     TParameter<Long64_t> nEventsParam("nEventsProcessed", nProcessed);
     nEventsParam.Write();
+    TParameter<double> nGenParam("N_gen", N_gen);
+    nGenParam.Write();
+    TParameter<double> sigmaTotalParam("sigma_total_nb", sigma_total);
+    sigmaTotalParam.Write();
+    TParameter<double>("DISCut_q2_min", cutCfg.q2_min).Write();
+    TParameter<double>("DISCut_q2_max", cutCfg.q2_max).Write();
+    TParameter<double>("DISCut_y_min", cutCfg.y_min).Write();
+    TParameter<double>("DISCut_y_max", cutCfg.y_max).Write();
     tree->Write();
 
     // Write Q2/xy histograms
@@ -3362,25 +3937,29 @@ int main(int argc, char** argv) {
     h_eta_max_truth->Write();
 
     // Write NEW inclusive DIS histograms
-    h_W2_EM->Write(); h_W2_DA->Write(); h_W2_Sigma->Write(); h_W2_truth->Write();
-    h_RelRes_W2_EM->Write(); h_RelRes_W2_DA->Write(); h_RelRes_W2_Sigma->Write();
-    h_RelRes_W2_binned_EM->Write(); h_RelRes_W2_binned_DA->Write(); h_RelRes_W2_binned_Sigma->Write();
+    h_W2_EM->Write(); h_W2_DA->Write(); h_W2_Best->Write(); h_W2_Sigma->Write(); h_W2_truth->Write();
+    h_RelRes_W2_EM->Write(); h_RelRes_W2_DA->Write(); h_RelRes_W2_Best->Write(); h_RelRes_W2_Sigma->Write();
+    h_RelRes_W2_binned_EM->Write(); h_RelRes_W2_binned_DA->Write(); h_RelRes_W2_binned_Best->Write(); h_RelRes_W2_binned_Sigma->Write();
     h_Ep_e->Write(); h_phi_e->Write(); h_pT_e->Write();
     h_Ep_e_truth->Write(); h_phi_e_truth->Write(); h_pT_e_truth->Write();
     h_Response_Q2->Write(); h_Response_x->Write(); h_Response_y->Write();
-    h_Response_W2_EM->Write(); h_Response_W2_DA->Write(); h_Response_W2_Sigma->Write();
+    h_Response_W2_EM->Write(); h_Response_W2_DA->Write(); h_Response_W2_Best->Write(); h_Response_W2_Sigma->Write();
     h_Response_Q2_rowNorm->Write(); h_Response_Q2_colNorm->Write();
     h_Response_x_rowNorm->Write(); h_Response_x_colNorm->Write();
     h_Response_y_rowNorm->Write(); h_Response_y_colNorm->Write();
     h_Response_W2_EM_rowNorm->Write(); h_Response_W2_EM_colNorm->Write();
     h_Response_W2_DA_rowNorm->Write(); h_Response_W2_DA_colNorm->Write();
+    h_Response_W2_Best_rowNorm->Write(); h_Response_W2_Best_colNorm->Write();
     h_Response_W2_Sigma_rowNorm->Write(); h_Response_W2_Sigma_colNorm->Write();
 
     g_Q2_EM->Write(); g_Q2_DA->Write(); g_Q2_Sigma->Write();
     g_x_EM->Write(); g_x_DA->Write(); g_x_Sigma->Write();
     g_y_EM->Write(); g_y_DA->Write(); g_y_Sigma->Write();
-    g_W2_EM->Write(); g_W2_DA->Write(); g_W2_Sigma->Write();
+    g_W2_EM->Write(); g_W2_DA->Write(); g_W2_Best->Write(); g_W2_Sigma->Write();
     g_Ep_e->Write(); g_phi_e->Write(); g_pT_e->Write();
+
+    TParameter<double>("W2Best_W0", kW2BestW0).Write();
+    TParameter<double>("W2Best_Gamma", kW2BestGamma).Write();
 
     // Write diffractive t histograms/graphs
     h_t_MC->Write();
@@ -3440,18 +4019,24 @@ int main(int argc, char** argv) {
     h_xpom_res_RP->Write();
     h_xpom_RelRes_binned_B0->Write();
     h_xpom_RelRes_binned_RP->Write();
+    h_xpom_RelRes_binned_W2Best_B0->Write();
+    h_xpom_RelRes_binned_W2Best_RP->Write();
     h_Response_xpom_EM_B0->Write();
     h_Response_xpom_EM_RP->Write();
     h_Response_xpom_DA_B0->Write();
     h_Response_xpom_DA_RP->Write();
     h_Response_xpom_Sigma_B0->Write();
     h_Response_xpom_Sigma_RP->Write();
+    h_Response_xpom_W2Best_B0->Write();
+    h_Response_xpom_W2Best_RP->Write();
     h_Response_beta_EM_B0->Write();
     h_Response_beta_EM_RP->Write();
     h_Response_beta_DA_B0->Write();
     h_Response_beta_DA_RP->Write();
     h_Response_beta_Sigma_B0->Write();
     h_Response_beta_Sigma_RP->Write();
+    h_Response_beta_W2Best_B0->Write();
+    h_Response_beta_W2Best_RP->Write();
     h_xpom_RelRes_vs_k_EM_B0->Write();
     h_xpom_RelRes_vs_k_DA_B0->Write();
     h_xpom_RelRes_vs_k_Sigma_B0->Write();
@@ -3485,6 +4070,8 @@ int main(int argc, char** argv) {
     h_beta_corr_RP->Write();
     h_beta_RelRes_binned_B0->Write();
     h_beta_RelRes_binned_RP->Write();
+    h_beta_RelRes_binned_W2Best_B0->Write();
+    h_beta_RelRes_binned_W2Best_RP->Write();
     h_beta_vs_Q2->Write();
     h_beta_vs_xpom->Write();
     h_beta_vs_t->Write();
@@ -3522,10 +4109,12 @@ int main(int argc, char** argv) {
     h_W2_truth_pdata->Write();
     h_t_truth_mc_B0->Write();
     h_t_reco_mc_B0->Write();
+    h_t_same_mc_B0->Write();
     h_t_reco_pdata_B0->Write();
     h_t_truth_pdata_B0->Write();
     h_t_truth_mc_RP->Write();
     h_t_reco_mc_RP->Write();
+    h_t_same_mc_RP->Write();
     h_t_reco_pdata_RP->Write();
     h_t_truth_pdata_RP->Write();
     h_beta_truth_mc_B0->Write();
@@ -3564,6 +4153,8 @@ int main(int argc, char** argv) {
     h_d3sigma_MC->Write();
     h_d3sigma_B0->Write();
     h_d3sigma_RP->Write();
+    h_d3sigma_same_mc_B0->Write();
+    h_d3sigma_same_mc_RP->Write();
     if (h_d3sigma_Sum) h_d3sigma_Sum->Write();
     h_beta_Q2_truth->Write();
     h_t_Q2_truth->Write();
@@ -3587,6 +4178,15 @@ int main(int argc, char** argv) {
     if (h_phase3D_reco_yaml) {
         h_phase3D_reco_yaml->Write();
     }
+    h_phase_bin_gen->Write();
+    h_phase_bin_meas->Write();
+    h_phase_bin_gen_meas_same->Write();
+    h_phase_bin_gen_setA->Write();
+    h_phase_bin_meas_setA->Write();
+    h_phase_bin_gen_meas_same_setA->Write();
+    h_phase_bin_gen_setB->Write();
+    h_phase_bin_meas_setB->Write();
+    h_phase_bin_gen_meas_same_setB->Write();
     g_xpom_EM_B0->Write();
     g_xpom_EM_RP->Write();
     g_xpom_DA_B0->Write();
@@ -3612,11 +4212,35 @@ int main(int argc, char** argv) {
     h_MX2_t_B0->Write();
     h_MX2_t_RP->Write();
 
+    bool wroteOccupancyYAML = WriteBinOccupancyYAML("/data/bin_occupancy.yaml", yaml_bins, occupancy_truth_k);
+    std::string occupancyPath = "/data/bin_occupancy.yaml";
+    if (!wroteOccupancyYAML) {
+        wroteOccupancyYAML = WriteBinOccupancyYAML("data/bin_occupancy.yaml", yaml_bins, occupancy_truth_k);
+        occupancyPath = "data/bin_occupancy.yaml";
+    }
+    if (!wroteOccupancyYAML) {
+        wroteOccupancyYAML = WriteBinOccupancyYAML("bin_occupancy.yaml", yaml_bins, occupancy_truth_k);
+        occupancyPath = "bin_occupancy.yaml";
+    }
+    if (wroteOccupancyYAML) {
+        std::cout << "Wrote bin occupancy YAML: " << occupancyPath << std::endl;
+    } else {
+        std::cerr << "WARNING: Failed to write bin occupancy YAML." << std::endl;
+    }
+
     outputFile->Close();
     delete events;
     delete outputFile;
 
     std::cout << "\nInclusive kinematics summary:" << std::endl;
+    std::cout << "  DIS cutflow config: Q2>(" << cutCfg.q2_min << "), y in (" << cutCfg.y_min
+              << ", " << cutCfg.y_max << "), E-pz in (" << cutCfg.epz_min << ", " << cutCfg.epz_max
+              << "), apply_epz=" << (cutCfg.apply_epz_cut ? "true" : "false")
+              << ", proton_acceptance=" << (cutCfg.apply_proton_tag_cuts ? "true" : "false") << std::endl;
+    std::cout << "  Passed DIS cuts (truth/EM/DA/Sigma): "
+              << nPassTruthDIS << " / " << nPassEMDIS << " / " << nPassDADIS;
+    if (sigmaAvailable) std::cout << " / " << nPassSigmaDIS;
+    std::cout << std::endl;
     std::cout << "  Valid truth events (Q2,x,y): " << nTruthValid << " / " << nentries << std::endl;
     std::cout << "  Valid EM events   (Q2,x,y): " << nEMValid << " / " << nentries << std::endl;
     std::cout << "  Valid DA events   (Q2,x,y): " << nDAValid << " / " << nentries << std::endl;

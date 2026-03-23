@@ -3,6 +3,7 @@
 // ./DDIS_Plot_Final <combined.root>
 
 #include "Plotting.hpp"
+#include "RecoMethods.hpp"
 
 #include <TFile.h>
 #include <TStyle.h>
@@ -23,12 +24,14 @@
 #include <TF1.h>
 #include <TFitResult.h>
 #include <TPad.h>
+#include <TParameter.h>
 
 #include <iostream>
 #include <fstream>
 #include <iomanip>
 #include <sstream>
 #include <algorithm>
+#include <map>
 #include <limits>
 #include <cstring>
 #include <cmath>
@@ -49,7 +52,8 @@ static void DrawBinningGridWithCounts(TH2* hist,
                                       const std::vector<double>& xbins,
                                       const std::vector<double>& ybins,
                                       bool logX,
-                                      bool logY);
+                                      bool logY,
+                                      bool showBinIds = true);
 static std::vector<double> BuildLinEdges(double minVal, double maxVal, int nSlices);
 
 static bool StartsWith(const std::string& s, const std::string& prefix) {
@@ -142,6 +146,99 @@ static void CollectEdges(const std::vector<BinDef>& bins,
     q2_edges = UniqueSorted(q2_edges);
     beta_edges = UniqueSorted(beta_edges);
     xpom_edges = UniqueSorted(xpom_edges);
+}
+
+static bool InferBeamEnergiesFromInputPath(const std::string& inputPath,
+                                           double& eBeamGeV,
+                                           double& pBeamGeV,
+                                           std::string* firstMatchedToken = nullptr,
+                                           std::string* mismatchToken = nullptr) {
+    std::vector<std::string> tokens;
+    tokens.reserve(16);
+    tokens.push_back(inputPath);
+
+    std::string token;
+    token.reserve(inputPath.size());
+    for (char c : inputPath) {
+        if (c == '/' || c == '\\') {
+            if (!token.empty()) {
+                tokens.push_back(token);
+                token.clear();
+            }
+            continue;
+        }
+        token.push_back(c);
+    }
+    if (!token.empty()) tokens.push_back(token);
+
+    bool found = false;
+    double eRef = 0.0;
+    double pRef = 0.0;
+    std::string firstToken;
+    for (const auto& tok : tokens) {
+        double eCand = 0.0;
+        double pCand = 0.0;
+        if (!ParseBeamEnergiesFromFilename(tok, eCand, pCand)) continue;
+
+        if (!found) {
+            found = true;
+            eRef = eCand;
+            pRef = pCand;
+            firstToken = tok;
+            continue;
+        }
+
+        const bool sameE = std::fabs(eCand - eRef) < 1e-9;
+        const bool sameP = std::fabs(pCand - pRef) < 1e-9;
+        if (!sameE || !sameP) {
+            if (mismatchToken) *mismatchToken = tok;
+            return false;
+        }
+    }
+
+    if (!found) return false;
+    eBeamGeV = eRef;
+    pBeamGeV = pRef;
+    if (firstMatchedToken) *firstMatchedToken = firstToken;
+    return true;
+}
+
+static bool EstimateDISsFromQ2Tree(TFile* inputFile, double& sGeV2) {
+    if (!inputFile) return false;
+    TTree* tree = dynamic_cast<TTree*>(inputFile->Get("Q2_tree"));
+    if (!tree) return false;
+    if (!tree->GetBranch("Q2_truth") || !tree->GetBranch("x_truth") || !tree->GetBranch("y_truth")) {
+        return false;
+    }
+
+    float q2 = -1.0f;
+    float x = -1.0f;
+    float y = -1.0f;
+    tree->SetBranchAddress("Q2_truth", &q2);
+    tree->SetBranchAddress("x_truth", &x);
+    tree->SetBranchAddress("y_truth", &y);
+
+    const Long64_t nEntries = tree->GetEntries();
+    if (nEntries <= 0) return false;
+    const Long64_t maxSample = 200000;
+    const Long64_t stride = std::max<Long64_t>(1, nEntries / maxSample);
+
+    std::vector<double> sValues;
+    sValues.reserve(static_cast<size_t>(nEntries / stride + 1));
+    for (Long64_t i = 0; i < nEntries; i += stride) {
+        tree->GetEntry(i);
+        if (!std::isfinite(q2) || !std::isfinite(x) || !std::isfinite(y)) continue;
+        if (q2 <= 0.0f || x <= 0.0f || y <= 0.0f) continue;
+        const double sCand = static_cast<double>(q2) / (static_cast<double>(x) * static_cast<double>(y));
+        if (!std::isfinite(sCand) || sCand <= 0.0) continue;
+        sValues.push_back(sCand);
+    }
+
+    if (sValues.empty()) return false;
+    auto mid = sValues.begin() + static_cast<long>(sValues.size() / 2);
+    std::nth_element(sValues.begin(), mid, sValues.end());
+    sGeV2 = *mid;
+    return std::isfinite(sGeV2) && sGeV2 > 0.0;
 }
 
 static void PlotXQ2Density(TFile* inputFile) {
@@ -483,7 +580,8 @@ static void DrawBinningGridWithCounts(TH2* hist,
                                       const std::vector<double>& xbins,
                                       const std::vector<double>& ybins,
                                       bool logX,
-                                      bool logY) {
+                                      bool logY,
+                                      bool showBinIds) {
     if (!hist || xbins.size() < 2 || ybins.size() < 2) {
         if (hist && (xbins.size() < 2 || ybins.size() < 2)) {
             std::cerr << "Warning: bin overlay skipped (empty bin edges)." << std::endl;
@@ -563,7 +661,9 @@ static void DrawBinningGridWithCounts(TH2* hist,
             if (count > 0.0) {
                 countText.DrawLatex(xcenter, y_count, Form("%d", (int)std::lround(count)));
             }
-            idText.DrawLatex(xcenter, y_id, Form("%d", bin_id));
+            if (showBinIds) {
+                idText.DrawLatex(xcenter, y_id, Form("%d", bin_id));
+            }
         }
     }
 }
@@ -573,7 +673,8 @@ static void DrawBinsForSlice(TH2D* hist,
                              double beta_lo,
                              double beta_hi,
                              bool logX,
-                             bool logY) {
+                             bool logY,
+                             bool showBinIds = true) {
     if (!hist || bins.empty()) return;
     const double xmin = hist->GetXaxis()->GetXmin();
     const double xmax = hist->GetXaxis()->GetXmax();
@@ -626,6 +727,127 @@ static void DrawBinsForSlice(TH2D* hist,
         if (count > 0.0) {
             countText.DrawLatex(xcenter, ycenter, Form("%d", (int)std::lround(count)));
         }
+        if (showBinIds && b.bin_id >= 0) {
+            const double y_id = logY ? (ycenter * 1.25) : (ycenter + 0.06 * (yhigh - ylow));
+            idText.DrawLatex(xcenter, y_id, Form("%d", b.bin_id));
+        }
+    }
+}
+
+static bool EdgesMatchWithinTolerance(double a, double b) {
+    const double scale = std::max(1.0, std::max(std::abs(a), std::abs(b)));
+    return std::abs(a - b) <= 1e-12 * scale;
+}
+
+static int FindLowerEdgeIndex(const std::vector<double>& edges, double value) {
+    if (edges.size() < 2) return -1;
+    for (size_t i = 0; i + 1 < edges.size(); ++i) {
+        if (EdgesMatchWithinTolerance(edges[i], value)) {
+            return static_cast<int>(i);
+        }
+    }
+    return -1;
+}
+
+static int GetGlobalBinFromBinDef(const BinDef& b,
+                                  const std::vector<double>& q2_edges,
+                                  const std::vector<double>& xpom_edges,
+                                  const std::vector<double>& beta_edges) {
+    const int iQ2 = FindLowerEdgeIndex(q2_edges, b.Q2_min);
+    const int iXpom = FindLowerEdgeIndex(xpom_edges, b.xpom_min);
+    const int iBeta = FindLowerEdgeIndex(beta_edges, b.beta_min);
+    if (iQ2 < 0 || iXpom < 0 || iBeta < 0) return -1;
+
+    if (iQ2 + 1 >= static_cast<int>(q2_edges.size()) ||
+        iXpom + 1 >= static_cast<int>(xpom_edges.size()) ||
+        iBeta + 1 >= static_cast<int>(beta_edges.size())) {
+        return -1;
+    }
+
+    if (!EdgesMatchWithinTolerance(q2_edges[iQ2 + 1], b.Q2_max) ||
+        !EdgesMatchWithinTolerance(xpom_edges[iXpom + 1], b.xpom_max) ||
+        !EdgesMatchWithinTolerance(beta_edges[iBeta + 1], b.beta_max)) {
+        return -1;
+    }
+
+    const int nBeta = static_cast<int>(beta_edges.size()) - 1;
+    const int nXpom = static_cast<int>(xpom_edges.size()) - 1;
+    return iBeta + iXpom * nBeta + iQ2 * (nBeta * nXpom);
+}
+
+static void DrawBinsForSliceMetric(TH2D* hist,
+                                   const std::vector<BinDef>& bins,
+                                   double beta_lo,
+                                   double beta_hi,
+                                   bool logX,
+                                   bool logY,
+                                   const std::vector<double>& metric_values,
+                                   const std::vector<double>& q2_edges,
+                                   const std::vector<double>& xpom_edges,
+                                   const std::vector<double>& beta_edges,
+                                   const std::vector<double>* metric_uncertainties = nullptr,
+                                   double valueTextScale = 1.0) {
+    if (!hist || bins.empty()) return;
+    const double xmin = hist->GetXaxis()->GetXmin();
+    const double xmax = hist->GetXaxis()->GetXmax();
+    const double ymin = hist->GetYaxis()->GetXmin();
+    const double ymax = hist->GetYaxis()->GetXmax();
+    const double eps = 1e-12;
+
+    TLatex metricText;
+    metricText.SetTextColor(kBlack);
+    metricText.SetTextSize(0.033 * valueTextScale);
+    metricText.SetTextAlign(22);
+    metricText.SetTextFont(42);
+
+    TLatex idText;
+    idText.SetTextColor(kBlue + 2);
+    idText.SetTextSize(0.030);
+    idText.SetTextAlign(22);
+    idText.SetTextFont(42);
+
+    for (const auto& b : bins) {
+        if (b.beta_max <= beta_lo + eps || b.beta_min >= beta_hi - eps) {
+            continue;
+        }
+        double xlow = b.xpom_min;
+        double xhigh = b.xpom_max;
+        double ylow = b.Q2_min;
+        double yhigh = b.Q2_max;
+        if (xhigh <= xmin || xlow >= xmax || yhigh <= ymin || ylow >= ymax) {
+            continue;
+        }
+        xlow = std::max(xlow, xmin);
+        xhigh = std::min(xhigh, xmax);
+        ylow = std::max(ylow, ymin);
+        yhigh = std::min(yhigh, ymax);
+        if (xlow <= 0.0 || ylow <= 0.0) continue;
+
+        TBox* box = new TBox(xlow, ylow, xhigh, yhigh);
+        box->SetFillStyle(0);
+        box->SetLineColor(kRed);
+        box->SetLineWidth(2);
+        box->Draw("same");
+
+        const double xcenter = logX ? std::sqrt(xlow * xhigh) : 0.5 * (xlow + xhigh);
+        const double ycenter = logY ? std::sqrt(ylow * yhigh) : 0.5 * (ylow + yhigh);
+        const int k = GetGlobalBinFromBinDef(b, q2_edges, xpom_edges, beta_edges);
+        if (k >= 0 && k < static_cast<int>(metric_values.size()) &&
+            std::isfinite(metric_values[k]) && metric_values[k] >= 0.0) {
+            const bool hasUnc = (metric_uncertainties &&
+                                 k < static_cast<int>(metric_uncertainties->size()) &&
+                                 std::isfinite((*metric_uncertainties)[k]) &&
+                                 (*metric_uncertainties)[k] >= 0.0);
+            if (hasUnc) {
+                metricText.DrawLatex(xcenter, ycenter,
+                                     Form("%.2f#pm%.2f", metric_values[k], (*metric_uncertainties)[k]));
+            } else {
+                std::ostringstream oss;
+                oss << std::fixed << std::setprecision(3) << metric_values[k];
+                metricText.DrawLatex(xcenter, ycenter, oss.str().c_str());
+            }
+        }
+
         if (b.bin_id >= 0) {
             const double y_id = logY ? (ycenter * 1.25) : (ycenter + 0.06 * (yhigh - ylow));
             idText.DrawLatex(xcenter, y_id, Form("%d", b.bin_id));
@@ -647,7 +869,8 @@ static void DrawSliceGrid(TH3D* h3,
                           const std::vector<double>* overlayYBins = nullptr,
                           bool overlayLogX = false,
                           bool overlayLogY = false,
-                          const std::vector<BinDef>* overlayBins = nullptr) {
+                          const std::vector<BinDef>* overlayBins = nullptr,
+                          bool showBinIds = true) {
     if (!h3 || edges.size() < 2) return;
     const int nSlices = static_cast<int>(edges.size()) - 1;
     const int nCols = 2;
@@ -703,10 +926,144 @@ static void DrawSliceGrid(TH3D* h3,
         h2->Draw("COLZ");
 
         if (overlayBins) {
-            DrawBinsForSlice(h2, *overlayBins, lo, hi, overlayLogX, overlayLogY);
+            DrawBinsForSlice(h2, *overlayBins, lo, hi, overlayLogX, overlayLogY, showBinIds);
         } else if (overlayXBins && overlayYBins) {
-            DrawBinningGridWithCounts(h2, *overlayXBins, *overlayYBins, overlayLogX, overlayLogY);
+            DrawBinningGridWithCounts(h2, *overlayXBins, *overlayYBins, overlayLogX, overlayLogY, showBinIds);
         }
+
+        TLatex latex;
+        latex.SetTextSize(0.06);
+        latex.SetNDC();
+        latex.SetTextColor(kBlack);
+        const std::string label = std::string(sliceLabel) + " " + FormatRange(lo, hi);
+        latex.DrawLatex(0.15, 0.88, label.c_str());
+        projections.push_back(h2);
+    }
+
+    axis->SetRange(0, 0);
+    c->Update();
+    SaveCanvas(c, saveName);
+    for (TH2D* proj : projections) {
+        delete proj;
+    }
+    delete c;
+}
+
+static void DrawSliceGridWithMetric(TH3D* h3,
+                                    int sliceAxis,
+                                    const std::vector<double>& edges,
+                                    const char* projOpt,
+                                    const char* xTitle,
+                                    const char* yTitle,
+                                    const char* sliceLabel,
+                                    const char* saveName,
+                                    bool logX,
+                                    bool logY,
+                                    const std::vector<BinDef>& overlayBins,
+                                    bool overlayLogX,
+                                    bool overlayLogY,
+                                    const std::vector<double>& metric_values,
+                                    const std::vector<double>& q2_edges,
+                                    const std::vector<double>& xpom_edges,
+                                    const std::vector<double>& beta_edges,
+                                    double zMin,
+                                    double zMax,
+                                    const std::vector<double>* metric_uncertainties = nullptr,
+                                    double valueTextScale = 1.0) {
+    if (!h3 || edges.size() < 2) return;
+    const int nSlices = static_cast<int>(edges.size()) - 1;
+    const int nCols = 2;
+    const int nRows = (nSlices + nCols - 1) / nCols;
+
+    TCanvas* c = new TCanvas(Form("c_phase_slices_metric_%d", sliceAxis), saveName, 2400, 2000);
+    c->Divide(nCols, nRows, 0.002, 0.002);
+
+    TAxis* axis = nullptr;
+    if (sliceAxis == 1) axis = h3->GetXaxis();
+    if (sliceAxis == 2) axis = h3->GetYaxis();
+    if (sliceAxis == 3) axis = h3->GetZaxis();
+    if (!axis) {
+        delete c;
+        return;
+    }
+
+    std::vector<TH2D*> projections;
+    projections.reserve(nSlices);
+
+    for (int i = 0; i < nSlices; ++i) {
+        const double lo = edges[i];
+        const double hi = edges[i + 1];
+        const double tiny = 1e-12;
+        const int binLo = axis->FindBin(lo + tiny);
+        const int binHi = axis->FindBin(hi - tiny);
+        axis->SetRange(binLo, binHi);
+
+        TH2D* h2raw = (TH2D*)h3->Project3D(projOpt);
+        if (!h2raw) continue;
+        TH2D* h2 = (TH2D*)h2raw->Clone(Form("slice_metric_%s_%d", projOpt, i));
+        h2->SetDirectory(nullptr);
+        delete h2raw;
+        h2->Reset("ICES");
+        h2->SetTitle("");
+        h2->GetXaxis()->SetTitle(xTitle);
+        h2->GetYaxis()->SetTitle(yTitle);
+        h2->GetXaxis()->SetTitleOffset(1.1);
+        h2->GetYaxis()->SetTitleOffset(1.2);
+        if (strcmp(xTitle, "#beta") == 0) {
+            h2->GetXaxis()->SetRangeUser(0.0, 1.0);
+        }
+        if (strcmp(yTitle, "#beta") == 0) {
+            h2->GetYaxis()->SetRangeUser(0.0, 1.0);
+        }
+
+        const double eps = 1e-12;
+        const double xmin = h2->GetXaxis()->GetXmin();
+        const double xmax = h2->GetXaxis()->GetXmax();
+        const double ymin = h2->GetYaxis()->GetXmin();
+        const double ymax = h2->GetYaxis()->GetXmax();
+        for (const auto& b : overlayBins) {
+            if (b.beta_max <= lo + eps || b.beta_min >= hi - eps) continue;
+            double xlow = std::max(b.xpom_min, xmin);
+            double xhigh = std::min(b.xpom_max, xmax);
+            double ylow = std::max(b.Q2_min, ymin);
+            double yhigh = std::min(b.Q2_max, ymax);
+            if (xhigh <= xlow || yhigh <= ylow) continue;
+
+            const int k = GetGlobalBinFromBinDef(b, q2_edges, xpom_edges, beta_edges);
+            if (k < 0 || k >= static_cast<int>(metric_values.size())) continue;
+            const double val = metric_values[k];
+            if (!std::isfinite(val) || val < 0.0) continue;
+
+            const int binxlow = h2->GetXaxis()->FindBin(xlow + eps);
+            const int binxhigh = h2->GetXaxis()->FindBin(xhigh - eps);
+            const int binylow = h2->GetYaxis()->FindBin(ylow + eps);
+            const int binyhigh = h2->GetYaxis()->FindBin(yhigh - eps);
+            for (int bx = binxlow; bx <= binxhigh; ++bx) {
+                for (int by = binylow; by <= binyhigh; ++by) {
+                    h2->SetBinContent(bx, by, val);
+                }
+            }
+        }
+
+        h2->SetMinimum(zMin);
+        h2->SetMaximum(zMax);
+
+        TPad* pad = (TPad*)c->cd(i + 1);
+        pad->SetRightMargin(0.14);
+        pad->SetLeftMargin(0.14);
+        pad->SetTopMargin(0.12);
+        pad->SetBottomMargin(0.12);
+        if (logX) pad->SetLogx();
+        if (logY) pad->SetLogy();
+        h2->Draw("COLZ");
+
+        DrawBinsForSliceMetric(h2,
+                               overlayBins,
+                               lo, hi,
+                               overlayLogX, overlayLogY,
+                               metric_values,
+                               q2_edges, xpom_edges, beta_edges,
+                               metric_uncertainties, valueTextScale);
 
         TLatex latex;
         latex.SetTextSize(0.06);
@@ -782,7 +1139,239 @@ static void PlotPhaseSpaceSlices(TFile* inputFile, const std::string& yamlPath) 
                   (yaml_requested ? nullptr : &xpom_overlay_bins),
                   (yaml_requested ? nullptr : &q2_overlay_bins),
                   true, true,
-                  yaml_requested ? &yaml_bins : nullptr);
+                  yaml_requested ? &yaml_bins : nullptr,
+                  false);
+
+    DrawSliceGrid(h3, 3, beta_edges,
+                  "xy",
+                  "x_{pom}", "Q^{2} [GeV^{2}]", "#beta",
+                  "figs/diffractive/histos/phase_slices_beta_bin_number.png",
+                  true, true,
+                  (yaml_requested ? nullptr : &xpom_overlay_bins),
+                  (yaml_requested ? nullptr : &q2_overlay_bins),
+                  true, true,
+                  yaml_requested ? &yaml_bins : nullptr,
+                  true);
+
+    // Bin-wise acceptance/purity/efficiency overlays using explicit YAML bins.
+    // Definitions (user-requested):
+    //   A_i   = N_meas_i / N_gen_i
+    //   P_i   = N_gen&meas_same_i / N_meas_i
+    //   eff_i = N_gen&meas_same_i / N_gen_i
+    if (yaml_requested && !yaml_bins.empty()) {
+        TH1* h_gen = (TH1*)inputFile->Get("phase_bin_gen");
+        TH1* h_meas = (TH1*)inputFile->Get("phase_bin_meas");
+        TH1* h_same = (TH1*)inputFile->Get("phase_bin_gen_meas_same");
+        if (!h_gen || !h_meas || !h_same) {
+            std::cerr << "Warning: phase-bin metric histograms not found; skipping "
+                         "phase_slices_beta_{eff,acceptance,purity}.png"
+                      << std::endl;
+        } else {
+            const int nGlobalBins =
+                static_cast<int>((q2_edges.size() - 1) * (xpom_edges.size() - 1) * (beta_edges.size() - 1));
+            if (nGlobalBins > 0) {
+                std::vector<double> acceptance_values(nGlobalBins, -1.0);
+                std::vector<double> purity_values(nGlobalBins, -1.0);
+                std::vector<double> efficiency_values(nGlobalBins, -1.0);
+
+                const int nCommon = std::min({nGlobalBins, h_gen->GetNbinsX(), h_meas->GetNbinsX(), h_same->GetNbinsX()});
+                for (int k = 0; k < nCommon; ++k) {
+                    const double n_gen = h_gen->GetBinContent(k + 1);
+                    const double n_meas = h_meas->GetBinContent(k + 1);
+                    const double n_same = h_same->GetBinContent(k + 1);
+
+                    if (n_gen > 0.0) {
+                        acceptance_values[k] = n_meas / n_gen;
+                        efficiency_values[k] = n_same / n_gen;
+                    }
+                    if (n_meas > 0.0) {
+                        purity_values[k] = n_same / n_meas;
+                    }
+                }
+
+                DrawSliceGridWithMetric(h3, 3, beta_edges,
+                                        "xy",
+                                        "x_{pom}", "Q^{2} [GeV^{2}]", "#beta",
+                                        "figs/diffractive/histos/phase_slices_beta_eff.png",
+                                        true, true,
+                                        yaml_bins,
+                                        true, true,
+                                        efficiency_values,
+                                        q2_edges, xpom_edges, beta_edges,
+                                        0.0, 1.0);
+
+                DrawSliceGridWithMetric(h3, 3, beta_edges,
+                                        "xy",
+                                        "x_{pom}", "Q^{2} [GeV^{2}]", "#beta",
+                                        "figs/diffractive/histos/phase_slices_beta_acceptance.png",
+                                        true, true,
+                                        yaml_bins,
+                                        true, true,
+                                        acceptance_values,
+                                        q2_edges, xpom_edges, beta_edges,
+                                        0.0, 1.2);
+
+                DrawSliceGridWithMetric(h3, 3, beta_edges,
+                                        "xy",
+                                        "x_{pom}", "Q^{2} [GeV^{2}]", "#beta",
+                                        "figs/diffractive/histos/phase_slices_beta_purity.png",
+                                        true, true,
+                                        yaml_bins,
+                                        true, true,
+                                        purity_values,
+                                        q2_edges, xpom_edges, beta_edges,
+                                        0.0, 1.0);
+            }
+        }
+
+        // Closure test with user-requested formula:
+        // N_i^(B,corr) = N_i^(B,meas) * P_i^A / eff_i^A
+        // where:
+        //   P_i^A   = N_i^(A,gen&meas_same) / N_i^(A,meas)
+        //   eff_i^A = N_i^(A,gen&meas_same) / N_i^(A,gen)
+        // and closure ratio:
+        //   C_i = N_i^(B,corr) / N_i^(B,gen)
+        TH1* h_gen_A = (TH1*)inputFile->Get("phase_bin_gen_setA");
+        TH1* h_meas_A = (TH1*)inputFile->Get("phase_bin_meas_setA");
+        TH1* h_same_A = (TH1*)inputFile->Get("phase_bin_gen_meas_same_setA");
+        TH1* h_gen_B = (TH1*)inputFile->Get("phase_bin_gen_setB");
+        TH1* h_meas_B = (TH1*)inputFile->Get("phase_bin_meas_setB");
+        if (h_gen_A && h_meas_A && h_same_A && h_gen_B && h_meas_B) {
+            const int nGlobalBins =
+                static_cast<int>((q2_edges.size() - 1) * (xpom_edges.size() - 1) * (beta_edges.size() - 1));
+            if (nGlobalBins > 0) {
+                std::vector<double> closure_values(nGlobalBins, -1.0);
+                std::vector<double> closure_unc_values(nGlobalBins, -1.0);
+                const int nCommon = std::min({nGlobalBins,
+                                              h_gen_A->GetNbinsX(),
+                                              h_meas_A->GetNbinsX(),
+                                              h_same_A->GetNbinsX(),
+                                              h_gen_B->GetNbinsX(),
+                                              h_meas_B->GetNbinsX()});
+                for (int k = 0; k < nCommon; ++k) {
+                    const double n_gen_A = h_gen_A->GetBinContent(k + 1);
+                    const double n_meas_A = h_meas_A->GetBinContent(k + 1);
+                    const double n_same_A = h_same_A->GetBinContent(k + 1);
+                    const double n_gen_B = h_gen_B->GetBinContent(k + 1);
+                    const double n_meas_B = h_meas_B->GetBinContent(k + 1);
+
+                    const double purity_A = (n_meas_A > 0.0) ? (n_same_A / n_meas_A) : -1.0;
+                    const double eff_A = (n_gen_A > 0.0) ? (n_same_A / n_gen_A) : -1.0;
+                    if (eff_A > 0.0 && purity_A >= 0.0 && n_gen_B > 0.0) {
+                        const double n_corr_B = n_meas_B * purity_A / eff_A;
+                        const double closure = n_corr_B / n_gen_B;
+                        closure_values[k] = closure;
+
+                        // Approximate statistical uncertainty (Poisson, uncorrelated counts)
+                        // using algebraically equivalent form:
+                        // C = (N_meas^B * N_gen^A) / (N_meas^A * N_gen^B)
+                        if (n_meas_B > 0.0 && n_gen_A > 0.0 && n_meas_A > 0.0 && n_gen_B > 0.0) {
+                            const double rel2 = (1.0 / n_meas_B) +
+                                                (1.0 / n_gen_A) +
+                                                (1.0 / n_meas_A) +
+                                                (1.0 / n_gen_B);
+                            closure_unc_values[k] = std::abs(closure) * std::sqrt(rel2);
+                        }
+                    }
+                }
+
+                DrawSliceGridWithMetric(h3, 3, beta_edges,
+                                        "xy",
+                                        "x_{pom}", "Q^{2} [GeV^{2}]", "#beta",
+                                        "figs/diffractive/histos/phase_slices_beta_closure_ratio.png",
+                                        true, true,
+                                        yaml_bins,
+                                        true, true,
+                                        closure_values,
+                                        q2_edges, xpom_edges, beta_edges,
+                                        0.0, 2.0,
+                                        &closure_unc_values, 0.85);
+            }
+        } else {
+            std::cerr << "Warning: Set A/B phase-bin histograms for closure test are missing; "
+                         "skipping phase_slices_beta_closure_ratio.png"
+                      << std::endl;
+        }
+    }
+}
+
+static void PlotRecoSetUncorrected(TFile* inputFile,
+                                   const char* recoHistNameSetA,
+                                   const char* recoHistNameSetB,
+                                   const char* xLabel,
+                                   const char* title,
+                                   const char* saveName,
+                                   bool logX,
+                                   bool logY,
+                                   const char* setALabel,
+                                   const char* setBLabel,
+                                   bool normalizeToPDF = false) {
+    if (!inputFile) return;
+    TH1* h_setA = (TH1*)inputFile->Get(recoHistNameSetA);
+    TH1* h_setB = (TH1*)inputFile->Get(recoHistNameSetB);
+    if (!h_setA || !h_setB) {
+        std::cerr << "Warning: Missing hist(s) for uncorrected reco comparison: "
+                  << recoHistNameSetA << ", " << recoHistNameSetB << std::endl;
+        return;
+    }
+
+    TH1D* hA = (TH1D*)h_setA->Clone(Form("uncorr_setA_%s", recoHistNameSetA));
+    TH1D* hB = (TH1D*)h_setB->Clone(Form("uncorr_setB_%s", recoHistNameSetB));
+    hA->SetDirectory(nullptr);
+    hB->SetDirectory(nullptr);
+
+    if (normalizeToPDF) {
+        const double intA = hA->Integral();
+        const double intB = hB->Integral();
+        if (intA > 0.0) hA->Scale(1.0 / intA);
+        if (intB > 0.0) hB->Scale(1.0 / intB);
+    }
+
+    TCanvas* c = new TCanvas(Form("c_uncorr_%s", recoHistNameSetA), title, 1200, 900);
+    gStyle->SetOptStat(0);
+    if (logX) c->SetLogx();
+    if (logY) c->SetLogy();
+
+    hA->SetStats(false);
+    hA->SetTitle("");
+    hA->GetXaxis()->SetTitle(xLabel);
+    hA->GetYaxis()->SetTitle(normalizeToPDF ? "Normalized" : "Counts");
+    hA->GetXaxis()->SetTitleOffset(1.1);
+    hA->GetYaxis()->SetTitleOffset(1.2);
+
+    hA->SetLineWidth(2);
+    hA->SetLineColor(kBlack);
+    hB->SetMarkerStyle(20);
+    hB->SetMarkerSize(1.1);
+    hB->SetMarkerColor(kBlack);
+    hB->SetLineColor(kBlack);
+
+    double max_val = 0.0;
+    double min_pos = std::numeric_limits<double>::max();
+    for (int i = 1; i <= hA->GetNbinsX(); ++i) {
+        double v = std::max(hA->GetBinContent(i), hB->GetBinContent(i));
+        if (v > max_val) max_val = v;
+        if (v > 0 && v < min_pos) min_pos = v;
+    }
+    if (logY && min_pos < std::numeric_limits<double>::max()) {
+        hA->SetMinimum(min_pos * 0.5);
+        hA->SetMaximum(max_val * 5.0);
+    } else {
+        hA->SetMaximum(max_val * 1.3);
+    }
+
+    hA->Draw("hist");
+    hB->Draw("pe same");
+
+    TLegend* leg = new TLegend(0.65, 0.75, 0.92, 0.90);
+    leg->SetBorderSize(0);
+    leg->SetFillStyle(0);
+    leg->AddEntry(hA, setALabel, "l");
+    leg->AddEntry(hB, setBLabel, "p");
+    leg->Draw();
+
+    SaveCanvas(c, saveName);
+    delete c;
 }
 
 static void PlotRecoSetComparison(TFile* inputFile,
@@ -1517,7 +2106,7 @@ static void PlotRelResVsK(TFile* inputFile,
     }
     if (hists.empty()) return;
 
-    TCanvas c("c_relres_vs_k", "c_relres_vs_k", 1100, 600);
+    TCanvas c("c_relres_vs_k", "c_relres_vs_k", 3000, 600);
     gStyle->SetOptTitle(0);
     c.SetGridx();
     c.SetGridy();
@@ -1561,6 +2150,191 @@ static void PlotRelResVsK(TFile* inputFile,
     SaveCanvas(&c, outpath.c_str());
 }
 
+enum class TBinMetricKind {
+    Acceptance,
+    Purity,
+    Efficiency
+};
+
+static std::pair<double, double> ComputeMetricFromCounts(const double nGen,
+                                                         const double nMeas,
+                                                         const double nSame,
+                                                         const TBinMetricKind kind) {
+    double value = 0.0;
+    double error = 0.0;
+
+    if (kind == TBinMetricKind::Acceptance) {
+        if (nGen > 0.0) {
+            value = nMeas / nGen;
+            if (nMeas > 0.0) {
+                error = std::abs(value) * std::sqrt((1.0 / nMeas) + (1.0 / nGen));
+            }
+        }
+        return {value, error};
+    }
+
+    if (kind == TBinMetricKind::Purity) {
+        if (nMeas > 0.0) {
+            value = nSame / nMeas;
+            if (nSame > 0.0) {
+                error = std::abs(value) * std::sqrt((1.0 / nSame) + (1.0 / nMeas));
+            }
+        }
+        return {value, error};
+    }
+
+    // Efficiency
+    if (nGen > 0.0) {
+        value = nSame / nGen;
+        if (nSame > 0.0) {
+            error = std::abs(value) * std::sqrt((1.0 / nSame) + (1.0 / nGen));
+        }
+    }
+    return {value, error};
+}
+
+static bool BuildTMetricHistograms(TFile* inputFile,
+                                   const TBinMetricKind kind,
+                                   TH1D*& hB0Out,
+                                   TH1D*& hRPOut,
+                                   TH1D*& hSumOut) {
+    hB0Out = nullptr;
+    hRPOut = nullptr;
+    hSumOut = nullptr;
+    if (!inputFile) return false;
+
+    TH1D* hTruthB0 = (TH1D*)inputFile->Get("t_truth_mc_B0");
+    TH1D* hRecoB0 = (TH1D*)inputFile->Get("t_reco_mc_B0");
+    TH2D* hCorrB0 = (TH2D*)inputFile->Get("t_corr_B0");
+    TH1D* hTruthRP = (TH1D*)inputFile->Get("t_truth_mc_RP");
+    TH1D* hRecoRP = (TH1D*)inputFile->Get("t_reco_mc_RP");
+    TH2D* hCorrRP = (TH2D*)inputFile->Get("t_corr_RP");
+    if (!hTruthB0 || !hRecoB0 || !hCorrB0 || !hTruthRP || !hRecoRP || !hCorrRP) {
+        std::cerr << "Warning: Missing |t| histograms for metric plots. "
+                  << "(need t_truth_mc_{B0,RP}, t_reco_mc_{B0,RP}, t_corr_{B0,RP})" << std::endl;
+        return false;
+    }
+
+    hB0Out = (TH1D*)hTruthB0->Clone("t_metric_b0_tmp");
+    hRPOut = (TH1D*)hTruthRP->Clone("t_metric_rp_tmp");
+    hSumOut = (TH1D*)hTruthB0->Clone("t_metric_sum_tmp");
+    hB0Out->SetDirectory(nullptr);
+    hRPOut->SetDirectory(nullptr);
+    hSumOut->SetDirectory(nullptr);
+    hB0Out->Reset("ICES");
+    hRPOut->Reset("ICES");
+    hSumOut->Reset("ICES");
+
+    const int nbins = hTruthB0->GetNbinsX();
+    for (int i = 1; i <= nbins; ++i) {
+        const double genB0 = hTruthB0->GetBinContent(i);
+        const double measB0 = hRecoB0->GetBinContent(i);
+        const double sameB0 = hCorrB0->GetBinContent(i, i);
+
+        const double genRP = hTruthRP->GetBinContent(i);
+        const double measRP = hRecoRP->GetBinContent(i);
+        const double sameRP = hCorrRP->GetBinContent(i, i);
+
+        const auto b0Metric = ComputeMetricFromCounts(genB0, measB0, sameB0, kind);
+        const auto rpMetric = ComputeMetricFromCounts(genRP, measRP, sameRP, kind);
+        const auto sumMetric = ComputeMetricFromCounts(genB0 + genRP, measB0 + measRP, sameB0 + sameRP, kind);
+
+        hB0Out->SetBinContent(i, b0Metric.first);
+        hB0Out->SetBinError(i, b0Metric.second);
+        hRPOut->SetBinContent(i, rpMetric.first);
+        hRPOut->SetBinError(i, rpMetric.second);
+        hSumOut->SetBinContent(i, sumMetric.first);
+        hSumOut->SetBinError(i, sumMetric.second);
+    }
+
+    return true;
+}
+
+static void PlotTBinMetric(TFile* inputFile,
+                           const TBinMetricKind kind,
+                           const char* title,
+                           const char* yLabel,
+                           const char* saveName) {
+    TH1D* hB0 = nullptr;
+    TH1D* hRP = nullptr;
+    TH1D* hSum = nullptr;
+    if (!BuildTMetricHistograms(inputFile, kind, hB0, hRP, hSum)) {
+        return;
+    }
+
+    TCanvas* c = new TCanvas(Form("c_%s", saveName), title, 1200, 900);
+    c->SetLogx();
+    c->SetGridx();
+    c->SetGridy();
+
+    hSum->SetTitle("");
+    hSum->GetXaxis()->SetTitle("|t| [GeV^{2}]");
+    hSum->GetYaxis()->SetTitle(yLabel);
+    hSum->GetXaxis()->SetTitleOffset(1.1);
+    hSum->GetYaxis()->SetTitleOffset(1.2);
+    hSum->GetXaxis()->SetMoreLogLabels();
+    hSum->GetXaxis()->SetNoExponent();
+
+    hB0->SetMarkerStyle(20);
+    hB0->SetMarkerSize(1.0);
+    hB0->SetMarkerColor(kRed + 1);
+    hB0->SetLineColor(kRed + 1);
+    hB0->SetLineWidth(2);
+
+    hRP->SetMarkerStyle(21);
+    hRP->SetMarkerSize(1.0);
+    hRP->SetMarkerColor(kBlue + 1);
+    hRP->SetLineColor(kBlue + 1);
+    hRP->SetLineWidth(2);
+
+    hSum->SetMarkerStyle(24);
+    hSum->SetMarkerSize(1.0);
+    hSum->SetMarkerColor(kBlack);
+    hSum->SetLineColor(kBlack);
+    hSum->SetLineWidth(2);
+
+    double ymax = 0.0;
+    for (int i = 1; i <= hSum->GetNbinsX(); ++i) {
+        ymax = std::max(ymax, hB0->GetBinContent(i) + hB0->GetBinError(i));
+        ymax = std::max(ymax, hRP->GetBinContent(i) + hRP->GetBinError(i));
+        ymax = std::max(ymax, hSum->GetBinContent(i) + hSum->GetBinError(i));
+    }
+    if (ymax <= 0.0) ymax = 1.0;
+    const double minY = 0.0;
+    const double floorMax = (kind == TBinMetricKind::Acceptance) ? 1.2 : 1.05;
+    hSum->GetYaxis()->SetRangeUser(minY, std::max(ymax * 1.25, floorMax));
+
+    hSum->Draw("E1");
+    hB0->Draw("E1 SAME");
+    hRP->Draw("E1 SAME");
+
+    const double xMin = hSum->GetXaxis()->GetXmin();
+    const double xMax = hSum->GetXaxis()->GetXmax();
+    TLine* unity = new TLine(xMin, 1.0, xMax, 1.0);
+    unity->SetLineColor(kGray + 2);
+    unity->SetLineStyle(2);
+    unity->SetLineWidth(2);
+    unity->Draw("SAME");
+
+    TLegend* leg = new TLegend(0.66, 0.72, 0.9, 0.9);
+    leg->SetBorderSize(0);
+    leg->SetFillStyle(0);
+    leg->AddEntry(hB0, "B0", "lep");
+    leg->AddEntry(hRP, "RP", "lep");
+    leg->AddEntry(hSum, "B0+RP", "lep");
+    leg->Draw();
+
+    DrawSimLabels(inputFile);
+    SaveCanvas(c, saveName);
+
+    delete leg;
+    delete unity;
+    delete c;
+    delete hB0;
+    delete hRP;
+    delete hSum;
+}
+
 int main(int argc, char** argv) {
     if (argc < 3) {
         std::cerr << "Usage: " << argv[0] << " <combined.root> <bins.yaml>" << std::endl;
@@ -1590,6 +2364,65 @@ int main(int argc, char** argv) {
         return 1;
     }
 
+    double nGenFromFile = -1.0;
+    if (auto* nGenParam = dynamic_cast<TParameter<double>*>(inputFile->Get("N_gen"))) {
+        nGenFromFile = nGenParam->GetVal();
+    } else if (auto* nEvtParam = dynamic_cast<TParameter<Long64_t>*>(inputFile->Get("nEventsProcessed"))) {
+        nGenFromFile = static_cast<double>(nEvtParam->GetVal());
+    }
+    double sigmaTotalNbFromFile = -1.0;
+    if (auto* sigmaParam = dynamic_cast<TParameter<double>*>(inputFile->Get("sigma_total_nb"))) {
+        sigmaTotalNbFromFile = sigmaParam->GetVal();
+    }
+    double yMinCutFromFile = 0.01;
+    double yMaxCutFromFile = 0.95;
+    if (auto* yMinParam = dynamic_cast<TParameter<double>*>(inputFile->Get("DISCut_y_min"))) {
+        yMinCutFromFile = yMinParam->GetVal();
+    }
+    if (auto* yMaxParam = dynamic_cast<TParameter<double>*>(inputFile->Get("DISCut_y_max"))) {
+        yMaxCutFromFile = yMaxParam->GetVal();
+    }
+    if (nGenFromFile > 0.0) {
+        std::cout << "Loaded N_gen from output file: " << nGenFromFile << std::endl;
+    } else {
+        std::cout << "N_gen metadata not found in output file." << std::endl;
+    }
+    if (sigmaTotalNbFromFile > 0.0) {
+        std::cout << "Loaded sigma_total from output file: " << sigmaTotalNbFromFile << " nb" << std::endl;
+    }
+    std::cout << "Using DIS y-window for reduced-cross-section plot: "
+              << yMinCutFromFile << " < y < " << yMaxCutFromFile << std::endl;
+
+    double eBeamGeV = 0.0;
+    double pBeamGeV = 0.0;
+    double disSGeV2 = 0.0;
+    std::string firstBeamToken;
+    std::string mismatchBeamToken;
+    const bool haveBeamFromPath = InferBeamEnergiesFromInputPath(
+        inputFileName.Data(), eBeamGeV, pBeamGeV, &firstBeamToken, &mismatchBeamToken
+    );
+    if (haveBeamFromPath && eBeamGeV > 0.0 && pBeamGeV > 0.0) {
+        disSGeV2 = 4.0 * eBeamGeV * pBeamGeV;
+        std::cout << "Reduced-cross-section kinematics: parsed beam tag "
+                  << eBeamGeV << "x" << pBeamGeV << " GeV from token '"
+                  << firstBeamToken << "', using s = " << disSGeV2 << " GeV^2." << std::endl;
+    } else {
+        if (!mismatchBeamToken.empty()) {
+            std::cerr << "WARNING: Inconsistent beam-energy tags found in input path (first match '"
+                      << firstBeamToken << "', mismatch '" << mismatchBeamToken
+                      << "'). Falling back to kinematic s estimate from Q2_tree." << std::endl;
+        } else {
+            std::cout << "Beam-energy tag not found in input path; estimating s from Q2_tree truth kinematics." << std::endl;
+        }
+        if (EstimateDISsFromQ2Tree(inputFile, disSGeV2)) {
+            std::cout << "Estimated s = " << disSGeV2
+                      << " GeV^2 from median(Q2_truth/(x_truth*y_truth))." << std::endl;
+        } else {
+            std::cerr << "WARNING: Could not determine s from beam tags or Q2_tree. "
+                      << "Reduced-cross-section stacked plots will be skipped." << std::endl;
+        }
+    }
+
     std::string yamlPath = argv[2];
     std::vector<BinDef> yaml_bins = ReadBinsFromYAML(yamlPath);
     std::vector<double> q2_edges;
@@ -1608,6 +2441,8 @@ int main(int argc, char** argv) {
 
     // Plot outputs are routed to figs/organized/... in SaveCanvas.
     gSystem->mkdir("figs/organized", kTRUE);
+    gSystem->mkdir("figs/inclusive/control", kTRUE);
+    gSystem->mkdir("figs/diffractive/control", kTRUE);
 
     // Acceptance/purity plots (if tracking histograms exist)
     TH1D* h_gen_Q2 = (TH1D*)inputFile->Get("h_gen_Q2");
@@ -1752,6 +2587,117 @@ int main(int argc, char** argv) {
                           false,
                           controlSetALabel,
                           controlSetBLabel);
+
+    // ---- Uncorrected MC vs pseudo-data control plots ----
+    // Inclusive variables (raw counts)
+    PlotRecoSetUncorrected(inputFile, "Q2_reco_mc", "Q2_reco_pdata",
+                           "Q^{2} [GeV^{2}]", "Q^{2} Uncorrected: MC vs Pseudo-data",
+                           "figs/inclusive/control/q2_mc_vs_pdata.png",
+                           true, true, controlSetALabel, controlSetBLabel);
+    PlotRecoSetUncorrected(inputFile, "x_reco_mc", "x_reco_pdata",
+                           "x_{Bj}", "x_{Bj} Uncorrected: MC vs Pseudo-data",
+                           "figs/inclusive/control/xbj_mc_vs_pdata.png",
+                           true, true, controlSetALabel, controlSetBLabel);
+    PlotRecoSetUncorrected(inputFile, "y_reco_mc", "y_reco_pdata",
+                           "y", "y Uncorrected: MC vs Pseudo-data",
+                           "figs/inclusive/control/y_mc_vs_pdata.png",
+                           false, true, controlSetALabel, controlSetBLabel);
+    PlotRecoSetUncorrected(inputFile, "W2_reco_mc", "W2_reco_pdata",
+                           "W^{2} [GeV^{2}]", "W^{2} Uncorrected: MC vs Pseudo-data",
+                           "figs/inclusive/control/w2_mc_vs_pdata.png",
+                           true, true, controlSetALabel, controlSetBLabel);
+    // Inclusive variables (PDF-normalized)
+    PlotRecoSetUncorrected(inputFile, "Q2_reco_mc", "Q2_reco_pdata",
+                           "Q^{2} [GeV^{2}]", "Q^{2} Uncorrected: MC vs Pseudo-data (PDF)",
+                           "figs/inclusive/control/q2_mc_vs_pdata_pdf.png",
+                           true, false, controlSetALabel, controlSetBLabel, true);
+    PlotRecoSetUncorrected(inputFile, "x_reco_mc", "x_reco_pdata",
+                           "x_{Bj}", "x_{Bj} Uncorrected: MC vs Pseudo-data (PDF)",
+                           "figs/inclusive/control/xbj_mc_vs_pdata_pdf.png",
+                           true, false, controlSetALabel, controlSetBLabel, true);
+    PlotRecoSetUncorrected(inputFile, "y_reco_mc", "y_reco_pdata",
+                           "y", "y Uncorrected: MC vs Pseudo-data (PDF)",
+                           "figs/inclusive/control/y_mc_vs_pdata_pdf.png",
+                           false, false, controlSetALabel, controlSetBLabel, true);
+    PlotRecoSetUncorrected(inputFile, "W2_reco_mc", "W2_reco_pdata",
+                           "W^{2} [GeV^{2}]", "W^{2} Uncorrected: MC vs Pseudo-data (PDF)",
+                           "figs/inclusive/control/w2_mc_vs_pdata_pdf.png",
+                           true, false, controlSetALabel, controlSetBLabel, true);
+    // Diffractive variables (raw counts)
+    PlotRecoSetUncorrected(inputFile, "t_reco_mc_B0", "t_reco_pdata_B0",
+                           "|t| [GeV^{2}]", "|t| Uncorrected: MC vs Pseudo-data (B0)",
+                           "figs/diffractive/control/t_mc_vs_pdata_b0.png",
+                           true, true, controlSetALabel, controlSetBLabel);
+    PlotRecoSetUncorrected(inputFile, "t_reco_mc_RP", "t_reco_pdata_RP",
+                           "|t| [GeV^{2}]", "|t| Uncorrected: MC vs Pseudo-data (RP)",
+                           "figs/diffractive/control/t_mc_vs_pdata_rp.png",
+                           true, true, controlSetALabel, controlSetBLabel);
+    PlotRecoSetUncorrected(inputFile, "beta_reco_mc_B0", "beta_reco_pdata_B0",
+                           "#beta", "#beta Uncorrected: MC vs Pseudo-data (B0)",
+                           "figs/diffractive/control/beta_mc_vs_pdata_b0.png",
+                           false, true, controlSetALabel, controlSetBLabel);
+    PlotRecoSetUncorrected(inputFile, "beta_reco_mc_RP", "beta_reco_pdata_RP",
+                           "#beta", "#beta Uncorrected: MC vs Pseudo-data (RP)",
+                           "figs/diffractive/control/beta_mc_vs_pdata_rp.png",
+                           false, true, controlSetALabel, controlSetBLabel);
+    PlotRecoSetUncorrected(inputFile, "xpom_reco_mc_B0", "xpom_reco_pdata_B0",
+                           "x_{pom}", "x_{pom} Uncorrected: MC vs Pseudo-data (B0)",
+                           "figs/diffractive/control/xpom_mc_vs_pdata_b0.png",
+                           true, true, controlSetALabel, controlSetBLabel);
+    PlotRecoSetUncorrected(inputFile, "xpom_reco_mc_RP", "xpom_reco_pdata_RP",
+                           "x_{pom}", "x_{pom} Uncorrected: MC vs Pseudo-data (RP)",
+                           "figs/diffractive/control/xpom_mc_vs_pdata_rp.png",
+                           true, true, controlSetALabel, controlSetBLabel);
+    PlotRecoSetUncorrected(inputFile, "MX2_reco_mc", "MX2_reco_pdata",
+                           "M_{X}^{2} [GeV^{2}]", "M_{X}^{2} Uncorrected: MC vs Pseudo-data",
+                           "figs/diffractive/control/mx2_mc_vs_pdata.png",
+                           true, true, controlSetALabel, controlSetBLabel);
+    PlotRecoSetUncorrected(inputFile, "theta_reco_mc_B0", "theta_reco_pdata_B0",
+                           "#theta [mrad]", "#theta Uncorrected: MC vs Pseudo-data (B0)",
+                           "figs/diffractive/control/theta_mc_vs_pdata_b0.png",
+                           false, true, controlSetALabel, controlSetBLabel);
+    PlotRecoSetUncorrected(inputFile, "theta_reco_mc_RP", "theta_reco_pdata_RP",
+                           "#theta [mrad]", "#theta Uncorrected: MC vs Pseudo-data (RP)",
+                           "figs/diffractive/control/theta_mc_vs_pdata_rp.png",
+                           false, true, controlSetALabel, controlSetBLabel);
+    // Diffractive variables (PDF-normalized)
+    PlotRecoSetUncorrected(inputFile, "t_reco_mc_B0", "t_reco_pdata_B0",
+                           "|t| [GeV^{2}]", "|t| Uncorrected: MC vs Pseudo-data (B0, PDF)",
+                           "figs/diffractive/control/t_mc_vs_pdata_b0_pdf.png",
+                           true, false, controlSetALabel, controlSetBLabel, true);
+    PlotRecoSetUncorrected(inputFile, "t_reco_mc_RP", "t_reco_pdata_RP",
+                           "|t| [GeV^{2}]", "|t| Uncorrected: MC vs Pseudo-data (RP, PDF)",
+                           "figs/diffractive/control/t_mc_vs_pdata_rp_pdf.png",
+                           true, false, controlSetALabel, controlSetBLabel, true);
+    PlotRecoSetUncorrected(inputFile, "beta_reco_mc_B0", "beta_reco_pdata_B0",
+                           "#beta", "#beta Uncorrected: MC vs Pseudo-data (B0, PDF)",
+                           "figs/diffractive/control/beta_mc_vs_pdata_b0_pdf.png",
+                           false, false, controlSetALabel, controlSetBLabel, true);
+    PlotRecoSetUncorrected(inputFile, "beta_reco_mc_RP", "beta_reco_pdata_RP",
+                           "#beta", "#beta Uncorrected: MC vs Pseudo-data (RP, PDF)",
+                           "figs/diffractive/control/beta_mc_vs_pdata_rp_pdf.png",
+                           false, false, controlSetALabel, controlSetBLabel, true);
+    PlotRecoSetUncorrected(inputFile, "xpom_reco_mc_B0", "xpom_reco_pdata_B0",
+                           "x_{pom}", "x_{pom} Uncorrected: MC vs Pseudo-data (B0, PDF)",
+                           "figs/diffractive/control/xpom_mc_vs_pdata_b0_pdf.png",
+                           true, false, controlSetALabel, controlSetBLabel, true);
+    PlotRecoSetUncorrected(inputFile, "xpom_reco_mc_RP", "xpom_reco_pdata_RP",
+                           "x_{pom}", "x_{pom} Uncorrected: MC vs Pseudo-data (RP, PDF)",
+                           "figs/diffractive/control/xpom_mc_vs_pdata_rp_pdf.png",
+                           true, false, controlSetALabel, controlSetBLabel, true);
+    PlotRecoSetUncorrected(inputFile, "MX2_reco_mc", "MX2_reco_pdata",
+                           "M_{X}^{2} [GeV^{2}]", "M_{X}^{2} Uncorrected: MC vs Pseudo-data (PDF)",
+                           "figs/diffractive/control/mx2_mc_vs_pdata_pdf.png",
+                           true, false, controlSetALabel, controlSetBLabel, true);
+    PlotRecoSetUncorrected(inputFile, "theta_reco_mc_B0", "theta_reco_pdata_B0",
+                           "#theta [mrad]", "#theta Uncorrected: MC vs Pseudo-data (B0, PDF)",
+                           "figs/diffractive/control/theta_mc_vs_pdata_b0_pdf.png",
+                           false, false, controlSetALabel, controlSetBLabel, true);
+    PlotRecoSetUncorrected(inputFile, "theta_reco_mc_RP", "theta_reco_pdata_RP",
+                           "#theta [mrad]", "#theta Uncorrected: MC vs Pseudo-data (RP, PDF)",
+                           "figs/diffractive/control/theta_mc_vs_pdata_rp_pdf.png",
+                           false, false, controlSetALabel, controlSetBLabel, true);
+
     PlotDensityFromHistWithOverlay(inputFile, "beta_Q2_reco", "#beta", "Q^{2} [GeV^{2}]",
                                    "figs/diffractive/histos/beta_q2_density.png",
                                    false, true, beta_edges, q2_edges, false, true);
@@ -1807,6 +2753,13 @@ int main(int argc, char** argv) {
                      "W^{2}_{truth} [GeV^{2}]",
                      "W^{2}_{reco} [GeV^{2}]",
                      "figs/inclusive/histos/w2_corr_unbinned_da_density.png",
+                     10.0, 1.0e4, 140, true, true);
+    PlotGraphDensity(inputFile,
+                     "g_W2_Best",
+                     "W^{2} Correlation (Best, Unbinned)",
+                     "W^{2}_{truth} [GeV^{2}]",
+                     "W^{2}_{reco} [GeV^{2}]",
+                     "figs/inclusive/histos/w2_corr_unbinned_best_density.png",
                      10.0, 1.0e4, 140, true, true);
     PlotGraphDensity(inputFile,
                      "g_W2_Sigma",
@@ -1960,9 +2913,9 @@ int main(int argc, char** argv) {
     // NEW: W² distributions
     // =================================================================
     plot_ptr = new PlotOptions1D(
-        {"W2_truth", "W2_EM", "W2_DA", "W2_Sigma"},
-        {"MC: truth", "Reco. EM", "Reco. DA", "Reco. Sigma"},
-        {"hist", "pe", "pe", "pe"},
+        {"W2_truth", "W2_EM", "W2_DA", "W2_Best", "W2_Sigma"},
+        {"MC: truth", "Reco. EM", "Reco. DA", "Reco. Best", "Reco. Sigma"},
+        {"hist", "pe", "pe", "pe", "pe"},
         "W^{2} Reconstruction Methods",
         "W^{2} [GeV^{2}]",
         "# of events",
@@ -1975,9 +2928,9 @@ int main(int argc, char** argv) {
     plots.push_back(plot_ptr);
 
     plot_ptr = new PlotOptions1D(
-        {"W2_truth", "W2_EM", "W2_DA", "W2_Sigma"},
-        {"MC: truth", "Reco. EM", "Reco. DA", "Reco. Sigma"},
-        {"hist", "pe", "pe", "pe"},
+        {"W2_truth", "W2_EM", "W2_DA", "W2_Best", "W2_Sigma"},
+        {"MC: truth", "Reco. EM", "Reco. DA", "Reco. Best", "Reco. Sigma"},
+        {"hist", "pe", "pe", "pe", "pe"},
         "W^{2} PDF Comparison",
         "W^{2} [GeV^{2}]",
         "PDF",
@@ -2426,6 +3379,16 @@ int main(int argc, char** argv) {
         {10.0, 1.0e4}
     ));
     plots.push_back(new PlotOptionsResponseMatrix(
+        "Response_W2_Best",
+        "W^{2}_{truth} [GeV^{2}]",
+        "W^{2}_{reco} [GeV^{2}]",
+        "figs/inclusive/response/response_w2_best.png",
+        true,
+        true,
+        {10.0, 1.0e4},
+        {10.0, 1.0e4}
+    ));
+    plots.push_back(new PlotOptionsResponseMatrix(
         "Response_W2_Sigma",
         "W^{2}_{truth} [GeV^{2}]",
         "W^{2}_{reco} [GeV^{2}]",
@@ -2477,6 +3440,26 @@ int main(int argc, char** argv) {
         {10.0, 1.0e4}
     ));
     plots.push_back(new PlotOptionsResponseMatrix(
+        "Response_W2_Best_rowNorm",
+        "W^{2}_{truth} [GeV^{2}]",
+        "W^{2}_{reco} [GeV^{2}]",
+        "figs/inclusive/response/response_w2_best_rowNorm.png",
+        true,
+        true,
+        {10.0, 1.0e4},
+        {10.0, 1.0e4}
+    ));
+    plots.push_back(new PlotOptionsResponseMatrix(
+        "Response_W2_Best_colNorm",
+        "W^{2}_{truth} [GeV^{2}]",
+        "W^{2}_{reco} [GeV^{2}]",
+        "figs/inclusive/response/response_w2_best_colNorm.png",
+        true,
+        true,
+        {10.0, 1.0e4},
+        {10.0, 1.0e4}
+    ));
+    plots.push_back(new PlotOptionsResponseMatrix(
         "Response_W2_Sigma_rowNorm",
         "W^{2}_{truth} [GeV^{2}]",
         "W^{2}_{reco} [GeV^{2}]",
@@ -2504,102 +3487,123 @@ int main(int argc, char** argv) {
         "Q2_RelRes_EM",
         "#frac{Q^{2}_{EM} - Q^{2}_{MC}}{ Q^{2}_{MC}}",
         "Counts",
-        -0.01, 0.01,
-        "figs/inclusive/resolution/q2_relres_em.png"
+        -0.05, 0.05,
+        "figs/inclusive/resolution/q2_relres_em.png",
+        "dscb"
     ));
 
     plots.push_back(new PlotOptionsRelRes(
         "Q2_RelRes_DA",
         "#frac{Q^{2}_{DA} - Q^{2}_{MC}}{ Q^{2}_{MC}}",
         "Counts",
-        -0.005, 0.02,
-        "figs/inclusive/resolution/q2_relres_da.png"
+        -0.1, 0.1,
+        "figs/inclusive/resolution/q2_relres_da.png",
+        "double_sided_crystalball"
     ));
 
     plots.push_back(new PlotOptionsRelRes(
         "Q2_RelRes_Sigma",
         "#frac{Q^{2}_{#Sigma} - Q^{2}_{MC}}{ Q^{2}_{MC}}",
         "Counts",
-        -0.01, 0.01,
-        "figs/inclusive/resolution/q2_relres_sigma.png"
+        -0.2, 0.05,
+        "figs/inclusive/resolution/q2_relres_sigma.png",
+        "crystalball"
     ));
 
     plots.push_back(new PlotOptionsRelRes(
         "x_RelRes_EM",
         "#frac{x_{EM} - x_{MC}}{ x_{MC}}",
         "Counts",
-        -0.025, 0.02,
-        "figs/inclusive/resolution/xbj_relres_em.png"
+        -0.1, 0.1,
+        "figs/inclusive/resolution/xbj_relres_em.png",
+        "dscb"
     ));
 
     plots.push_back(new PlotOptionsRelRes(
         "x_RelRes_DA",
         "#frac{x_{DA} - x_{MC}}{X_{MC}}",
         "Counts",
-        0., 0.,
-        "figs/inclusive/resolution/xbj_relres_da.png"
+        -0.4, 0.5,
+        "figs/inclusive/resolution/xbj_relres_da.png",
+        "double_sided_crystalball"
     ));
 
     plots.push_back(new PlotOptionsRelRes(
         "x_RelRes_Sigma",
         "#frac{x_{#Sigma} - x_{MC}}{X_{MC}}",
         "Counts",
-        0., 0.,
-        "figs/inclusive/resolution/xbj_relres_sigma.png"
+        -0.5, 0.5,
+        "figs/inclusive/resolution/xbj_relres_sigma.png",
+        "dscb"
     ));
 
     plots.push_back(new PlotOptionsRelRes(
         "y_RelRes_EM",
         "#frac{y_{EM} - y_{MC}}{ y_{MC}}",
         "Counts",
-        -0.009, 0.009,
-        "figs/inclusive/resolution/y_relres_em.png"
+        -0.05, 0.05,
+        "figs/inclusive/resolution/y_relres_em.png",
+        "dscb"
     ));
 
     plots.push_back(new PlotOptionsRelRes(
         "y_RelRes_DA",
         "#frac{y_{DA} - y_{MC}}{y_{MC}}",
         "Counts",
-        0., 0.,
-        "figs/inclusive/resolution/y_relres_da.png"
+        -0.22, 0.3,
+        "figs/inclusive/resolution/y_relres_da.png",
+        "dscb"
     ));
 
     plots.push_back(new PlotOptionsRelRes(
         "y_RelRes_Sigma",
         "#frac{y_{#Sigma} - y_{MC}}{y_{MC}}",
         "Counts",
-        0., 0.,
-        "figs/inclusive/resolution/y_relres_sigma.png"
+        -0.5, 0.5,
+        "figs/inclusive/resolution/y_relres_sigma.png",
+        "double_sided_crystalball"
     ));
 
     plots.push_back(new PlotOptionsRelRes(
         "W2_RelRes_EM",
         "#frac{W^{2}_{EM} - W^{2}_{MC}}{W^{2}_{MC}}",
         "Counts",
-        -0.5, 0.5,
-        "figs/inclusive/resolution/w2_relres_em.png"
+        -0.1, 0.1,
+        "figs/inclusive/resolution/w2_relres_em.png",
+        "dscb"
     ));
 
     plots.push_back(new PlotOptionsRelRes(
         "W2_RelRes_DA",
         "#frac{W^{2}_{DA} - W^{2}_{MC}}{W^{2}_{MC}}",
         "Counts",
-        -0.5, 0.5,
-        "figs/inclusive/resolution/w2_relres_da.png"
+        -0.25, 0.3,
+        "figs/inclusive/resolution/w2_relres_da.png",
+        "double_sided_crystalball"
+    ));
+
+    plots.push_back(new PlotOptionsRelRes(
+        "W2_RelRes_Best",
+        "#frac{W^{2}_{best} - W^{2}_{MC}}{W^{2}_{MC}}",
+        "Counts",
+        -0.12, 0.12,
+        "figs/inclusive/resolution/w2_relres_best.png",
+        "dscb"
     ));
 
     plots.push_back(new PlotOptionsRelRes(
         "W2_RelRes_Sigma",
         "#frac{W^{2}_{#Sigma} - W^{2}_{MC}}{W^{2}_{MC}}",
         "Counts",
-        -0.5, 0.5,
-        "figs/inclusive/resolution/w2_relres_sigma.png"
+        -0.8, 0.5,
+        "figs/inclusive/resolution/w2_relres_sigma.png",
+        "dscb"
     ));
 
     // =================================================================
     // Binned resolution plots (Q2/x/y)
     // =================================================================
-    plots.push_back(new PlotOptionsBinnedRelRes(
+    binned_plot_ptr = new PlotOptionsBinnedRelRes(
         "Q2_RelRes_binned_EM",
         "Relative bin by bin resolution (EM);Q^{2}_{MC};#frac{Q^{2}_{EM} - Q^{2}_{MC}}{Q^{2}_{MC}}",
         "Q^{2}_{EM}",
@@ -2615,9 +3619,12 @@ int main(int argc, char** argv) {
         "figs/inclusive/resolution/profile/q2_relres_binned_em",
         std::make_pair(5.0, 200),
         true
-    ));
+    );
+    binned_plot_ptr->SetLegendPosition(0.2, 0.25, 0.35, 0.4);
+    binned_plot_ptr->SetRangeY(-0.10, 0.10);
+    plots.push_back(binned_plot_ptr);
 
-    plots.push_back(new PlotOptionsBinnedRelRes(
+    binned_plot_ptr = new PlotOptionsBinnedRelRes(
         "Q2_RelRes_binned_DA",
         "Relative bin by bin resolution (DA);Q^{2}_{MC};#frac{Q^{2}_{DA} - Q^{2}_{MC}}{Q^{2}_{MC}}",
         "Q^{2}_{DA}",
@@ -2633,9 +3640,12 @@ int main(int argc, char** argv) {
         "figs/inclusive/resolution/profile/q2_relres_binned_da",
         std::make_pair(5.0, 200),
         true
-    ));
+    );
+    binned_plot_ptr->SetLegendPosition(0.2, 0.25, 0.35, 0.4);
+    binned_plot_ptr->SetRangeY(-0.10, 0.10);
+    plots.push_back(binned_plot_ptr);
 
-    plots.push_back(new PlotOptionsBinnedRelRes(
+    binned_plot_ptr = new PlotOptionsBinnedRelRes(
         "Q2_RelRes_binned_Sigma",
         ";Q^{2}_{MC};#frac{Q^{2}_{#Sigma} - Q^{2}_{MC}}{Q^{2}_{MC}}",
         "Q^{2}_{#Sigma}",
@@ -2651,7 +3661,10 @@ int main(int argc, char** argv) {
         "figs/inclusive/resolution/profile/q2_relres_binned_sigma",
         std::make_pair(5.0, 200),
         true
-    ));
+    );
+    binned_plot_ptr->SetLegendPosition(0.7, 0.75, 0.85, 0.9);
+    binned_plot_ptr->SetRangeY(-0.15, 0.10);
+    plots.push_back(binned_plot_ptr);
 
     binned_plot_ptr = new PlotOptionsBinnedRelRes(
         "x_RelRes_binned_EM",
@@ -2792,6 +3805,22 @@ int main(int argc, char** argv) {
         },
         "figs/inclusive/resolution/w2_relres_binned_da.png",
         "figs/inclusive/resolution/profile/w2_relres_binned_da",
+        std::make_pair(10.0, 1.0e4),
+        true
+    );
+    plots.push_back(binned_plot_ptr);
+
+    binned_plot_ptr = new PlotOptionsBinnedRelRes(
+        "W2_RelRes_binned_Best",
+        "W^{2} relative bin by bin resolution (Best);W^{2}_{MC} [GeV^{2}];#frac{W^{2}_{best} - W^{2}_{MC}}{W^{2}_{MC}}",
+        "W^{2}_{best}",
+        "",
+        {
+            {0,0}, {-0.35,0.35}, {-0.2,0.2}, {-0.12,0.12}, {-0.08,0.08},
+            {-0.05,0.05}, {-0.05,0.05}
+        },
+        "figs/inclusive/resolution/w2_relres_binned_best.png",
+        "figs/inclusive/resolution/profile/w2_relres_binned_best",
         std::make_pair(10.0, 1.0e4),
         true
     );
@@ -3003,6 +4032,28 @@ int main(int argc, char** argv) {
     ));
 
     plots.push_back(new PlotOptionsResponseMatrix(
+        "Response_xpom_W2Best_B0",
+        "Truth x_{pom}",
+        "Reco x_{pom}",
+        "figs/diffractive/response/response_xpom_w2best_b0.png",
+        true,
+        true,
+        {1e-4, 0.3},
+        {1e-4, 0.3}
+    ));
+
+    plots.push_back(new PlotOptionsResponseMatrix(
+        "Response_xpom_W2Best_RP",
+        "Truth x_{pom}",
+        "Reco x_{pom}",
+        "figs/diffractive/response/response_xpom_w2best_rp.png",
+        true,
+        true,
+        {1e-4, 0.3},
+        {1e-4, 0.3}
+    ));
+
+    plots.push_back(new PlotOptionsResponseMatrix(
         "Response_xpom_DA_B0",
         "Truth x_{pom}",
         "Reco x_{pom}",
@@ -3062,6 +4113,28 @@ int main(int argc, char** argv) {
         "Truth #beta",
         "Reco #beta",
         "figs/diffractive/response/response_beta_em_rp.png",
+        false,
+        false,
+        {0.0, 1.0},
+        {0.0, 1.0}
+    ));
+
+    plots.push_back(new PlotOptionsResponseMatrix(
+        "Response_beta_W2Best_B0",
+        "Truth #beta",
+        "Reco #beta",
+        "figs/diffractive/response/response_beta_w2best_b0.png",
+        false,
+        false,
+        {0.0, 1.0},
+        {0.0, 1.0}
+    ));
+
+    plots.push_back(new PlotOptionsResponseMatrix(
+        "Response_beta_W2Best_RP",
+        "Truth #beta",
+        "Reco #beta",
+        "figs/diffractive/response/response_beta_w2best_rp.png",
         false,
         false,
         {0.0, 1.0},
@@ -3302,8 +4375,9 @@ int main(int argc, char** argv) {
         "MX2_RelRes",
         "#frac{M_{X,reco}^{2} - M_{X,truth}^{2}}{M_{X,truth}^{2}}",
         "Counts",
-        -0.5, 0.5,
-        "figs/resolutions/simple/MX2_resolution.png"
+        -0.6, 0.6,
+        "figs/resolutions/simple/MX2_resolution.png",
+        "double_sided_crystalball"
     ));
 
 #if 0
@@ -3456,16 +4530,18 @@ int main(int argc, char** argv) {
         "t_res_B0",
         "(|t|_{reco} - |t|_{truth})/|t|_{truth}",
         "Counts",
-        -999., -999.,
-        "figs/diffractive/resolution/t_res_b0.png"
+        -0.1, 0.2,
+        "figs/diffractive/resolution/t_res_b0.png",
+        "dscb"
     ));
 
     plots.push_back(new PlotOptionsRelRes(
         "t_res_RP",
         "(|t|_{reco} - |t|_{truth})/|t|_{truth}",
         "Counts",
-        -999., -999.,
-        "figs/diffractive/resolution/t_res_rp.png"
+        -0.3, 0.4,
+        "figs/diffractive/resolution/t_res_rp.png",
+        "dscb"
     ));
 
     binned_plot_ptr = new PlotOptionsBinnedRelRes(
@@ -3602,51 +4678,49 @@ int main(int argc, char** argv) {
         "xL_res_B0",
         "(x_{L,reco} - x_{L,truth})/x_{L,truth}",
         "Counts",
-        -0.5, 0.5,
-        "figs/resolutions/simple/xL_resolution_B0.png"
+        -0.4, 0.3,
+        "figs/resolutions/simple/xL_resolution_B0.png",
+        "dscb"
     ));
     plots.push_back(new PlotOptionsRelRes(
         "xL_res_RP",
         "(x_{L,reco} - x_{L,truth})/x_{L,truth}",
         "Counts",
-        -0.5, 0.5,
-        "figs/resolutions/simple/xL_resolution_RP.png"
+        -0.3, 0.3,
+        "figs/resolutions/simple/xL_resolution_RP.png",
+        "dscb"
     ));
     plots.push_back(new PlotOptionsRelRes(
         "xpom_res_B0",
         "(x_{pom,reco} - x_{pom,truth})/x_{pom,truth}",
         "Counts",
-        -0.5, 0.5,
-        "figs/resolutions/simple/xpom_resolution_B0.png"
+        -1.0, 1.0,
+        "figs/resolutions/simple/xpom_resolution_B0.png",
+        "dscb"
     ));
     plots.push_back(new PlotOptionsRelRes(
         "xpom_res_RP",
         "(x_{pom,reco} - x_{pom,truth})/x_{pom,truth}",
         "Counts",
+        -1.0, 1.0,
+        "figs/resolutions/simple/xpom_resolution_RP.png",
+        "dscb"
+    ));
+    plots.push_back(new PlotOptionsRelRes(
+        "beta_res_B0",
+        "(#beta_{reco} - #beta_{truth})/#beta_{truth}",
+        "Counts",
         -0.5, 0.5,
-        "figs/resolutions/simple/xpom_resolution_RP.png"
-    ));
-    plots.push_back(new PlotOptions1D(
-        {"beta_res_B0"},
-        {"B0 Reco"},
-        {"hist"},
-        "B0 #beta Resolution",
-        "(#beta_{reco} - #beta_{truth})/#beta_{truth}",
-        "Counts",
         "figs/resolutions/simple/beta_resolution_B0.png",
-        false,
-        false
+        "dscb"
     ));
-    plots.push_back(new PlotOptions1D(
-        {"beta_res_RP"},
-        {"RP Reco"},
-        {"hist"},
-        "RP #beta Resolution",
+    plots.push_back(new PlotOptionsRelRes(
+        "beta_res_RP",
         "(#beta_{reco} - #beta_{truth})/#beta_{truth}",
         "Counts",
+        -0.5, 0.5,
         "figs/resolutions/simple/beta_resolution_RP.png",
-        false,
-        false
+        "dscb"
     ));
 
     binned_plot_ptr = new PlotOptionsBinnedRelRes(
@@ -3680,11 +4754,12 @@ int main(int argc, char** argv) {
         "B0 x_{pom} Resolution vs Truth x_{pom}",
         "x_{pom,truth}",
         "(x_{pom,reco} - x_{pom,truth})/x_{pom,truth}",
-        {{-0.5, 0.5}},
+        {{0,0},{0,0},{0,0},{0,0},{0,0},{-1.0,1.0}},
         "figs/resolutions/binned/xpom_resolution_binned_B0.png",
         "figs/resolutions/binned/bins/xpom_B0",
         std::make_pair(1e-4, 0.4),
-        true
+        true,
+        "dscb"
     );
     plots.push_back(binned_plot_ptr);
 
@@ -3693,11 +4768,40 @@ int main(int argc, char** argv) {
         "RP x_{pom} Resolution vs Truth x_{pom}",
         "x_{pom,truth}",
         "(x_{pom,reco} - x_{pom,truth})/x_{pom,truth}",
-        {{-0.5, 0.5}},
+        {{0,0},{0,0},{0,0},{-0.8,0.9},{-1.0,1.0},{-1.0,1.0}},
         "figs/resolutions/binned/xpom_resolution_binned_RP.png",
         "figs/resolutions/binned/bins/xpom_RP",
         std::make_pair(1e-4, 0.4),
-        true
+        true,
+        "dscb"
+    );
+    plots.push_back(binned_plot_ptr);
+
+    binned_plot_ptr = new PlotOptionsBinnedRelRes(
+        "xpom_RelRes_binned_W2Best_B0",
+        "B0 x_{pom} Resolution vs Truth x_{pom} (W^{2}_{best})",
+        "x_{pom,truth}",
+        "(x_{pom,reco} - x_{pom,truth})/x_{pom,truth}",
+        {{0,0},{0,0},{0,0},{0,0},{0,0},{-1.0,1.0}},
+        "figs/resolutions/binned/xpom_resolution_binned_w2best_B0.png",
+        "figs/resolutions/binned/bins/xpom_w2best_B0",
+        std::make_pair(1e-4, 0.4),
+        true,
+        "dscb"
+    );
+    plots.push_back(binned_plot_ptr);
+
+    binned_plot_ptr = new PlotOptionsBinnedRelRes(
+        "xpom_RelRes_binned_W2Best_RP",
+        "RP x_{pom} Resolution vs Truth x_{pom} (W^{2}_{best})",
+        "x_{pom,truth}",
+        "(x_{pom,reco} - x_{pom,truth})/x_{pom,truth}",
+        {{0,0},{0,0},{0,0},{-0.8,0.9},{-1.0,1.0},{-1.0,1.0}},
+        "figs/resolutions/binned/xpom_resolution_binned_w2best_RP.png",
+        "figs/resolutions/binned/bins/xpom_w2best_RP",
+        std::make_pair(1e-4, 0.4),
+        true,
+        "dscb"
     );
     plots.push_back(binned_plot_ptr);
 
@@ -3706,11 +4810,12 @@ int main(int argc, char** argv) {
         "B0 #beta Resolution vs Truth #beta",
         "#beta_{truth}",
         "(#beta_{reco} - #beta_{truth})/#beta_{truth}",
-        {{-0.3, 0.3}},
+        {{-0.4, 0.8}, {-0.4,0.8},{-0.3,0.6},{-0.2,0.4},{-0.1,0.2}},
         "figs/resolutions/binned/beta_resolution_binned_B0.png",
         "figs/resolutions/binned/bins/beta_B0",
         std::make_pair(0.0, 1.0),
-        false
+        false,
+        "dscb"
     );
     plots.push_back(binned_plot_ptr);
 
@@ -3719,11 +4824,40 @@ int main(int argc, char** argv) {
         "RP #beta Resolution vs Truth #beta",
         "#beta_{truth}",
         "(#beta_{reco} - #beta_{truth})/#beta_{truth}",
-        {{-0.3, 0.3}},
+        {{-0.4, 0.8}, {-0.4,0.8},{-0.3,0.6},{-0.2,0.4},{-0.1,0.2}},
         "figs/resolutions/binned/beta_resolution_binned_RP.png",
         "figs/resolutions/binned/bins/beta_RP",
         std::make_pair(0.0, 1.0),
-        false
+        false,
+        "dscb"
+    );
+    plots.push_back(binned_plot_ptr);
+
+    binned_plot_ptr = new PlotOptionsBinnedRelRes(
+        "beta_RelRes_binned_W2Best_B0",
+        "B0 #beta Resolution vs Truth #beta (W^{2}_{best})",
+        "#beta_{truth}",
+        "(#beta_{reco} - #beta_{truth})/#beta_{truth}",
+        {{-0.4, 0.8}, {-0.4,0.8},{-0.3,0.6},{-0.2,0.4},{-0.1,0.2}},
+        "figs/resolutions/binned/beta_resolution_binned_w2best_B0.png",
+        "figs/resolutions/binned/bins/beta_w2best_B0",
+        std::make_pair(0.0, 1.0),
+        false,
+        "dscb"
+    );
+    plots.push_back(binned_plot_ptr);
+
+    binned_plot_ptr = new PlotOptionsBinnedRelRes(
+        "beta_RelRes_binned_W2Best_RP",
+        "RP #beta Resolution vs Truth #beta (W^{2}_{best})",
+        "#beta_{truth}",
+        "(#beta_{reco} - #beta_{truth})/#beta_{truth}",
+        {{-0.4, 0.8}, {-0.4,0.8},{-0.3,0.6},{-0.2,0.4},{-0.1,0.2}},
+        "figs/resolutions/binned/beta_resolution_binned_w2best_RP.png",
+        "figs/resolutions/binned/bins/beta_w2best_RP",
+        std::make_pair(0.0, 1.0),
+        false,
+        "dscb"
     );
     plots.push_back(binned_plot_ptr);
 
@@ -4124,6 +5258,23 @@ int main(int argc, char** argv) {
                   "#beta relative resolution vs k (RP)",
                   "figs/resolutions/binned/beta_relres_vs_k_rp.png");
 
+    // |t|-bin performance metrics
+    PlotTBinMetric(inputFile,
+                   TBinMetricKind::Efficiency,
+                   "|t| Bin Efficiency (Set A)",
+                   "Efficiency",
+                   "figs/diffractive/performance/t_efficiency_binned.png");
+    PlotTBinMetric(inputFile,
+                   TBinMetricKind::Acceptance,
+                   "|t| Bin Acceptance (Set A)",
+                   "Acceptance",
+                   "figs/diffractive/performance/t_acceptance_binned.png");
+    PlotTBinMetric(inputFile,
+                   TBinMetricKind::Purity,
+                   "|t| Bin Purity (Set A)",
+                   "Purity",
+                   "figs/diffractive/performance/t_purity_binned.png");
+
     // =================================================================
     // Legacy 2D maps (circle style), EPz correlation, and cross sections
     // =================================================================
@@ -4453,6 +5604,585 @@ int main(int argc, char** argv) {
         }
         SaveCanvas(cXpom, "figs/cross_sections/d3sigma_vs_xpom.png");
         delete cXpom;
+
+        // H1/ZEUS-like stacked layout in reduced-cross-section form:
+        // fixed x_{pom}, Q^{2} on x-axis, and vertically offset #beta series by 3^{i}.
+        if (disSGeV2 > 0.0) {
+            TH3D* hD3Data = hD3Sum ? hD3Sum : hD3B0;
+            const char* dataLegendLabel = "Pseudodata";
+            constexpr double kAlphaEM = 1.0 / 137.035999084;
+            constexpr double kOffsetBase = 3.0;
+            constexpr double kMaxBandRelErr = 0.80;
+            struct LegendBox {
+                double x1;
+                double y1;
+                double x2;
+                double y2;
+            };
+            const LegendBox kDefaultReducedLegendBox{0.52, 0.78, 0.90, 0.92};
+            const LegendBox kDefaultRawLegendBox{0.52, 0.78, 0.90, 0.92};
+            const std::map<std::string, LegendBox> kReducedLegendOverrides = {
+                // Example:
+                {"0p0025", {0.52, 0.78, 0.90, 0.88}},
+                {"0p0044", {0.52, 0.78, 0.90, 0.88}},
+                {"0p0078", {0.52, 0.78, 0.90, 0.88}},
+                {"0p0139", {0.54, 0.13, 0.92, 0.23}},
+                {"0p0247", {0.54, 0.13, 0.92, 0.23}},
+                {"0p0439", {0.54, 0.13, 0.92, 0.23}},
+                {"0p0781", {0.54, 0.13, 0.92, 0.23}}
+                
+            };
+            const std::map<std::string, LegendBox> kRawLegendOverrides = {
+                // Example:
+                {"0p0025", {0.52, 0.78, 0.90, 0.88}},
+                {"0p0044", {0.52, 0.78, 0.90, 0.88}},
+                {"0p0078", {0.52, 0.78, 0.90, 0.88}},
+                {"0p0139", {0.17, 0.13, 0.55, 0.23}},
+                {"0p0247", {0.17, 0.13, 0.55, 0.23}},
+                {"0p0439", {0.17, 0.13, 0.55, 0.23}},
+                {"0p0781", {0.17, 0.13, 0.55, 0.23}}
+            };
+            auto getLegendBox = [](const std::map<std::string, LegendBox>& overrides,
+                                   const LegendBox& defaultBox,
+                                   const std::string& key) {
+                const auto it = overrides.find(key);
+                return (it != overrides.end()) ? it->second : defaultBox;
+            };
+
+            auto makeXpomTag = [](double xpomCenter) {
+                std::ostringstream oss;
+                oss << std::fixed << std::setprecision(4) << xpomCenter;
+                std::string s = oss.str();
+                while (!s.empty() && s.back() == '0') s.pop_back();
+                if (!s.empty() && s.back() == '.') s.pop_back();
+                for (char& c : s) {
+                    if (c == '.') c = 'p';
+                }
+                return s;
+            };
+
+            std::vector<double> q2Edges;
+            q2Edges.reserve(nQ2 + 1);
+            for (int iQ2 = 1; iQ2 <= nQ2; ++iQ2) {
+                q2Edges.push_back(hD3MC->GetXaxis()->GetBinLowEdge(iQ2));
+            }
+            q2Edges.push_back(hD3MC->GetXaxis()->GetBinUpEdge(nQ2));
+            gSystem->mkdir("figs/cross_sections/debug", true);
+
+            for (int iXpom = 1; iXpom <= nXpom; ++iXpom) {
+                const double xpomLow = hD3MC->GetZaxis()->GetBinLowEdge(iXpom);
+                const double xpomHigh = hD3MC->GetZaxis()->GetBinUpEdge(iXpom);
+                const double xpomCenter = hD3MC->GetZaxis()->GetBinCenter(iXpom);
+                if (!std::isfinite(xpomCenter) || xpomCenter <= 0.0) continue;
+
+                struct SeriesRow {
+                    double betaLow = -1.0;
+                    double betaHigh = -1.0;
+                    double betaCenter = -1.0;
+                    std::vector<double> q2;
+                    std::vector<double> theory;
+                    std::vector<double> theoryErr;
+                    std::vector<double> data;
+                    std::vector<double> dataErr;
+                };
+                struct DebugPoint {
+                    int iQ2 = -1;
+                    int iBeta = -1;
+                    double q2 = -1.0;
+                    double beta = -1.0;
+                    double y = -1.0;
+                    double d3Theory = -1.0;
+                    double d3TheoryErr = 0.0;
+                    double d3Data = -1.0;
+                    double d3DataErr = 0.0;
+                    double redTheory = -1.0;
+                    double redTheoryErr = 0.0;
+                    double redData = -1.0;
+                    double redDataErr = 0.0;
+                };
+
+                std::vector<SeriesRow> rows;
+                rows.reserve(nBeta);
+                std::vector<DebugPoint> debugPoints;
+                debugPoints.reserve(static_cast<size_t>(nBeta * nQ2));
+                for (int iBeta = 1; iBeta <= nBeta; ++iBeta) {
+                    SeriesRow row;
+                    row.betaLow = hD3MC->GetYaxis()->GetBinLowEdge(iBeta);
+                    row.betaHigh = hD3MC->GetYaxis()->GetBinUpEdge(iBeta);
+                    row.betaCenter = hD3MC->GetYaxis()->GetBinCenter(iBeta);
+                    if (!std::isfinite(row.betaCenter) || row.betaCenter <= 0.0) continue;
+
+                    for (int iQ2 = 1; iQ2 <= nQ2; ++iQ2) {
+                        const double q2 = hD3MC->GetXaxis()->GetBinCenter(iQ2);
+                        if (!std::isfinite(q2) || q2 <= 0.0) continue;
+
+                        const double y = q2 / (disSGeV2 * xpomCenter * row.betaCenter);
+                        if (!std::isfinite(y) || !(y > yMinCutFromFile && y < yMaxCutFromFile)) continue;
+
+                        const double yTerm = 1.0 + (1.0 - y) * (1.0 - y);
+                        if (!(yTerm > 0.0)) continue;
+                        const double redFactor = row.betaCenter * q2 * q2 / (2.0 * TMath::Pi() * kAlphaEM * kAlphaEM * yTerm);
+
+                        const double th = hD3MC->GetBinContent(iQ2, iBeta, iXpom);
+                        const double thErr = hD3MC->GetBinError(iQ2, iBeta, iXpom);
+                        const double dt = hD3Data->GetBinContent(iQ2, iBeta, iXpom);
+                        const double dtErr = hD3Data->GetBinError(iQ2, iBeta, iXpom);
+                        const bool hasTheory = std::isfinite(th) && th > 0.0;
+                        const bool hasData = std::isfinite(dt) && dt > 0.0;
+                        if (!hasTheory && !hasData) continue;
+
+                        const double thRed = hasTheory ? (xpomCenter * th * redFactor) : -1.0;
+                        const double thRedErr = hasTheory ? (xpomCenter * std::max(0.0, thErr) * redFactor) : 0.0;
+                        const double dtRed = hasData ? (xpomCenter * dt * redFactor) : -1.0;
+                        const double dtRedErr = hasData ? (xpomCenter * std::max(0.0, dtErr) * redFactor) : 0.0;
+
+                        row.q2.push_back(q2);
+                        row.theory.push_back(thRed);
+                        row.theoryErr.push_back(thRedErr);
+                        row.data.push_back(dtRed);
+                        row.dataErr.push_back(dtRedErr);
+
+                        DebugPoint dp;
+                        dp.iQ2 = iQ2;
+                        dp.iBeta = iBeta;
+                        dp.q2 = q2;
+                        dp.beta = row.betaCenter;
+                        dp.y = y;
+                        dp.d3Theory = hasTheory ? th : -1.0;
+                        dp.d3TheoryErr = hasTheory ? std::max(0.0, thErr) : 0.0;
+                        dp.d3Data = hasData ? dt : -1.0;
+                        dp.d3DataErr = hasData ? std::max(0.0, dtErr) : 0.0;
+                        dp.redTheory = thRed;
+                        dp.redTheoryErr = thRedErr;
+                        dp.redData = dtRed;
+                        dp.redDataErr = dtRedErr;
+                        debugPoints.push_back(dp);
+                    }
+                    if (row.q2.size() >= 2) rows.push_back(std::move(row));
+                }
+                if (rows.empty()) continue;
+
+                std::sort(rows.begin(), rows.end(), [](const SeriesRow& a, const SeriesRow& b) {
+                    return a.betaCenter > b.betaCenter;
+                });
+
+                double yMin = std::numeric_limits<double>::max();
+                double yMax = 0.0;
+                for (size_t iRow = 0; iRow < rows.size(); ++iRow) {
+                    const double offset = std::pow(kOffsetBase, static_cast<double>(iRow));
+                    for (size_t i = 0; i < rows[iRow].q2.size(); ++i) {
+                        if (rows[iRow].theory[i] > 0.0) {
+                            const double yVal = rows[iRow].theory[i] * offset;
+                            yMin = std::min(yMin, yVal);
+                            yMax = std::max(yMax, yVal);
+                        }
+                        if (rows[iRow].data[i] > 0.0) {
+                            const double yVal = rows[iRow].data[i] * offset;
+                            yMin = std::min(yMin, yVal);
+                            yMax = std::max(yMax, yVal);
+                        }
+                    }
+                }
+                if (!(yMax > 0.0) || !(yMin > 0.0) || !std::isfinite(yMin) || !std::isfinite(yMax)) {
+                    continue;
+                }
+
+                const std::string xpomTag = makeXpomTag(xpomCenter);
+                const std::string saveName = "figs/cross_sections/sigma_r_q2_stacked_xpom_" + xpomTag + ".png";
+                const std::string legacySaveName = "figs/cross_sections/d3sigma_q2_stacked_xpom_" + xpomTag + ".png";
+                TCanvas* cStack = new TCanvas(Form("c_sigma_r_q2_stacked_%d", iXpom),
+                                              "reduced cross section stacked layout", 1100, 1400);
+                cStack->SetLeftMargin(0.16);
+                cStack->SetBottomMargin(0.12);
+                cStack->SetLogx();
+                cStack->SetLogy();
+                cStack->SetGridx();
+                cStack->SetGridy();
+
+                TH1D* frame = new TH1D(Form("h_sigma_r_stack_frame_%d", iXpom),
+                                       "",
+                                       nQ2, q2Edges.data());
+                frame->SetDirectory(nullptr);
+                frame->SetStats(false);
+                frame->GetXaxis()->SetTitle("Q^{2} [GeV^{2}]");
+                frame->GetYaxis()->SetTitle("3^{i} #times x_{pom} #sigma_{r}^{D(3)}");
+                frame->GetXaxis()->SetTitleSize(0.048);
+                frame->GetYaxis()->SetTitleSize(0.048);
+                frame->GetXaxis()->SetLabelSize(0.040);
+                frame->GetYaxis()->SetLabelSize(0.040);
+                frame->GetXaxis()->SetTitleOffset(1.05);
+                frame->GetYaxis()->SetTitleOffset(1.20);
+                frame->SetMinimum(std::max(yMin / 2.0, 1e-12));
+                frame->SetMaximum(yMax * 1.35);
+                frame->Draw("AXIS");
+
+                std::vector<TObject*> transientObjects;
+                transientObjects.reserve(rows.size() * 3);
+                TGraph* legendTheory = nullptr;
+                TGraphErrors* legendData = nullptr;
+
+                for (size_t iRow = 0; iRow < rows.size(); ++iRow) {
+                    const double offset = std::pow(kOffsetBase, static_cast<double>(iRow));
+                    std::vector<double> xTheory, yTheory, yTheoryErr;
+                    std::vector<double> xTheoryBand, yTheoryBand, yTheoryBandErr;
+                    std::vector<double> xData, yData, yDataErr;
+                    xTheory.reserve(rows[iRow].q2.size());
+                    yTheory.reserve(rows[iRow].q2.size());
+                    yTheoryErr.reserve(rows[iRow].q2.size());
+                    xTheoryBand.reserve(rows[iRow].q2.size());
+                    yTheoryBand.reserve(rows[iRow].q2.size());
+                    yTheoryBandErr.reserve(rows[iRow].q2.size());
+                    xData.reserve(rows[iRow].q2.size());
+                    yData.reserve(rows[iRow].q2.size());
+                    yDataErr.reserve(rows[iRow].q2.size());
+
+                    for (size_t i = 0; i < rows[iRow].q2.size(); ++i) {
+                        if (rows[iRow].theory[i] > 0.0) {
+                            xTheory.push_back(rows[iRow].q2[i]);
+                            yTheory.push_back(rows[iRow].theory[i] * offset);
+                            yTheoryErr.push_back(rows[iRow].theoryErr[i] * offset);
+                            const double relErr = (rows[iRow].theory[i] > 0.0)
+                                                  ? (rows[iRow].theoryErr[i] / rows[iRow].theory[i])
+                                                  : std::numeric_limits<double>::infinity();
+                            if (std::isfinite(relErr) && relErr <= kMaxBandRelErr) {
+                                xTheoryBand.push_back(rows[iRow].q2[i]);
+                                yTheoryBand.push_back(rows[iRow].theory[i] * offset);
+                                yTheoryBandErr.push_back(rows[iRow].theoryErr[i] * offset);
+                            }
+                        }
+                        if (rows[iRow].data[i] > 0.0) {
+                            xData.push_back(rows[iRow].q2[i]);
+                            yData.push_back(rows[iRow].data[i] * offset);
+                            yDataErr.push_back(rows[iRow].dataErr[i] * offset);
+                        }
+                    }
+                    if (xTheory.empty() && xData.empty()) continue;
+
+                    if (!xTheoryBand.empty()) {
+                        auto* band = new TGraphErrors(static_cast<int>(xTheoryBand.size()));
+                        for (size_t i = 0; i < xTheoryBand.size(); ++i) {
+                            band->SetPoint(static_cast<int>(i), xTheoryBand[i], yTheoryBand[i]);
+                            band->SetPointError(static_cast<int>(i), 0.0, yTheoryBandErr[i]);
+                        }
+                        band->SetFillColorAlpha(kGreen + 1, 0.35);
+                        band->SetLineColor(kGreen + 1);
+                        band->SetLineWidth(1);
+                        band->Draw("3 SAME");
+                        transientObjects.push_back(band);
+                    }
+                    if (!xTheory.empty()) {
+                        auto* line = new TGraph(static_cast<int>(xTheory.size()));
+                        for (size_t i = 0; i < xTheory.size(); ++i) {
+                            line->SetPoint(static_cast<int>(i), xTheory[i], yTheory[i]);
+                        }
+                        line->SetLineColor(kGreen + 2);
+                        line->SetLineWidth(2);
+                        line->SetMarkerStyle(20);
+                        line->SetMarkerSize(0.8);
+                        line->SetMarkerColor(kGreen + 2);
+                        line->Draw("LP SAME");
+
+                        transientObjects.push_back(line);
+                        if (!legendTheory) legendTheory = line;
+                    }
+
+                    if (!xData.empty()) {
+                        auto* data = new TGraphErrors(static_cast<int>(xData.size()));
+                        for (size_t i = 0; i < xData.size(); ++i) {
+                            data->SetPoint(static_cast<int>(i), xData[i], yData[i]);
+                            data->SetPointError(static_cast<int>(i), 0.0, yDataErr[i]);
+                        }
+                        data->SetLineColor(kBlack);
+                        data->SetMarkerColor(kBlack);
+                        data->SetMarkerStyle(20);
+                        data->SetMarkerSize(0.9);
+                        data->SetLineWidth(1);
+                        data->Draw("P SAME");
+                        transientObjects.push_back(data);
+                        if (!legendData) legendData = data;
+                    }
+
+                    double yText = -1.0;
+                    if (!yTheory.empty()) {
+                        yText = yTheory.front();
+                    } else if (!yData.empty()) {
+                        yText = yData.front();
+                    }
+                    if (yText > 0.0) {
+                        const double xMin = frame->GetXaxis()->GetXmin();
+                        const double xMax = frame->GetXaxis()->GetXmax();
+                        const double xText = std::exp(std::log(xMin) + 0.06 * (std::log(xMax) - std::log(xMin)));
+                        TLatex betaText;
+                        betaText.SetTextSize(0.028);
+                        betaText.SetTextFont(42);
+                        betaText.SetTextColor(kBlack);
+                        betaText.SetTextAlign(12);
+                        betaText.DrawLatex(
+                            xText,
+                            yText,
+                            Form("%.4g < #beta < %.4g (i = %zu)",
+                                 rows[iRow].betaLow,
+                                 rows[iRow].betaHigh,
+                                 iRow)
+                        );
+                    }
+                }
+
+                const LegendBox reducedLegendBox = getLegendBox(kReducedLegendOverrides,
+                                                                kDefaultReducedLegendBox,
+                                                                xpomTag);
+                TLegend* leg = new TLegend(reducedLegendBox.x1, reducedLegendBox.y1,
+                                           reducedLegendBox.x2, reducedLegendBox.y2);
+                leg->SetBorderSize(0);
+                leg->SetFillStyle(0);
+                leg->SetTextFont(42);
+                leg->SetTextSize(0.032);
+                leg->SetHeader(Form("%.4g < x_{pom} < %.4g", xpomLow, xpomHigh), "C");
+                if (legendTheory) leg->AddEntry(legendTheory, "MC", "lp");
+                if (legendData) leg->AddEntry(legendData, dataLegendLabel, "p");
+                leg->AddEntry((TObject*)nullptr, Form("%.2f < y < %.2f", yMinCutFromFile, yMaxCutFromFile), "");
+                leg->Draw();
+
+                {
+                    const std::string debugName = "figs/cross_sections/debug/sigma_r_debug_xpom_" + xpomTag + ".tsv";
+                    std::ofstream dbg(debugName);
+                    if (dbg.is_open()) {
+                        dbg << "# iQ2\tiBeta\tQ2\tbeta\txpom\ty\td3_theory\td3_theory_err\td3_data\td3_data_err\tred_theory\tred_theory_err\tred_data\tred_data_err\n";
+                        dbg << std::setprecision(8);
+                        for (const auto& dp : debugPoints) {
+                            dbg << dp.iQ2 << '\t'
+                                << dp.iBeta << '\t'
+                                << dp.q2 << '\t'
+                                << dp.beta << '\t'
+                                << xpomCenter << '\t'
+                                << dp.y << '\t'
+                                << dp.d3Theory << '\t'
+                                << dp.d3TheoryErr << '\t'
+                                << dp.d3Data << '\t'
+                                << dp.d3DataErr << '\t'
+                                << dp.redTheory << '\t'
+                                << dp.redTheoryErr << '\t'
+                                << dp.redData << '\t'
+                                << dp.redDataErr << '\n';
+                        }
+                    }
+                }
+
+                DrawSimLabels(inputFile);
+                SaveCanvas(cStack, saveName.c_str());
+
+                delete leg;
+                for (TObject* obj : transientObjects) {
+                    delete obj;
+                }
+                delete frame;
+                delete cStack;
+
+                // Also write a true (non-reduced) stacked x_{pom} d^{3}#sigma plot
+                // to the legacy filename for direct visual comparison.
+                std::vector<SeriesRow> rowsRaw;
+                rowsRaw.reserve(nBeta);
+                for (int iBeta = 1; iBeta <= nBeta; ++iBeta) {
+                    SeriesRow rowRaw;
+                    rowRaw.betaLow = hD3MC->GetYaxis()->GetBinLowEdge(iBeta);
+                    rowRaw.betaHigh = hD3MC->GetYaxis()->GetBinUpEdge(iBeta);
+                    rowRaw.betaCenter = hD3MC->GetYaxis()->GetBinCenter(iBeta);
+                    if (!std::isfinite(rowRaw.betaCenter) || rowRaw.betaCenter <= 0.0) continue;
+                    for (const auto& dp : debugPoints) {
+                        if (dp.iBeta != iBeta) continue;
+                        const bool hasTheory = std::isfinite(dp.d3Theory) && dp.d3Theory > 0.0;
+                        const bool hasData = std::isfinite(dp.d3Data) && dp.d3Data > 0.0;
+                        if (!hasTheory && !hasData) continue;
+                        rowRaw.q2.push_back(dp.q2);
+                        rowRaw.theory.push_back(hasTheory ? (xpomCenter * dp.d3Theory) : -1.0);
+                        rowRaw.theoryErr.push_back(hasTheory ? (xpomCenter * std::max(0.0, dp.d3TheoryErr)) : 0.0);
+                        rowRaw.data.push_back(hasData ? (xpomCenter * dp.d3Data) : -1.0);
+                        rowRaw.dataErr.push_back(hasData ? (xpomCenter * std::max(0.0, dp.d3DataErr)) : 0.0);
+                    }
+                    if (rowRaw.q2.size() >= 2) rowsRaw.push_back(std::move(rowRaw));
+                }
+                if (!rowsRaw.empty()) {
+                    std::sort(rowsRaw.begin(), rowsRaw.end(), [](const SeriesRow& a, const SeriesRow& b) {
+                        return a.betaCenter > b.betaCenter;
+                    });
+                    double yMinRaw = std::numeric_limits<double>::max();
+                    double yMaxRaw = 0.0;
+                    for (size_t iRow = 0; iRow < rowsRaw.size(); ++iRow) {
+                        const double offset = std::pow(kOffsetBase, static_cast<double>(iRow));
+                        for (size_t i = 0; i < rowsRaw[iRow].q2.size(); ++i) {
+                            if (rowsRaw[iRow].theory[i] > 0.0) {
+                                const double yVal = rowsRaw[iRow].theory[i] * offset;
+                                yMinRaw = std::min(yMinRaw, yVal);
+                                yMaxRaw = std::max(yMaxRaw, yVal);
+                            }
+                            if (rowsRaw[iRow].data[i] > 0.0) {
+                                const double yVal = rowsRaw[iRow].data[i] * offset;
+                                yMinRaw = std::min(yMinRaw, yVal);
+                                yMaxRaw = std::max(yMaxRaw, yVal);
+                            }
+                        }
+                    }
+                    if (yMaxRaw > 0.0 && yMinRaw > 0.0 && std::isfinite(yMinRaw) && std::isfinite(yMaxRaw)) {
+                        TCanvas* cStackRaw = new TCanvas(Form("c_d3sigma_q2_stacked_%d", iXpom),
+                                                         "raw d3sigma stacked layout", 1100, 1400);
+                        cStackRaw->SetLeftMargin(0.16);
+                        cStackRaw->SetBottomMargin(0.12);
+                        cStackRaw->SetLogx();
+                        cStackRaw->SetLogy();
+                        cStackRaw->SetGridx();
+                        cStackRaw->SetGridy();
+                        TH1D* frameRaw = new TH1D(Form("h_d3sigma_stack_frame_%d", iXpom),
+                                                  "",
+                                                  nQ2, q2Edges.data());
+                        frameRaw->SetDirectory(nullptr);
+                        frameRaw->SetStats(false);
+                        frameRaw->GetXaxis()->SetTitle("Q^{2} [GeV^{2}]");
+                        frameRaw->GetYaxis()->SetTitle("3^{i} #times x_{pom} d^{3}#sigma/(dQ^{2} d#beta dx_{pom})");
+                        frameRaw->GetXaxis()->SetTitleSize(0.048);
+                        frameRaw->GetYaxis()->SetTitleSize(0.048);
+                        frameRaw->GetXaxis()->SetLabelSize(0.040);
+                        frameRaw->GetYaxis()->SetLabelSize(0.040);
+                        frameRaw->GetXaxis()->SetTitleOffset(1.05);
+                        frameRaw->GetYaxis()->SetTitleOffset(1.30);
+                        frameRaw->SetMinimum(std::max(yMinRaw / 2.0, 1e-12));
+                        frameRaw->SetMaximum(yMaxRaw * 1.35);
+                        frameRaw->Draw("AXIS");
+
+                        std::vector<TObject*> rawObjects;
+                        rawObjects.reserve(rowsRaw.size() * 3);
+                        TGraph* legendTheoryRaw = nullptr;
+                        TGraphErrors* legendDataRaw = nullptr;
+
+                        for (size_t iRow = 0; iRow < rowsRaw.size(); ++iRow) {
+                            const double offset = std::pow(kOffsetBase, static_cast<double>(iRow));
+                            std::vector<double> xTheory, yTheory, yTheoryErr;
+                            std::vector<double> xTheoryBand, yTheoryBand, yTheoryBandErr;
+                            std::vector<double> xData, yData, yDataErr;
+                            xTheory.reserve(rowsRaw[iRow].q2.size());
+                            yTheory.reserve(rowsRaw[iRow].q2.size());
+                            yTheoryErr.reserve(rowsRaw[iRow].q2.size());
+                            xTheoryBand.reserve(rowsRaw[iRow].q2.size());
+                            yTheoryBand.reserve(rowsRaw[iRow].q2.size());
+                            yTheoryBandErr.reserve(rowsRaw[iRow].q2.size());
+                            xData.reserve(rowsRaw[iRow].q2.size());
+                            yData.reserve(rowsRaw[iRow].q2.size());
+                            yDataErr.reserve(rowsRaw[iRow].q2.size());
+                            for (size_t i = 0; i < rowsRaw[iRow].q2.size(); ++i) {
+                                if (rowsRaw[iRow].theory[i] > 0.0) {
+                                    xTheory.push_back(rowsRaw[iRow].q2[i]);
+                                    yTheory.push_back(rowsRaw[iRow].theory[i] * offset);
+                                    yTheoryErr.push_back(rowsRaw[iRow].theoryErr[i] * offset);
+                                    const double relErr = (rowsRaw[iRow].theory[i] > 0.0)
+                                                          ? (rowsRaw[iRow].theoryErr[i] / rowsRaw[iRow].theory[i])
+                                                          : std::numeric_limits<double>::infinity();
+                                    if (std::isfinite(relErr) && relErr <= kMaxBandRelErr) {
+                                        xTheoryBand.push_back(rowsRaw[iRow].q2[i]);
+                                        yTheoryBand.push_back(rowsRaw[iRow].theory[i] * offset);
+                                        yTheoryBandErr.push_back(rowsRaw[iRow].theoryErr[i] * offset);
+                                    }
+                                }
+                                if (rowsRaw[iRow].data[i] > 0.0) {
+                                    xData.push_back(rowsRaw[iRow].q2[i]);
+                                    yData.push_back(rowsRaw[iRow].data[i] * offset);
+                                    yDataErr.push_back(rowsRaw[iRow].dataErr[i] * offset);
+                                }
+                            }
+                            if (xTheory.empty() && xData.empty()) continue;
+
+                            if (!xTheoryBand.empty()) {
+                                auto* band = new TGraphErrors(static_cast<int>(xTheoryBand.size()));
+                                for (size_t i = 0; i < xTheoryBand.size(); ++i) {
+                                    band->SetPoint(static_cast<int>(i), xTheoryBand[i], yTheoryBand[i]);
+                                    band->SetPointError(static_cast<int>(i), 0.0, yTheoryBandErr[i]);
+                                }
+                                band->SetFillColorAlpha(kGreen + 1, 0.35);
+                                band->SetLineColor(kGreen + 1);
+                                band->SetLineWidth(1);
+                                band->Draw("3 SAME");
+                                rawObjects.push_back(band);
+                            }
+                            if (!xTheory.empty()) {
+                                auto* line = new TGraph(static_cast<int>(xTheory.size()));
+                                for (size_t i = 0; i < xTheory.size(); ++i) {
+                                    line->SetPoint(static_cast<int>(i), xTheory[i], yTheory[i]);
+                                }
+                                line->SetLineColor(kGreen + 2);
+                                line->SetLineWidth(2);
+                                line->SetMarkerStyle(20);
+                                line->SetMarkerSize(0.8);
+                                line->SetMarkerColor(kGreen + 2);
+                                line->Draw("LP SAME");
+                                rawObjects.push_back(line);
+                                if (!legendTheoryRaw) legendTheoryRaw = line;
+                            }
+                            if (!xData.empty()) {
+                                auto* data = new TGraphErrors(static_cast<int>(xData.size()));
+                                for (size_t i = 0; i < xData.size(); ++i) {
+                                    data->SetPoint(static_cast<int>(i), xData[i], yData[i]);
+                                    data->SetPointError(static_cast<int>(i), 0.0, yDataErr[i]);
+                                }
+                                data->SetLineColor(kBlack);
+                                data->SetMarkerColor(kBlack);
+                                data->SetMarkerStyle(20);
+                                data->SetMarkerSize(0.9);
+                                data->SetLineWidth(1);
+                                data->Draw("P SAME");
+                                rawObjects.push_back(data);
+                                if (!legendDataRaw) legendDataRaw = data;
+                            }
+
+                            double yText = -1.0;
+                            if (!yTheory.empty()) {
+                                yText = yTheory.front();
+                            } else if (!yData.empty()) {
+                                yText = yData.front();
+                            }
+                            if (yText > 0.0) {
+                                const double xMin = frameRaw->GetXaxis()->GetXmin();
+                                const double xMax = frameRaw->GetXaxis()->GetXmax();
+                                const double xText = std::exp(std::log(xMin) + 0.06 * (std::log(xMax) - std::log(xMin)));
+                                TLatex betaText;
+                                betaText.SetTextSize(0.028);
+                                betaText.SetTextFont(42);
+                                betaText.SetTextColor(kBlack);
+                                betaText.SetTextAlign(12);
+                                betaText.DrawLatex(
+                                    xText,
+                                    yText,
+                                    Form("%.4g < #beta < %.4g (i = %zu)",
+                                         rowsRaw[iRow].betaLow,
+                                         rowsRaw[iRow].betaHigh,
+                                         iRow)
+                                );
+                            }
+                        }
+
+                        const LegendBox rawLegendBox = getLegendBox(kRawLegendOverrides,
+                                                                    kDefaultRawLegendBox,
+                                                                    xpomTag);
+                        TLegend* legRaw = new TLegend(rawLegendBox.x1, rawLegendBox.y1,
+                                                      rawLegendBox.x2, rawLegendBox.y2);
+                        legRaw->SetBorderSize(0);
+                        legRaw->SetFillStyle(0);
+                        legRaw->SetTextFont(42);
+                        legRaw->SetTextSize(0.032);
+                        legRaw->SetHeader(Form("%.4g < x_{pom} < %.4g", xpomLow, xpomHigh), "C");
+                        if (legendTheoryRaw) legRaw->AddEntry(legendTheoryRaw, "MC", "lp");
+                        if (legendDataRaw) legRaw->AddEntry(legendDataRaw, dataLegendLabel, "p");
+                        legRaw->AddEntry((TObject*)nullptr, Form("%.2f < y < %.2f", yMinCutFromFile, yMaxCutFromFile), "");
+                        legRaw->Draw();
+
+                        DrawSimLabels(inputFile);
+                        SaveCanvas(cStackRaw, legacySaveName.c_str());
+
+                        delete legRaw;
+                        for (TObject* obj : rawObjects) delete obj;
+                        delete frameRaw;
+                        delete cStackRaw;
+                    }
+                }
+            }
+        }
     }
     delete hD3SumLocal;
 
