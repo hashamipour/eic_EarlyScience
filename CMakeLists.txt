@@ -12,7 +12,7 @@ endif()
 set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-g -O2")
 
-find_package(ROOT REQUIRED COMPONENTS Core Hist Tree RIO Graf Gpad)
+find_package(ROOT REQUIRED COMPONENTS Core Hist Tree RIO Graf Gpad RooFit RooFitCore)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 include_directories(${ROOT_INCLUDE_DIRS})
@@ -35,23 +35,11 @@ target_include_directories(eicplot PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 
 
-add_executable(ddis_skim_q2_xy analysis/DDIS_Skim_Q2_with_xy.cpp)
-target_link_libraries(ddis_skim_q2_xy PRIVATE eicplot ${ROOT_LIBRARIES})
-add_executable(skim_t analysis/DDIS_Skim_t.cpp)
-target_link_libraries(skim_t PRIVATE eicplot ${ROOT_LIBRARIES})
-add_executable(ddis_skim_combined analysis/DDIS_Skim_Combined.cpp)
-target_link_libraries(ddis_skim_combined PRIVATE eicplot ${ROOT_LIBRARIES})
 add_executable(ddis_skim_binning_inputs analysis/DDIS_Skim_BinningInputs.cpp)
 target_link_libraries(ddis_skim_binning_inputs PRIVATE eicplot ${ROOT_LIBRARIES})
 add_executable(ddis_skim_final analysis/DDIS_Skim_Final.cpp)
 target_link_libraries(ddis_skim_final PRIVATE eicplot ${ROOT_LIBRARIES})
 
-add_executable(ddis_plot_q2_xy analysis/DDIS_Plots_Q2_with_xy.cpp)
-target_link_libraries(ddis_plot_q2_xy PRIVATE eicplot ${ROOT_LIBRARIES})
-add_executable(ddis_plot_t analysis/DDIS_Plot_t.cpp)
-target_link_libraries(ddis_plot_t PRIVATE eicplot ${ROOT_LIBRARIES})
-add_executable(ddis_plot_combined analysis/DDIS_Plot_Combined.cpp)
-target_link_libraries(ddis_plot_combined PRIVATE eicplot ${ROOT_LIBRARIES})
 add_executable(ddis_plot_binning analysis/DDIS_Plot_Binning.cpp)
 target_link_libraries(ddis_plot_binning PRIVATE eicplot ${ROOT_LIBRARIES})
 add_executable(ddis_plot_final analysis/DDIS_Plot_Final.cpp)
@@ -60,4 +48,3 @@ target_link_libraries(ddis_plot_final PRIVATE eicplot ${ROOT_LIBRARIES})
 
 
 
-#install(TARGETS ddis_plots_q2 ddis_skim_q2 RUNTIME DESTINATION bin)
