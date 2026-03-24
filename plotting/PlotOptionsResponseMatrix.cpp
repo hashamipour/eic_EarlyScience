@@ -106,7 +106,7 @@ void PlotOptionsResponseMatrix::Plot(TFile* inputFile) {
     diagonal_line->Draw("SAME");
 
     TText t;
-    t.SetTextSize(0.02);
+    t.SetTextSize(0.04);
     t.SetTextAlign(22);
     for (int iy = 1; iy <= nbinsY; iy++) {
         for (int ix = 1; ix <= nbinsX; ix++) {

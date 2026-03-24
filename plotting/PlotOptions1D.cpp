@@ -15,6 +15,7 @@
 #include <cstring>   // std::strchr
 #include <iostream>
 #include <utility>
+#include <vector>
 
 // Constructor must match your header
 PlotOptions1D::PlotOptions1D(const std::vector<TString>& histNames,
@@ -47,7 +48,23 @@ void PlotOptions1D::Plot(TFile* inputFile) {
     if (m_isLogX) c->SetLogx();
     if (m_isLogY) c->SetLogy();
 
-    
+    auto isTruthHistogram = [](const TString& name) {
+        return name.Contains("truth") || name.Contains("MC");
+    };
+    auto hasPointLikeDrawOption = [](const TString& opt) {
+        return opt.Contains("P", TString::kIgnoreCase) ||
+               opt.Contains("E", TString::kIgnoreCase);
+    };
+
+    const bool hasTruthHist = std::any_of(m_histNames.begin(), m_histNames.end(),
+        [&](const TString& name) { return isTruthHistogram(name); });
+    const bool hasRecoHist = std::any_of(m_histNames.begin(), m_histNames.end(),
+        [&](const TString& name) { return !isTruthHistogram(name); });
+    const bool isTruthRecoOverlay = hasTruthHist && hasRecoHist;
+    constexpr double kRecoMarkerScale = 2.0;
+    std::vector<TH1*> transientHists;
+    transientHists.reserve(m_histNames.size());
+
     // ---------- Draw histograms ----------
     TH1* firstHist = nullptr;
 
@@ -68,8 +85,17 @@ void PlotOptions1D::Plot(TFile* inputFile) {
 
         // simple styling by name convention (adapt as you like)
         hist->SetLineWidth((i == 0) ? 2 : 1);
-        if (m_histNames[i].Contains("truth")|| m_histNames[i].Contains("MC")) {
+        const bool isTruth = isTruthHistogram(m_histNames[i]);
+        if (isTruth) {
             hist->SetLineColor(kBlack);
+            hist->SetMarkerStyle(0);
+            hist->SetMarkerSize(0.0);
+            if (isTruthRecoOverlay) {
+                hist->SetFillColor(kGray + 2);
+                hist->SetFillStyle(3354);
+            } else {
+                hist->SetFillStyle(0);
+            }
         } else if (m_histNames[i].Contains("EM")) {
             hist->SetLineColor(kRed);
             hist->SetMarkerColor(kRed);
@@ -96,8 +122,25 @@ void PlotOptions1D::Plot(TFile* inputFile) {
             hist->SetMarkerStyle(24);  // Hollow circle
         }
 
+        if (!isTruth && isTruthRecoOverlay && hist->GetMarkerStyle() > 0) {
+            hist->SetMarkerSize(hist->GetMarkerSize() * kRecoMarkerScale);
+        }
+
         // Draw with user draw options; ensure SAME for i>0
         TString drawOption = m_drawOptions[i];
+        if (isTruth && isTruthRecoOverlay) {
+            TH1* fillClone = static_cast<TH1*>(hist->Clone(Form("%s_fill_%p_%zu", hist->GetName(), this, i)));
+            fillClone->SetDirectory(nullptr);
+            fillClone->SetStats(false);
+            fillClone->SetLineWidth(0);
+            fillClone->SetLineColorAlpha(kGray + 1, 0.0);
+            fillClone->SetMarkerStyle(0);
+            fillClone->SetMarkerSize(0.0);
+            fillClone->SetFillColorAlpha(kGray + 1, 0.8);
+            fillClone->SetFillStyle(1001);
+            fillClone->Draw((i == 0) ? "HIST" : "HIST SAME");
+            transientHists.push_back(fillClone);
+        }
         if (i == 0) {
             hist->Draw(drawOption);
             firstHist = hist;
@@ -144,7 +187,19 @@ void PlotOptions1D::Plot(TFile* inputFile) {
     
     for (size_t i = 0; i < m_histNames.size(); ++i) {
         TH1* hist = static_cast<TH1*>(inputFile->Get(m_histNames[i]));
-        if (hist) legend->AddEntry(hist, m_legendEntries[i], "lp");
+        if (!hist) continue;
+
+        const bool hasFill = hist->GetFillStyle() != 0;
+        const bool hasPoints = (hist->GetMarkerStyle() > 0) || hasPointLikeDrawOption(m_drawOptions[i]);
+        const char* legendOpt = "l";
+        if (hasFill && hasPoints) {
+            legendOpt = "lfp";
+        } else if (hasFill) {
+            legendOpt = "lf";
+        } else if (hasPoints) {
+            legendOpt = "lp";
+        }
+        legend->AddEntry(hist, m_legendEntries[i], legendOpt);
     }
     
     legend->SetBorderSize(0);
@@ -186,5 +241,8 @@ void PlotOptions1D::Plot(TFile* inputFile) {
     c->Update();
     SaveCanvas(c, m_saveName);
 
+    for (TH1* hist : transientHists) {
+        delete hist;
+    }
     delete c;
 }

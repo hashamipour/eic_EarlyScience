@@ -33,141 +33,10 @@
 #include <TTreeReaderArray.h>
 #include "Utility.hpp"
 #include "RecoMethods.hpp"
+#include "YAMLBinning.hpp"
+#include "Afterburn.hpp"
 
-// These are the crucial headers for the ROOT::Math objects
-#include "Math/Vector4D.h"
-#include "Math/Vector3D.h"
-#include "Math/VectorUtil.h"
-#include "Math/RotationX.h"
-#include "Math/RotationY.h"
 #include "Math/GenVector/Boost.h"
-
-using ROOT::Math::VectorUtil::boost;
-using ROOT::Math::VectorUtil::Angle;
-using ROOT::Math::RotationX;
-using ROOT::Math::RotationY;
-using P3MVector=ROOT::Math::LorentzVector<ROOT::Math::PxPyPzMVector>;
-using P3EVector=ROOT::Math::LorentzVector<ROOT::Math::PxPyPzEVector>;
-using MomVector=ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<Double_t>,ROOT::Math::DefaultCoordinateSystemTag>;
-
-struct BinDef {
-    int bin_id = -1;
-    double Q2_min = -1.0;
-    double Q2_max = -1.0;
-    double beta_min = -1.0;
-    double beta_max = -1.0;
-    double xpom_min = -1.0;
-    double xpom_max = -1.0;
-};
-
-static bool StartsWith(const std::string& s, const std::string& prefix) {
-    return s.size() >= prefix.size() && s.compare(0, prefix.size(), prefix) == 0;
-}
-
-static std::string TrimWS(const std::string& s) {
-    const char* ws = " \t\r\n";
-    const size_t b = s.find_first_not_of(ws);
-    if (b == std::string::npos) return "";
-    const size_t e = s.find_last_not_of(ws);
-    return s.substr(b, e - b + 1);
-}
-
-static std::vector<double> ParseInlineList(const std::string& line) {
-    std::vector<double> values;
-    const auto lbr = line.find('[');
-    const auto rbr = line.find(']');
-    if (lbr == std::string::npos || rbr == std::string::npos || rbr <= lbr) return values;
-    std::string body = line.substr(lbr + 1, rbr - lbr - 1);
-    for (char& c : body) {
-        if (c == ',') c = ' ';
-    }
-    std::istringstream iss(body);
-    double v = 0.0;
-    while (iss >> v) {
-        values.push_back(v);
-    }
-    return values;
-}
-
-static std::vector<double> ReadInlineListFromYAML(const std::string& path, const std::string& key) {
-    std::ifstream in(path);
-    if (!in.is_open()) return {};
-    std::string line;
-    const std::string prefix = key + ":";
-    while (std::getline(in, line)) {
-        const size_t hash = line.find('#');
-        if (hash != std::string::npos) line = line.substr(0, hash);
-        line = TrimWS(line);
-        if (line.empty()) continue;
-        if (StartsWith(line, prefix)) {
-            return ParseInlineList(line);
-        }
-    }
-    return {};
-}
-
-static std::vector<BinDef> ReadBinsFromYAML(const std::string& path) {
-    std::vector<BinDef> bins;
-    std::ifstream in(path);
-    if (!in.is_open()) {
-        std::cerr << "ERROR: cannot open YAML file " << path << std::endl;
-        return bins;
-    }
-    bool in_bins = false;
-    BinDef cur;
-    bool have_cur = false;
-    std::string line;
-    while (std::getline(in, line)) {
-        const size_t hash = line.find('#');
-        if (hash != std::string::npos) line = line.substr(0, hash);
-        line = TrimWS(line);
-        if (line.empty()) continue;
-        if (StartsWith(line, "3D_bins:")) {
-            in_bins = true;
-            continue;
-        }
-        if (!in_bins) continue;
-        if (StartsWith(line, "t_bins:")) continue;
-        if (StartsWith(line, "W2_bins:")) continue;
-        if (StartsWith(line, "-")) {
-            if (have_cur) bins.push_back(cur);
-            cur = BinDef();
-            have_cur = true;
-            const size_t pos = line.find("bin_id");
-            if (pos != std::string::npos) {
-                const size_t colon = line.find(':', pos);
-                if (colon != std::string::npos) {
-                    cur.bin_id = std::stoi(TrimWS(line.substr(colon + 1)));
-                }
-            }
-            continue;
-        }
-        const size_t colon = line.find(':');
-        if (colon == std::string::npos) continue;
-        const std::string key = TrimWS(line.substr(0, colon));
-        const std::string val_str = TrimWS(line.substr(colon + 1));
-        if (val_str.empty()) continue;
-        const double val = std::stod(val_str);
-        if (key == "bin_id") cur.bin_id = static_cast<int>(val);
-        else if (key == "Q2_min") cur.Q2_min = val;
-        else if (key == "Q2_max") cur.Q2_max = val;
-        else if (key == "beta_min") cur.beta_min = val;
-        else if (key == "beta_max") cur.beta_max = val;
-        else if (key == "x_min" || key == "x_pom_min" || key == "xpom_min") cur.xpom_min = val;
-        else if (key == "x_max" || key == "x_pom_max" || key == "xpom_max") cur.xpom_max = val;
-    }
-    if (have_cur) bins.push_back(cur);
-    return bins;
-}
-
-static std::vector<double> UniqueSorted(std::vector<double> vals) {
-    std::sort(vals.begin(), vals.end());
-    const double eps = 1e-12;
-    vals.erase(std::unique(vals.begin(), vals.end(), [eps](double a, double b) {
-        return std::fabs(a - b) < eps;
-    }), vals.end());
-    return vals;
-}
 
 struct CutflowConfig {
     bool apply_dis_cuts = true;// all cuts
@@ -220,23 +89,6 @@ static bool PassB0Acceptance(const CutflowConfig& cfg, const double theta_mrad) 
     if (!std::isfinite(theta_mrad)) return false;
     if (!cfg.apply_proton_tag_cuts) return true;
     return theta_mrad > cfg.theta_b0_min_mrad && theta_mrad < cfg.theta_b0_max_mrad;
-}
-
-static void CollectEdges(const std::vector<BinDef>& bins,
-                         std::vector<double>& q2_edges,
-                         std::vector<double>& beta_edges,
-                         std::vector<double>& xpom_edges) {
-    for (const auto& b : bins) {
-        if (b.Q2_min > 0) q2_edges.push_back(b.Q2_min);
-        if (b.Q2_max > 0) q2_edges.push_back(b.Q2_max);
-        if (b.beta_min >= 0) beta_edges.push_back(b.beta_min);
-        if (b.beta_max >= 0) beta_edges.push_back(b.beta_max);
-        if (b.xpom_min > 0) xpom_edges.push_back(b.xpom_min);
-        if (b.xpom_max > 0) xpom_edges.push_back(b.xpom_max);
-    }
-    q2_edges = UniqueSorted(q2_edges);
-    beta_edges = UniqueSorted(beta_edges);
-    xpom_edges = UniqueSorted(xpom_edges);
 }
 
 // Smooth DA->EM blend for W^2 reconstruction:
@@ -438,56 +290,6 @@ static bool WriteBinOccupancyYAML(const std::string& path,
         out << "    beta_max: " << b.beta_max << "\n";
     }
     return true;
-}
-
-const Float_t fMass_proton{0.938272};
-const Float_t fMass_electron{0.000511};
-double MASS_PROTON   = fMass_proton;
-double MASS_ELECTRON = fMass_electron;
-
-// Global afterburner correction parameters
-Float_t fXAngle{-0.025};
-RotationX rotAboutX;
-RotationY rotAboutY;
-MomVector vBoostToCoM;
-MomVector vBoostToHoF;
-
-void undoAfterburnAndCalc(P3MVector& p, P3MVector& k){
-    P3MVector p_beam(fXAngle*p.E(), 0., p.E(), p.M());
-    P3MVector e_beam(0., 0., -k.E(), k.M());
-    
-    P3MVector CoM_boost = p_beam + e_beam;
-    vBoostToCoM.SetXYZ(-CoM_boost.X()/CoM_boost.E(), -CoM_boost.Y()/CoM_boost.E(), -CoM_boost.Z()/CoM_boost.E());
-    
-    p_beam = boost(p_beam, vBoostToCoM);
-    e_beam = boost(e_beam, vBoostToCoM);
-    
-    Float_t fRotY = -1.0*TMath::ATan2(p_beam.X(), p_beam.Z());
-    Float_t fRotX = 1.0*TMath::ATan2(p_beam.Y(), p_beam.Z());
-    
-    rotAboutY = RotationY(fRotY);
-    rotAboutX = RotationX(fRotX);
-    
-    p_beam = rotAboutY(p_beam);
-    p_beam = rotAboutX(p_beam);
-    e_beam = rotAboutY(e_beam);
-    e_beam = rotAboutX(e_beam);
-    
-    P3EVector HoF_boost(0., 0., CoM_boost.Z(), CoM_boost.E());
-    vBoostToHoF.SetXYZ(HoF_boost.X()/HoF_boost.E(), HoF_boost.Y()/HoF_boost.E(), HoF_boost.Z()/HoF_boost.E());
-    
-    p_beam = boost(p_beam, vBoostToHoF);
-    e_beam = boost(e_beam, vBoostToHoF);
-    
-    p.SetPxPyPzE(p_beam.X(), p_beam.Y(), p_beam.Z(), p_beam.E());
-    k.SetPxPyPzE(e_beam.X(), e_beam.Y(), e_beam.Z(), e_beam.E());
-}
-
-void undoAfterburn(P3MVector& a){
-    a = boost(a, vBoostToCoM);
-    a = rotAboutY(a);
-    a = rotAboutX(a);
-    a = boost(a, vBoostToHoF);
 }
 
 // E - pz calculation for matched reco/truth particles

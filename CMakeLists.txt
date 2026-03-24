@@ -35,13 +35,9 @@ target_include_directories(eicplot PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 
 
-add_executable(ddis_skim_binning_inputs analysis/DDIS_Skim_BinningInputs.cpp)
-target_link_libraries(ddis_skim_binning_inputs PRIVATE eicplot ${ROOT_LIBRARIES})
 add_executable(ddis_skim_final analysis/DDIS_Skim_Final.cpp)
 target_link_libraries(ddis_skim_final PRIVATE eicplot ${ROOT_LIBRARIES})
 
-add_executable(ddis_plot_binning analysis/DDIS_Plot_Binning.cpp)
-target_link_libraries(ddis_plot_binning PRIVATE eicplot ${ROOT_LIBRARIES})
 add_executable(ddis_plot_final analysis/DDIS_Plot_Final.cpp)
 target_link_libraries(ddis_plot_final PRIVATE eicplot ${ROOT_LIBRARIES})
 
