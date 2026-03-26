@@ -8,9 +8,6 @@ build_*/
 # ROOT output files
 *.root
 
-# Generated figures
-figs/
-
 # LaTeX build artifacts
 *.aux
 *.log
