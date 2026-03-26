@@ -821,9 +821,11 @@ int main(int argc, char** argv) {
     TH2D* h_MX2_RelRes_binned = new TH2D("MX2_RelRes_binned",
                                          "M_{X}^{2} relative resolution;M_{X,truth}^{2} [GeV^{2}];#frac{M_{X,reco}^{2}-M_{X,truth}^{2}}{M_{X,truth}^{2}}",
                                          mx2_bins.size() - 1, mx2_bins.data(), n_binned, -1.0, 1.0);
+    // Coarser binning for the 2D resolution map (circle plot) — 25 bins like x_bins
+    std::vector<Double_t> mx2_bins_coarse = GetLogBins(mx2_min, mx2_max, 25);
     TProfile2D* h_MX2_RelRes_vs_MX2Q2 = new TProfile2D("MX2_RelRes_vs_MX2Q2",
                                                        "M_{X}^{2} Rel. Res. binned in (M_{X}^{2}, Q^{2});M_{X}^{2} [GeV^{2}];Q^{2} [GeV^{2}]",
-                                                       mx2_bins.size() - 1, mx2_bins.data(),
+                                                       mx2_bins_coarse.size() - 1, mx2_bins_coarse.data(),
                                                        n_bins, bin_edges_Q2.data(),
                                                        "s");
 

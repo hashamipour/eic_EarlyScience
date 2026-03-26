@@ -5341,16 +5341,8 @@ int main(int argc, char** argv) {
                          "figs/inclusive/resolutions/2d_maps/y_RelRes_xQ2_BestMethod.png",
                          "x_{Bj}", "Q^{2} [GeV^{2}]", true, true);
 
-    if (auto* profMX2 = (TProfile2D*)inputFile->Get("MX2_RelRes_vs_MX2Q2")) {
-        TCanvas* cMX2 = new TCanvas("c_MX2_relres_map", "MX2 Resolution", 1200, 900);
-        cMX2->SetRightMargin(0.15);
-        cMX2->SetLogx();
-        cMX2->SetLogy();
-        profMX2->SetTitle("M_{X}^{2} Resolution vs (M_{X}^{2}, Q^{2});M_{X}^{2} [GeV^{2}];Q^{2} [GeV^{2}]");
-        profMX2->Draw("COLZ TEXT");
-        SaveCanvas(cMX2, "figs/diffractive/resolutions/2d_maps/MX2_RelRes_MX2Q2.png");
-        delete cMX2;
-    }
+    createCirclePlot("MX2_RelRes_vs_MX2Q2", "figs/diffractive/resolutions/2d_maps/MX2_RelRes_MX2Q2.png",
+                     "M_{X}^{2} [GeV^{2}]", "Q^{2} [GeV^{2}]", true, true);
 
     if (auto* hEPz2D = (TH2D*)inputFile->Get("h_EPz_2D")) {
         TCanvas* cEPz = new TCanvas("c_EPz_2D", "E-pz Correlation", 1200, 900);
