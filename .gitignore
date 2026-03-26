@@ -1,1 +1,21 @@
 build/
+build_*/
+
+# Hidden/IDE files
+.claude/
+.vscode/
+
+# ROOT output files
+*.root
+
+# Generated figures
+figs/
+
+# LaTeX build artifacts
+*.aux
+*.log
+*.nav
+*.out
+*.snm
+*.synctex.gz
+*.toc
