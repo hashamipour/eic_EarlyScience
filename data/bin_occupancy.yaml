@@ -1,0 +1,501 @@
+metadata:
+  description: "Per-bin occupancy from truth global bin assignment (Q2_truth, x_pom_truth, beta_truth)."
+  n_bins: 55
+  total_assigned_events: 189166
+  k_index_convention: "one_based"
+bins:
+  - bin_id: 1
+    k_index: 2
+    occupancy: 18
+    Q2_min: 5
+    Q2_max: 8
+    x_pom_min: 0.001
+    x_pom_max: 0.003
+    beta_min: 0.15
+    beta_max: 0.5
+  - bin_id: 2
+    k_index: 3
+    occupancy: 2647
+    Q2_min: 5
+    Q2_max: 8
+    x_pom_min: 0.001
+    x_pom_max: 0.003
+    beta_min: 0.5
+    beta_max: 0.85
+  - bin_id: 3
+    k_index: 4
+    occupancy: 1322
+    Q2_min: 5
+    Q2_max: 8
+    x_pom_min: 0.001
+    x_pom_max: 0.003
+    beta_min: 0.85
+    beta_max: 1
+  - bin_id: 4
+    k_index: 5
+    occupancy: 1
+    Q2_min: 5
+    Q2_max: 8
+    x_pom_min: 0.003
+    x_pom_max: 0.01
+    beta_min: 0
+    beta_max: 0.15
+  - bin_id: 5
+    k_index: 6
+    occupancy: 8079
+    Q2_min: 5
+    Q2_max: 8
+    x_pom_min: 0.003
+    x_pom_max: 0.01
+    beta_min: 0.15
+    beta_max: 0.5
+  - bin_id: 6
+    k_index: 7
+    occupancy: 14697
+    Q2_min: 5
+    Q2_max: 8
+    x_pom_min: 0.003
+    x_pom_max: 0.01
+    beta_min: 0.5
+    beta_max: 0.85
+  - bin_id: 7
+    k_index: 8
+    occupancy: 4365
+    Q2_min: 5
+    Q2_max: 8
+    x_pom_min: 0.003
+    x_pom_max: 0.01
+    beta_min: 0.85
+    beta_max: 1
+  - bin_id: 8
+    k_index: 9
+    occupancy: 1579
+    Q2_min: 5
+    Q2_max: 8
+    x_pom_min: 0.01
+    x_pom_max: 0.03
+    beta_min: 0
+    beta_max: 0.15
+  - bin_id: 9
+    k_index: 10
+    occupancy: 13241
+    Q2_min: 5
+    Q2_max: 8
+    x_pom_min: 0.01
+    x_pom_max: 0.03
+    beta_min: 0.15
+    beta_max: 0.5
+  - bin_id: 10
+    k_index: 11
+    occupancy: 12039
+    Q2_min: 5
+    Q2_max: 8
+    x_pom_min: 0.01
+    x_pom_max: 0.03
+    beta_min: 0.5
+    beta_max: 0.85
+  - bin_id: 11
+    k_index: 12
+    occupancy: 3054
+    Q2_min: 5
+    Q2_max: 8
+    x_pom_min: 0.01
+    x_pom_max: 0.03
+    beta_min: 0.85
+    beta_max: 1
+  - bin_id: 12
+    k_index: 13
+    occupancy: 7141
+    Q2_min: 5
+    Q2_max: 8
+    x_pom_min: 0.03
+    x_pom_max: 0.1
+    beta_min: 0
+    beta_max: 0.15
+  - bin_id: 13
+    k_index: 14
+    occupancy: 12831
+    Q2_min: 5
+    Q2_max: 8
+    x_pom_min: 0.03
+    x_pom_max: 0.1
+    beta_min: 0.15
+    beta_max: 0.5
+  - bin_id: 14
+    k_index: 15
+    occupancy: 10510
+    Q2_min: 5
+    Q2_max: 8
+    x_pom_min: 0.03
+    x_pom_max: 0.1
+    beta_min: 0.5
+    beta_max: 0.85
+  - bin_id: 15
+    k_index: 16
+    occupancy: 1208
+    Q2_min: 5
+    Q2_max: 8
+    x_pom_min: 0.03
+    x_pom_max: 0.1
+    beta_min: 0.85
+    beta_max: 1
+  - bin_id: 18
+    k_index: 19
+    occupancy: 59
+    Q2_min: 8
+    Q2_max: 12
+    x_pom_min: 0.001
+    x_pom_max: 0.003
+    beta_min: 0.5
+    beta_max: 0.85
+  - bin_id: 19
+    k_index: 20
+    occupancy: 146
+    Q2_min: 8
+    Q2_max: 12
+    x_pom_min: 0.001
+    x_pom_max: 0.003
+    beta_min: 0.85
+    beta_max: 1
+  - bin_id: 21
+    k_index: 22
+    occupancy: 2002
+    Q2_min: 8
+    Q2_max: 12
+    x_pom_min: 0.003
+    x_pom_max: 0.01
+    beta_min: 0.15
+    beta_max: 0.5
+  - bin_id: 22
+    k_index: 23
+    occupancy: 6180
+    Q2_min: 8
+    Q2_max: 12
+    x_pom_min: 0.003
+    x_pom_max: 0.01
+    beta_min: 0.5
+    beta_max: 0.85
+  - bin_id: 23
+    k_index: 24
+    occupancy: 2259
+    Q2_min: 8
+    Q2_max: 12
+    x_pom_min: 0.003
+    x_pom_max: 0.01
+    beta_min: 0.85
+    beta_max: 1
+  - bin_id: 24
+    k_index: 25
+    occupancy: 439
+    Q2_min: 8
+    Q2_max: 12
+    x_pom_min: 0.01
+    x_pom_max: 0.03
+    beta_min: 0
+    beta_max: 0.15
+  - bin_id: 25
+    k_index: 26
+    occupancy: 7475
+    Q2_min: 8
+    Q2_max: 12
+    x_pom_min: 0.01
+    x_pom_max: 0.03
+    beta_min: 0.15
+    beta_max: 0.5
+  - bin_id: 26
+    k_index: 27
+    occupancy: 6609
+    Q2_min: 8
+    Q2_max: 12
+    x_pom_min: 0.01
+    x_pom_max: 0.03
+    beta_min: 0.5
+    beta_max: 0.85
+  - bin_id: 27
+    k_index: 28
+    occupancy: 2100
+    Q2_min: 8
+    Q2_max: 12
+    x_pom_min: 0.01
+    x_pom_max: 0.03
+    beta_min: 0.85
+    beta_max: 1
+  - bin_id: 28
+    k_index: 29
+    occupancy: 3691
+    Q2_min: 8
+    Q2_max: 12
+    x_pom_min: 0.03
+    x_pom_max: 0.1
+    beta_min: 0
+    beta_max: 0.15
+  - bin_id: 29
+    k_index: 30
+    occupancy: 8158
+    Q2_min: 8
+    Q2_max: 12
+    x_pom_min: 0.03
+    x_pom_max: 0.1
+    beta_min: 0.15
+    beta_max: 0.5
+  - bin_id: 30
+    k_index: 31
+    occupancy: 6244
+    Q2_min: 8
+    Q2_max: 12
+    x_pom_min: 0.03
+    x_pom_max: 0.1
+    beta_min: 0.5
+    beta_max: 0.85
+  - bin_id: 31
+    k_index: 32
+    occupancy: 1038
+    Q2_min: 8
+    Q2_max: 12
+    x_pom_min: 0.03
+    x_pom_max: 0.1
+    beta_min: 0.85
+    beta_max: 1
+  - bin_id: 33
+    k_index: 38
+    occupancy: 268
+    Q2_min: 12
+    Q2_max: 20
+    x_pom_min: 0.003
+    x_pom_max: 0.01
+    beta_min: 0.15
+    beta_max: 0.5
+  - bin_id: 34
+    k_index: 39
+    occupancy: 2529
+    Q2_min: 12
+    Q2_max: 20
+    x_pom_min: 0.003
+    x_pom_max: 0.01
+    beta_min: 0.5
+    beta_max: 0.85
+  - bin_id: 35
+    k_index: 40
+    occupancy: 1252
+    Q2_min: 12
+    Q2_max: 20
+    x_pom_min: 0.003
+    x_pom_max: 0.01
+    beta_min: 0.85
+    beta_max: 1
+  - bin_id: 36
+    k_index: 41
+    occupancy: 43
+    Q2_min: 12
+    Q2_max: 20
+    x_pom_min: 0.01
+    x_pom_max: 0.03
+    beta_min: 0
+    beta_max: 0.15
+  - bin_id: 37
+    k_index: 42
+    occupancy: 4617
+    Q2_min: 12
+    Q2_max: 20
+    x_pom_min: 0.01
+    x_pom_max: 0.03
+    beta_min: 0.15
+    beta_max: 0.5
+  - bin_id: 38
+    k_index: 43
+    occupancy: 4705
+    Q2_min: 12
+    Q2_max: 20
+    x_pom_min: 0.01
+    x_pom_max: 0.03
+    beta_min: 0.5
+    beta_max: 0.85
+  - bin_id: 39
+    k_index: 44
+    occupancy: 1633
+    Q2_min: 12
+    Q2_max: 20
+    x_pom_min: 0.01
+    x_pom_max: 0.03
+    beta_min: 0.85
+    beta_max: 1
+  - bin_id: 40
+    k_index: 45
+    occupancy: 2183
+    Q2_min: 12
+    Q2_max: 20
+    x_pom_min: 0.03
+    x_pom_max: 0.1
+    beta_min: 0
+    beta_max: 0.15
+  - bin_id: 41
+    k_index: 46
+    occupancy: 7235
+    Q2_min: 12
+    Q2_max: 20
+    x_pom_min: 0.03
+    x_pom_max: 0.1
+    beta_min: 0.15
+    beta_max: 0.5
+  - bin_id: 42
+    k_index: 47
+    occupancy: 4723
+    Q2_min: 12
+    Q2_max: 20
+    x_pom_min: 0.03
+    x_pom_max: 0.1
+    beta_min: 0.5
+    beta_max: 0.85
+  - bin_id: 43
+    k_index: 48
+    occupancy: 1032
+    Q2_min: 12
+    Q2_max: 20
+    x_pom_min: 0.03
+    x_pom_max: 0.1
+    beta_min: 0.85
+    beta_max: 1
+  - bin_id: 46
+    k_index: 55
+    occupancy: 256
+    Q2_min: 20
+    Q2_max: 40
+    x_pom_min: 0.003
+    x_pom_max: 0.01
+    beta_min: 0.5
+    beta_max: 0.85
+  - bin_id: 47
+    k_index: 56
+    occupancy: 247
+    Q2_min: 20
+    Q2_max: 40
+    x_pom_min: 0.003
+    x_pom_max: 0.01
+    beta_min: 0.85
+    beta_max: 1
+  - bin_id: 49
+    k_index: 58
+    occupancy: 1255
+    Q2_min: 20
+    Q2_max: 40
+    x_pom_min: 0.01
+    x_pom_max: 0.03
+    beta_min: 0.15
+    beta_max: 0.5
+  - bin_id: 50
+    k_index: 59
+    occupancy: 2817
+    Q2_min: 20
+    Q2_max: 40
+    x_pom_min: 0.01
+    x_pom_max: 0.03
+    beta_min: 0.5
+    beta_max: 0.85
+  - bin_id: 51
+    k_index: 60
+    occupancy: 1125
+    Q2_min: 20
+    Q2_max: 40
+    x_pom_min: 0.01
+    x_pom_max: 0.03
+    beta_min: 0.85
+    beta_max: 1
+  - bin_id: 52
+    k_index: 61
+    occupancy: 586
+    Q2_min: 20
+    Q2_max: 40
+    x_pom_min: 0.03
+    x_pom_max: 0.1
+    beta_min: 0
+    beta_max: 0.15
+  - bin_id: 53
+    k_index: 62
+    occupancy: 4795
+    Q2_min: 20
+    Q2_max: 40
+    x_pom_min: 0.03
+    x_pom_max: 0.1
+    beta_min: 0.15
+    beta_max: 0.5
+  - bin_id: 54
+    k_index: 63
+    occupancy: 3089
+    Q2_min: 20
+    Q2_max: 40
+    x_pom_min: 0.03
+    x_pom_max: 0.1
+    beta_min: 0.5
+    beta_max: 0.85
+  - bin_id: 55
+    k_index: 64
+    occupancy: 873
+    Q2_min: 20
+    Q2_max: 40
+    x_pom_min: 0.03
+    x_pom_max: 0.1
+    beta_min: 0.85
+    beta_max: 1
+  - bin_id: 57
+    k_index: 74
+    occupancy: 31
+    Q2_min: 40
+    Q2_max: 150
+    x_pom_min: 0.01
+    x_pom_max: 0.03
+    beta_min: 0.15
+    beta_max: 0.5
+  - bin_id: 58
+    k_index: 75
+    occupancy: 434
+    Q2_min: 40
+    Q2_max: 150
+    x_pom_min: 0.01
+    x_pom_max: 0.03
+    beta_min: 0.5
+    beta_max: 0.85
+  - bin_id: 59
+    k_index: 76
+    occupancy: 299
+    Q2_min: 40
+    Q2_max: 150
+    x_pom_min: 0.01
+    x_pom_max: 0.03
+    beta_min: 0.85
+    beta_max: 1
+  - bin_id: 60
+    k_index: 77
+    occupancy: 12
+    Q2_min: 40
+    Q2_max: 150
+    x_pom_min: 0.03
+    x_pom_max: 0.1
+    beta_min: 0
+    beta_max: 0.15
+  - bin_id: 61
+    k_index: 78
+    occupancy: 1583
+    Q2_min: 40
+    Q2_max: 150
+    x_pom_min: 0.03
+    x_pom_max: 0.1
+    beta_min: 0.15
+    beta_max: 0.5
+  - bin_id: 62
+    k_index: 79
+    occupancy: 1845
+    Q2_min: 40
+    Q2_max: 150
+    x_pom_min: 0.03
+    x_pom_max: 0.1
+    beta_min: 0.5
+    beta_max: 0.85
+  - bin_id: 63
+    k_index: 80
+    occupancy: 567
+    Q2_min: 40
+    Q2_max: 150
+    x_pom_min: 0.03
+    x_pom_max: 0.1
+    beta_min: 0.85
+    beta_max: 1
