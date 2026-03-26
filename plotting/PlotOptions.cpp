@@ -15,10 +15,6 @@ static bool HasSuffix(const std::string& value, const std::string& suffix) {
     return value.compare(value.size() - suffix.size(), suffix.size(), suffix) == 0;
 }
 
-static bool HasPrefix(const std::string& value, const std::string& prefix) {
-    return value.size() >= prefix.size() &&
-           value.compare(0, prefix.size(), prefix) == 0;
-}
 
 void SaveCanvas(TCanvas* canvas, const char* filename) {
     if (!canvas || !filename) return;
@@ -28,12 +24,6 @@ void SaveCanvas(TCanvas* canvas, const char* filename) {
     } else if (!HasSuffix(name, ".png")) {
         name += ".png";
     }
-    if (HasPrefix(name, "./figs/") && !HasPrefix(name, "./figs/organized/")) {
-        name = "./figs/organized/" + name.substr(7);
-    } else if (HasPrefix(name, "figs/") && !HasPrefix(name, "figs/organized/")) {
-        name = "figs/organized/" + name.substr(5);
-    }
-
     const std::filesystem::path outPath(name);
     if (outPath.has_parent_path()) {
         std::filesystem::create_directories(outPath.parent_path());

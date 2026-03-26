@@ -244,14 +244,14 @@ static void PlotXQ2Density(TFile* inputFile) {
         delete c;
     };
 
-    drawDensity(h_reco, "c_xq2_density_reco", "figs/inclusive/histos/xbj_q2_density_reco.png");
-    drawDensity(h_truth, "c_xq2_density_truth", "figs/inclusive/histos/xbj_q2_density_truth.png");
+    drawDensity(h_reco, "c_xq2_density_reco", "figs/inclusive/distributions/xbj_q2_density_reco.png");
+    drawDensity(h_truth, "c_xq2_density_truth", "figs/inclusive/distributions/xbj_q2_density_truth.png");
 
     // Backward-compatible alias used by existing slides/docs.
     if (h_reco) {
-        drawDensity(h_reco, "c_xq2_density_legacy", "figs/inclusive/histos/xbj_q2_density.png");
+        drawDensity(h_reco, "c_xq2_density_legacy", "figs/inclusive/distributions/xbj_q2_density.png");
     } else if (h_truth) {
-        drawDensity(h_truth, "c_xq2_density_legacy", "figs/inclusive/histos/xbj_q2_density.png");
+        drawDensity(h_truth, "c_xq2_density_legacy", "figs/inclusive/distributions/xbj_q2_density.png");
     }
 
     delete h_reco_tmp;
@@ -1033,7 +1033,7 @@ static void PlotPhaseSpaceSlices(TFile* inputFile, const std::string& yamlPath) 
     DrawSliceGrid(h3, 3, beta_edges,
                   "xy",
                   "x_{pom}", "Q^{2} [GeV^{2}]", "#beta",
-                  "figs/diffractive/histos/phase_slices_beta.png",
+                  "figs/diffractive/distributions/phase_slices_beta.png",
                   true, true,
                   (yaml_requested ? nullptr : &xpom_overlay_bins),
                   (yaml_requested ? nullptr : &q2_overlay_bins),
@@ -1044,7 +1044,7 @@ static void PlotPhaseSpaceSlices(TFile* inputFile, const std::string& yamlPath) 
     DrawSliceGrid(h3, 3, beta_edges,
                   "xy",
                   "x_{pom}", "Q^{2} [GeV^{2}]", "#beta",
-                  "figs/diffractive/histos/phase_slices_beta_bin_number.png",
+                  "figs/diffractive/distributions/phase_slices_beta_bin_number.png",
                   true, true,
                   (yaml_requested ? nullptr : &xpom_overlay_bins),
                   (yaml_requested ? nullptr : &q2_overlay_bins),
@@ -1091,7 +1091,7 @@ static void PlotPhaseSpaceSlices(TFile* inputFile, const std::string& yamlPath) 
                 DrawSliceGridWithMetric(h3, 3, beta_edges,
                                         "xy",
                                         "x_{pom}", "Q^{2} [GeV^{2}]", "#beta",
-                                        "figs/diffractive/histos/phase_slices_beta_eff.png",
+                                        "figs/diffractive/distributions/phase_slices_beta_eff.png",
                                         true, true,
                                         yaml_bins,
                                         true, true,
@@ -1102,7 +1102,7 @@ static void PlotPhaseSpaceSlices(TFile* inputFile, const std::string& yamlPath) 
                 DrawSliceGridWithMetric(h3, 3, beta_edges,
                                         "xy",
                                         "x_{pom}", "Q^{2} [GeV^{2}]", "#beta",
-                                        "figs/diffractive/histos/phase_slices_beta_acceptance.png",
+                                        "figs/diffractive/distributions/phase_slices_beta_acceptance.png",
                                         true, true,
                                         yaml_bins,
                                         true, true,
@@ -1113,7 +1113,7 @@ static void PlotPhaseSpaceSlices(TFile* inputFile, const std::string& yamlPath) 
                 DrawSliceGridWithMetric(h3, 3, beta_edges,
                                         "xy",
                                         "x_{pom}", "Q^{2} [GeV^{2}]", "#beta",
-                                        "figs/diffractive/histos/phase_slices_beta_purity.png",
+                                        "figs/diffractive/distributions/phase_slices_beta_purity.png",
                                         true, true,
                                         yaml_bins,
                                         true, true,
@@ -1177,7 +1177,7 @@ static void PlotPhaseSpaceSlices(TFile* inputFile, const std::string& yamlPath) 
                 DrawSliceGridWithMetric(h3, 3, beta_edges,
                                         "xy",
                                         "x_{pom}", "Q^{2} [GeV^{2}]", "#beta",
-                                        "figs/diffractive/histos/phase_slices_beta_closure_ratio.png",
+                                        "figs/diffractive/distributions/phase_slices_beta_closure_ratio.png",
                                         true, true,
                                         yaml_bins,
                                         true, true,
@@ -2338,10 +2338,24 @@ int main(int argc, char** argv) {
     PlotOptions1D* plot_ptr = nullptr;
     PlotOptionsBinnedRelRes* binned_plot_ptr = nullptr;
 
-    // Plot outputs are routed to figs/organized/... in SaveCanvas.
-    gSystem->mkdir("figs/organized", kTRUE);
+    // Create output directory structure
+    gSystem->mkdir("figs/inclusive/distributions", kTRUE);
+    gSystem->mkdir("figs/inclusive/resolutions/simple", kTRUE);
+    gSystem->mkdir("figs/inclusive/resolutions/binned/bins", kTRUE);
+    gSystem->mkdir("figs/inclusive/resolutions/2d_maps", kTRUE);
+    gSystem->mkdir("figs/inclusive/response", kTRUE);
     gSystem->mkdir("figs/inclusive/control", kTRUE);
+    gSystem->mkdir("figs/inclusive/efficiency", kTRUE);
+    gSystem->mkdir("figs/inclusive/performance", kTRUE);
+    gSystem->mkdir("figs/diffractive/distributions", kTRUE);
+    gSystem->mkdir("figs/diffractive/resolutions/simple", kTRUE);
+    gSystem->mkdir("figs/diffractive/resolutions/binned/bins", kTRUE);
+    gSystem->mkdir("figs/diffractive/resolutions/2d_maps", kTRUE);
+    gSystem->mkdir("figs/diffractive/response", kTRUE);
     gSystem->mkdir("figs/diffractive/control", kTRUE);
+    gSystem->mkdir("figs/diffractive/efficiency", kTRUE);
+    gSystem->mkdir("figs/diffractive/performance", kTRUE);
+    gSystem->mkdir("figs/cross_sections/debug", kTRUE);
 
     // Acceptance/purity plots (if tracking histograms exist)
     TH1D* h_gen_Q2 = (TH1D*)inputFile->Get("h_gen_Q2");
@@ -2598,45 +2612,45 @@ int main(int argc, char** argv) {
                            false, false, controlSetALabel, controlSetBLabel, true);
 
     PlotDensityFromHistWithOverlay(inputFile, "beta_Q2_reco", "#beta", "Q^{2} [GeV^{2}]",
-                                   "figs/diffractive/histos/beta_q2_density.png",
+                                   "figs/diffractive/distributions/beta_q2_density.png",
                                    false, true, beta_edges, q2_edges, false, true);
     PlotDensityFromHist(inputFile, "t_Q2_reco", "|t| [GeV^{2}]", "Q^{2} [GeV^{2}]",
-                        "figs/diffractive/histos/t_q2_density.png", true, true);
+                        "figs/diffractive/distributions/t_q2_density.png", true, true);
     PlotDensityFromHistWithOverlay(inputFile, "xpom_Q2_reco", "x_{pom}", "Q^{2} [GeV^{2}]",
-                                   "figs/diffractive/histos/xpom_q2_density.png",
+                                   "figs/diffractive/distributions/xpom_q2_density.png",
                                    true, true, xpom_edges, q2_edges, true, true);
     PlotDensityFromHist(inputFile, "beta_t_reco", "#beta", "|t| [GeV^{2}]",
-                        "figs/diffractive/histos/beta_t_density.png", false, true);
+                        "figs/diffractive/distributions/beta_t_density.png", false, true);
     PlotDensityFromHist(inputFile, "xbj_t_reco", "x_{Bj}", "|t| [GeV^{2}]",
-                        "figs/diffractive/histos/xbj_t_density.png", true, true);
+                        "figs/diffractive/distributions/xbj_t_density.png", true, true);
     PlotDensityFromHist(inputFile, "xpom_t_reco", "x_{pom}", "|t| [GeV^{2}]",
-                        "figs/diffractive/histos/xpom_t_density.png", true, true);
+                        "figs/diffractive/distributions/xpom_t_density.png", true, true);
     PlotDensityFromHistWithOverlay(inputFile, "xpom_beta_reco", "x_{pom}", "#beta",
-                                   "figs/diffractive/histos/xpom_beta_density.png",
+                                   "figs/diffractive/distributions/xpom_beta_density.png",
                                    true, false, xpom_edges, beta_edges, true, false);
     PlotDensityFromHist(inputFile, "xbj_beta_reco", "x_{Bj}", "#beta",
-                        "figs/diffractive/histos/xbj_beta_density.png", true, false);
+                        "figs/diffractive/distributions/xbj_beta_density.png", true, false);
     PlotDensityFromHist(inputFile, "xbj_xpom_reco", "x_{Bj}", "x_{pom}",
-                        "figs/diffractive/histos/xbj_xpom_density.png", true, true);
+                        "figs/diffractive/distributions/xbj_xpom_density.png", true, true);
     // MC truth density versions
     PlotDensityFromHist(inputFile, "beta_Q2_truth", "#beta", "Q^{2} [GeV^{2}]",
-                        "figs/diffractive/histos/beta_q2_density_truth.png", false, true);
+                        "figs/diffractive/distributions/beta_q2_density_truth.png", false, true);
     PlotDensityFromHist(inputFile, "t_Q2_truth", "|t| [GeV^{2}]", "Q^{2} [GeV^{2}]",
-                        "figs/diffractive/histos/t_q2_density_truth.png", true, true);
+                        "figs/diffractive/distributions/t_q2_density_truth.png", true, true);
     PlotDensityFromHist(inputFile, "xpom_Q2_truth", "x_{pom}", "Q^{2} [GeV^{2}]",
-                        "figs/diffractive/histos/xpom_q2_density_truth.png", true, true);
+                        "figs/diffractive/distributions/xpom_q2_density_truth.png", true, true);
     PlotDensityFromHist(inputFile, "beta_t_truth", "#beta", "|t| [GeV^{2}]",
-                        "figs/diffractive/histos/beta_t_density_truth.png", false, true);
+                        "figs/diffractive/distributions/beta_t_density_truth.png", false, true);
     PlotDensityFromHist(inputFile, "xbj_t_truth", "x_{Bj}", "|t| [GeV^{2}]",
-                        "figs/diffractive/histos/xbj_t_density_truth.png", true, true);
+                        "figs/diffractive/distributions/xbj_t_density_truth.png", true, true);
     PlotDensityFromHist(inputFile, "xpom_t_truth", "x_{pom}", "|t| [GeV^{2}]",
-                        "figs/diffractive/histos/xpom_t_density_truth.png", true, true);
+                        "figs/diffractive/distributions/xpom_t_density_truth.png", true, true);
     PlotDensityFromHist(inputFile, "xpom_beta_truth", "x_{pom}", "#beta",
-                        "figs/diffractive/histos/xpom_beta_density_truth.png", true, false);
+                        "figs/diffractive/distributions/xpom_beta_density_truth.png", true, false);
     PlotDensityFromHist(inputFile, "xbj_beta_truth", "x_{Bj}", "#beta",
-                        "figs/diffractive/histos/xbj_beta_density_truth.png", true, false);
+                        "figs/diffractive/distributions/xbj_beta_density_truth.png", true, false);
     PlotDensityFromHist(inputFile, "xbj_xpom_truth", "x_{Bj}", "x_{pom}",
-                        "figs/diffractive/histos/xbj_xpom_density_truth.png", true, true);
+                        "figs/diffractive/distributions/xbj_xpom_density_truth.png", true, true);
     PlotPhaseSpaceSlices(inputFile, yamlPath);
 
     PlotGraphDensity(inputFile,
@@ -2644,28 +2658,28 @@ int main(int argc, char** argv) {
                      "W^{2} Correlation (EM, Unbinned)",
                      "W^{2}_{truth} [GeV^{2}]",
                      "W^{2}_{reco} [GeV^{2}]",
-                     "figs/inclusive/histos/w2_corr_unbinned_em_density.png",
+                     "figs/inclusive/distributions/w2_corr_unbinned_em_density.png",
                      10.0, 1.0e4, 140, true, true);
     PlotGraphDensity(inputFile,
                      "g_W2_DA",
                      "W^{2} Correlation (DA, Unbinned)",
                      "W^{2}_{truth} [GeV^{2}]",
                      "W^{2}_{reco} [GeV^{2}]",
-                     "figs/inclusive/histos/w2_corr_unbinned_da_density.png",
+                     "figs/inclusive/distributions/w2_corr_unbinned_da_density.png",
                      10.0, 1.0e4, 140, true, true);
     PlotGraphDensity(inputFile,
                      "g_W2_Best",
                      "W^{2} Correlation (Best, Unbinned)",
                      "W^{2}_{truth} [GeV^{2}]",
                      "W^{2}_{reco} [GeV^{2}]",
-                     "figs/inclusive/histos/w2_corr_unbinned_best_density.png",
+                     "figs/inclusive/distributions/w2_corr_unbinned_best_density.png",
                      10.0, 1.0e4, 140, true, true);
     PlotGraphDensity(inputFile,
                      "g_W2_Sigma",
                      "W^{2} Correlation (#Sigma, Unbinned)",
                      "W^{2}_{truth} [GeV^{2}]",
                      "W^{2}_{reco} [GeV^{2}]",
-                     "figs/inclusive/histos/w2_corr_unbinned_sigma_density.png",
+                     "figs/inclusive/distributions/w2_corr_unbinned_sigma_density.png",
                      10.0, 1.0e4, 140, true, true);
 
     if (h_gen_Q2 && h_gen_and_reco_after_cuts_Q2_EM && h_reco_Q2_EM) {
@@ -2696,7 +2710,7 @@ int main(int argc, char** argv) {
             "Acceptance vs Q^{2}",
             "Q^{2} [GeV^{2}]",
             "Acceptance",
-            "figs/performance/acceptance_vs_Q2.png",
+            "figs/inclusive/performance/acceptance_vs_Q2.png",
             true,
             false
         );
@@ -2710,7 +2724,7 @@ int main(int argc, char** argv) {
             "Purity vs Q^{2}",
             "Q^{2} [GeV^{2}]",
             "Purity",
-            "figs/performance/purity_vs_Q2.png",
+            "figs/inclusive/performance/purity_vs_Q2.png",
             true,
             false
         );
@@ -2728,7 +2742,7 @@ int main(int argc, char** argv) {
         "Q^{2} Reconstruction Methods",
         "Q^{2}",
         "# of events",
-        "figs/inclusive/histos/q2_methods_hist.png",
+        "figs/inclusive/distributions/q2_methods_hist.png",
         true,
         true
     );
@@ -2742,7 +2756,7 @@ int main(int argc, char** argv) {
         "Q^{2} PDF Comparison",
         "Q^{2}",
         "PDF",
-        "figs/inclusive/histos/q2_methods_pdf.png",
+        "figs/inclusive/distributions/q2_methods_pdf.png",
         true,
         true,
         true
@@ -2757,7 +2771,7 @@ int main(int argc, char** argv) {
         "x_{Bj} Reconstruction Methods",
         "x_{Bj}",
         "# of events",
-        "figs/inclusive/histos/xbj_methods_hist.png",
+        "figs/inclusive/distributions/xbj_methods_hist.png",
         true,
         true
     );
@@ -2771,7 +2785,7 @@ int main(int argc, char** argv) {
         "x_{Bj} PDF Comparison",
         "x_{Bj}",
         "PDF",
-        "figs/inclusive/histos/xbj_methods_pdf.png",
+        "figs/inclusive/distributions/xbj_methods_pdf.png",
         true,
         true,
         true
@@ -2786,7 +2800,7 @@ int main(int argc, char** argv) {
         "y (inelasticity) Reconstruction Methods",
         "y",
         "# of events",
-        "figs/inclusive/histos/y_methods_hist.png",
+        "figs/inclusive/distributions/y_methods_hist.png",
         false,
         true
     );
@@ -2800,7 +2814,7 @@ int main(int argc, char** argv) {
         "y (inelasticity) PDF Comparison",
         "y",
         "PDF",
-        "figs/inclusive/histos/y_methods_pdf.png",
+        "figs/inclusive/distributions/y_methods_pdf.png",
         false,
         false,
         true
@@ -2818,7 +2832,7 @@ int main(int argc, char** argv) {
         "W^{2} Reconstruction Methods",
         "W^{2} [GeV^{2}]",
         "# of events",
-        "figs/inclusive/histos/w2_methods_hist.png",
+        "figs/inclusive/distributions/w2_methods_hist.png",
         true,
         true
     );
@@ -2833,7 +2847,7 @@ int main(int argc, char** argv) {
         "W^{2} PDF Comparison",
         "W^{2} [GeV^{2}]",
         "PDF",
-        "figs/inclusive/histos/w2_methods_pdf.png",
+        "figs/inclusive/distributions/w2_methods_pdf.png",
         true,
         true,
         true
@@ -2852,7 +2866,7 @@ int main(int argc, char** argv) {
         "Scattered Electron Energy",
         "E'_{e} [GeV]",
         "Counts",
-        "figs/inclusive/histos/electron_energy.png",
+        "figs/inclusive/distributions/electron_energy.png",
         false,
         false
     );
@@ -2866,7 +2880,7 @@ int main(int argc, char** argv) {
         "Scattered Electron Energy",
         "E'_{e} [GeV]",
         "Counts",
-        "figs/inclusive/histos/electron_energy_logy.png",
+        "figs/inclusive/distributions/electron_energy_logy.png",
         false,
         true
     );
@@ -2880,7 +2894,7 @@ int main(int argc, char** argv) {
         "Scattered Electron Azimuthal Angle",
         "#phi_{e} [rad]",
         "Counts",
-        "figs/inclusive/histos/electron_phi.png",
+        "figs/inclusive/distributions/electron_phi.png",
         false,
         false
     );
@@ -2897,7 +2911,7 @@ int main(int argc, char** argv) {
         "Scattered Electron p_{T}",
         "p_{T}^{e} [GeV]",
         "Counts",
-        "figs/inclusive/histos/electron_pt.png",
+        "figs/inclusive/distributions/electron_pt.png",
         false,
         false
     );
@@ -2911,7 +2925,7 @@ int main(int argc, char** argv) {
         "Scattered Electron p_{T}",
         "p_{T}^{e} [GeV]",
         "Counts",
-        "figs/inclusive/histos/electron_pt_logy.png",
+        "figs/inclusive/distributions/electron_pt_logy.png",
         false,
         true
     );
@@ -2930,7 +2944,7 @@ int main(int argc, char** argv) {
         "Q^{2} Correlation (EM, Unbinned)",
         "Q^{2}_{truth} [GeV^{2}]",
         "Q^{2}_{reco} [GeV^{2}]",
-        "figs/inclusive/histos/q2_corr_unbinned_em.png",
+        "figs/inclusive/distributions/q2_corr_unbinned_em.png",
         {1.0, 300.0},
         {1.0, 300.0},
         true,
@@ -2945,7 +2959,7 @@ int main(int argc, char** argv) {
         "Q^{2} Correlation (DA, Unbinned)",
         "Q^{2}_{truth} [GeV^{2}]",
         "Q^{2}_{reco} [GeV^{2}]",
-        "figs/inclusive/histos/q2_corr_unbinned_da.png",
+        "figs/inclusive/distributions/q2_corr_unbinned_da.png",
         {1.0, 300.0},
         {1.0, 300.0},
         true,
@@ -2960,7 +2974,7 @@ int main(int argc, char** argv) {
         "Q^{2} Correlation (#Sigma, Unbinned)",
         "Q^{2}_{truth} [GeV^{2}]",
         "Q^{2}_{reco} [GeV^{2}]",
-        "figs/inclusive/histos/q2_corr_unbinned_sigma.png",
+        "figs/inclusive/distributions/q2_corr_unbinned_sigma.png",
         {1.0, 300.0},
         {1.0, 300.0},
         true,
@@ -2976,7 +2990,7 @@ int main(int argc, char** argv) {
         "x_{Bj} Correlation (EM, Unbinned)",
         "x_{truth}",
         "x_{reco}",
-        "figs/inclusive/histos/xbj_corr_unbinned_em.png",
+        "figs/inclusive/distributions/xbj_corr_unbinned_em.png",
         {1e-4, 1.0},
         {1e-4, 1.0},
         true,
@@ -2991,7 +3005,7 @@ int main(int argc, char** argv) {
         "x_{Bj} Correlation (DA, Unbinned)",
         "x_{truth}",
         "x_{reco}",
-        "figs/inclusive/histos/xbj_corr_unbinned_da.png",
+        "figs/inclusive/distributions/xbj_corr_unbinned_da.png",
         {1e-4, 1.0},
         {1e-4, 1.0},
         true,
@@ -3006,7 +3020,7 @@ int main(int argc, char** argv) {
         "x_{Bj} Correlation (#Sigma, Unbinned)",
         "x_{truth}",
         "x_{reco}",
-        "figs/inclusive/histos/xbj_corr_unbinned_sigma.png",
+        "figs/inclusive/distributions/xbj_corr_unbinned_sigma.png",
         {1e-4, 1.0},
         {1e-4, 1.0},
         true,
@@ -3021,7 +3035,7 @@ int main(int argc, char** argv) {
         "y Correlation (EM, Unbinned)",
         "y_{truth}",
         "y_{reco}",
-        "figs/inclusive/histos/y_corr_unbinned_em.png",
+        "figs/inclusive/distributions/y_corr_unbinned_em.png",
         {0.0, 1.0},
         {0.0, 1.0}
     ));
@@ -3034,7 +3048,7 @@ int main(int argc, char** argv) {
         "y Correlation (DA, Unbinned)",
         "y_{truth}",
         "y_{reco}",
-        "figs/inclusive/histos/y_corr_unbinned_da.png",
+        "figs/inclusive/distributions/y_corr_unbinned_da.png",
         {0.0, 1.0},
         {0.0, 1.0}
     ));
@@ -3047,7 +3061,7 @@ int main(int argc, char** argv) {
         "y Correlation (#Sigma, Unbinned)",
         "y_{truth}",
         "y_{reco}",
-        "figs/inclusive/histos/y_corr_unbinned_sigma.png",
+        "figs/inclusive/distributions/y_corr_unbinned_sigma.png",
         {0.0, 1.0},
         {0.0, 1.0}
     ));
@@ -3061,7 +3075,7 @@ int main(int argc, char** argv) {
         "W^{2} Correlation (EM, Unbinned)",
         "W^{2}_{truth} [GeV^{2}]",
         "W^{2}_{reco} [GeV^{2}]",
-        "figs/inclusive/histos/w2_corr_unbinned_em.png",
+        "figs/inclusive/distributions/w2_corr_unbinned_em.png",
         {10.0, 1.0e4},
         {10.0, 1.0e4},
         true,
@@ -3076,7 +3090,7 @@ int main(int argc, char** argv) {
         "W^{2} Correlation (DA, Unbinned)",
         "W^{2}_{truth} [GeV^{2}]",
         "W^{2}_{reco} [GeV^{2}]",
-        "figs/inclusive/histos/w2_corr_unbinned_da.png",
+        "figs/inclusive/distributions/w2_corr_unbinned_da.png",
         {10.0, 1.0e4},
         {10.0, 1.0e4},
         true,
@@ -3091,7 +3105,7 @@ int main(int argc, char** argv) {
         "W^{2} Correlation (#Sigma, Unbinned)",
         "W^{2}_{truth} [GeV^{2}]",
         "W^{2}_{reco} [GeV^{2}]",
-        "figs/inclusive/histos/w2_corr_unbinned_sigma.png",
+        "figs/inclusive/distributions/w2_corr_unbinned_sigma.png",
         {10.0, 1.0e4},
         {10.0, 1.0e4},
         true,
@@ -3106,7 +3120,7 @@ int main(int argc, char** argv) {
         "W^{2} Correlation (EM/DA/#Sigma, Unbinned)",
         "W^{2}_{truth} [GeV^{2}]",
         "W^{2}_{reco} [GeV^{2}]",
-        "figs/inclusive/histos/w2_corr_unbinned_all.png",
+        "figs/inclusive/distributions/w2_corr_unbinned_all.png",
         {10.0, 1.0e4},
         {10.0, 1.0e4},
         true,
@@ -3122,7 +3136,7 @@ int main(int argc, char** argv) {
         "E'_{e} Correlation (Unbinned)",
         "E'_{e,truth} [GeV]",
         "E'_{e,reco} [GeV]",
-        "figs/inclusive/histos/electron_energy_corr_unbinned.png",
+        "figs/inclusive/distributions/electron_energy_corr_unbinned.png",
         {0.0, 20.0},
         {0.0, 20.0}
     ));
@@ -3135,7 +3149,7 @@ int main(int argc, char** argv) {
         "#phi_{e} Correlation (Unbinned)",
         "#phi_{e,truth} [rad]",
         "#phi_{e,reco} [rad]",
-        "figs/inclusive/histos/electron_phi_corr_unbinned.png",
+        "figs/inclusive/distributions/electron_phi_corr_unbinned.png",
         {-3.2, 3.2},
         {-3.2, 3.2}
     ));
@@ -3148,7 +3162,7 @@ int main(int argc, char** argv) {
         "p_{T}^{e} Correlation (Unbinned)",
         "p_{T,truth}^{e} [GeV]",
         "p_{T,reco}^{e} [GeV]",
-        "figs/inclusive/histos/electron_pt_corr_unbinned.png",
+        "figs/inclusive/distributions/electron_pt_corr_unbinned.png",
         {0.0, 10.0},
         {0.0, 10.0}
     ));
@@ -3387,7 +3401,7 @@ int main(int argc, char** argv) {
         "#frac{Q^{2}_{EM} - Q^{2}_{MC}}{ Q^{2}_{MC}}",
         "Counts",
         -0.05, 0.05,
-        "figs/inclusive/resolution/q2_relres_em.png",
+        "figs/inclusive/resolutions/q2_relres_em.png",
         "dscb"
     ));
 
@@ -3396,7 +3410,7 @@ int main(int argc, char** argv) {
         "#frac{Q^{2}_{DA} - Q^{2}_{MC}}{ Q^{2}_{MC}}",
         "Counts",
         -0.1, 0.1,
-        "figs/inclusive/resolution/q2_relres_da.png",
+        "figs/inclusive/resolutions/q2_relres_da.png",
         "double_sided_crystalball"
     ));
 
@@ -3405,7 +3419,7 @@ int main(int argc, char** argv) {
         "#frac{Q^{2}_{#Sigma} - Q^{2}_{MC}}{ Q^{2}_{MC}}",
         "Counts",
         -0.2, 0.05,
-        "figs/inclusive/resolution/q2_relres_sigma.png",
+        "figs/inclusive/resolutions/q2_relres_sigma.png",
         "crystalball"
     ));
 
@@ -3414,7 +3428,7 @@ int main(int argc, char** argv) {
         "#frac{x_{EM} - x_{MC}}{ x_{MC}}",
         "Counts",
         -0.1, 0.1,
-        "figs/inclusive/resolution/xbj_relres_em.png",
+        "figs/inclusive/resolutions/xbj_relres_em.png",
         "dscb"
     ));
 
@@ -3423,7 +3437,7 @@ int main(int argc, char** argv) {
         "#frac{x_{DA} - x_{MC}}{X_{MC}}",
         "Counts",
         -0.4, 0.5,
-        "figs/inclusive/resolution/xbj_relres_da.png",
+        "figs/inclusive/resolutions/xbj_relres_da.png",
         "double_sided_crystalball"
     ));
 
@@ -3432,7 +3446,7 @@ int main(int argc, char** argv) {
         "#frac{x_{#Sigma} - x_{MC}}{X_{MC}}",
         "Counts",
         -0.5, 0.5,
-        "figs/inclusive/resolution/xbj_relres_sigma.png",
+        "figs/inclusive/resolutions/xbj_relres_sigma.png",
         "dscb"
     ));
 
@@ -3441,7 +3455,7 @@ int main(int argc, char** argv) {
         "#frac{y_{EM} - y_{MC}}{ y_{MC}}",
         "Counts",
         -0.05, 0.05,
-        "figs/inclusive/resolution/y_relres_em.png",
+        "figs/inclusive/resolutions/y_relres_em.png",
         "dscb"
     ));
 
@@ -3450,7 +3464,7 @@ int main(int argc, char** argv) {
         "#frac{y_{DA} - y_{MC}}{y_{MC}}",
         "Counts",
         -0.22, 0.3,
-        "figs/inclusive/resolution/y_relres_da.png",
+        "figs/inclusive/resolutions/y_relres_da.png",
         "dscb"
     ));
 
@@ -3459,7 +3473,7 @@ int main(int argc, char** argv) {
         "#frac{y_{#Sigma} - y_{MC}}{y_{MC}}",
         "Counts",
         -0.5, 0.5,
-        "figs/inclusive/resolution/y_relres_sigma.png",
+        "figs/inclusive/resolutions/y_relres_sigma.png",
         "double_sided_crystalball"
     ));
 
@@ -3468,7 +3482,7 @@ int main(int argc, char** argv) {
         "#frac{W^{2}_{EM} - W^{2}_{MC}}{W^{2}_{MC}}",
         "Counts",
         -0.1, 0.1,
-        "figs/inclusive/resolution/w2_relres_em.png",
+        "figs/inclusive/resolutions/w2_relres_em.png",
         "dscb"
     ));
 
@@ -3477,7 +3491,7 @@ int main(int argc, char** argv) {
         "#frac{W^{2}_{DA} - W^{2}_{MC}}{W^{2}_{MC}}",
         "Counts",
         -0.25, 0.3,
-        "figs/inclusive/resolution/w2_relres_da.png",
+        "figs/inclusive/resolutions/w2_relres_da.png",
         "double_sided_crystalball"
     ));
 
@@ -3486,7 +3500,7 @@ int main(int argc, char** argv) {
         "#frac{W^{2}_{best} - W^{2}_{MC}}{W^{2}_{MC}}",
         "Counts",
         -0.12, 0.12,
-        "figs/inclusive/resolution/w2_relres_best.png",
+        "figs/inclusive/resolutions/w2_relres_best.png",
         "dscb"
     ));
 
@@ -3495,7 +3509,7 @@ int main(int argc, char** argv) {
         "#frac{W^{2}_{#Sigma} - W^{2}_{MC}}{W^{2}_{MC}}",
         "Counts",
         -0.8, 0.5,
-        "figs/inclusive/resolution/w2_relres_sigma.png",
+        "figs/inclusive/resolutions/w2_relres_sigma.png",
         "dscb"
     ));
 
@@ -3514,8 +3528,8 @@ int main(int argc, char** argv) {
          {-0.02, 0.015}, {-0.02, 0.017}, {-0.017, 0.02}, {-0.02, 0.02}, {-0.04, 0.04},
          {-0.025, 0.03}, {-0.015, 0.025}, {-0.05, 0.06}
         },
-        "figs/inclusive/resolution/q2_relres_binned_em.png",
-        "figs/inclusive/resolution/profile/q2_relres_binned_em",
+        "figs/inclusive/resolutions/q2_relres_binned_em.png",
+        "figs/inclusive/resolutions/binned/bins/q2_relres_binned_em",
         std::make_pair(5.0, 200),
         true
     );
@@ -3535,8 +3549,8 @@ int main(int argc, char** argv) {
           {-0.01, 0.02}, {-0.004, 0.02}, {-0.017, 0.027}, {-0.025, 0.03}, {-0.08, 0.08},
           {-0.05, 0.06}, {-0.05, 0.065}, {-0.05, 0.06}
         },
-        "figs/inclusive/resolution/q2_relres_binned_da.png",
-        "figs/inclusive/resolution/profile/q2_relres_binned_da",
+        "figs/inclusive/resolutions/q2_relres_binned_da.png",
+        "figs/inclusive/resolutions/binned/bins/q2_relres_binned_da",
         std::make_pair(5.0, 200),
         true
     );
@@ -3556,8 +3570,8 @@ int main(int argc, char** argv) {
          {-0.02, 0.015}, {-0.02, 0.017}, {-0.017, 0.02}, {-0.02, 0.02}, {-0.04, 0.04},
          {-0.025, 0.03}, {-0.015, 0.025}, {-0.05, 0.06}
         },
-        "figs/inclusive/resolution/q2_relres_binned_sigma.png",
-        "figs/inclusive/resolution/profile/q2_relres_binned_sigma",
+        "figs/inclusive/resolutions/q2_relres_binned_sigma.png",
+        "figs/inclusive/resolutions/binned/bins/q2_relres_binned_sigma",
         std::make_pair(5.0, 200),
         true
     );
@@ -3577,8 +3591,8 @@ int main(int argc, char** argv) {
          {-0.015, 0.015}, {-0.015, 0.015}, {0, 0}, {0, 0}, {0, 0},
          {0, 0}, {0, 0}, {0, 0}
         },
-        "figs/inclusive/resolution/xbj_relres_binned_em.png",
-        "figs/inclusive/resolution/profile/xbj_relres_binned_em",
+        "figs/inclusive/resolutions/xbj_relres_binned_em.png",
+        "figs/inclusive/resolutions/binned/bins/xbj_relres_binned_em",
         std::make_pair(1e-3, 0.3),
         true
     );
@@ -3597,8 +3611,8 @@ int main(int argc, char** argv) {
             {0,0},{0,0},{0,0},{0,0},{0,0},
             {0,0},{0,0},{0,0}
         },
-        "figs/inclusive/resolution/xbj_relres_binned_da.png",
-        "figs/inclusive/resolution/profile/xbj_relres_binned_da",
+        "figs/inclusive/resolutions/xbj_relres_binned_da.png",
+        "figs/inclusive/resolutions/binned/bins/xbj_relres_binned_da",
         std::make_pair(1e-3, 0.3),
         true
     );
@@ -3617,8 +3631,8 @@ int main(int argc, char** argv) {
             {0,0},{0,0},{0,0},{0,0},{0,0},
             {0,0},{0,0},{0,0}
         },
-        "figs/inclusive/resolution/xbj_relres_binned_sigma.png",
-        "figs/inclusive/resolution/profile/xbj_relres_binned_sigma",
+        "figs/inclusive/resolutions/xbj_relres_binned_sigma.png",
+        "figs/inclusive/resolutions/binned/bins/xbj_relres_binned_sigma",
         std::make_pair(1e-3, 0.3),
         true
     );
@@ -3634,8 +3648,8 @@ int main(int argc, char** argv) {
             {0,0},{-0.09,0.08},{-0.05,0.05},{-0.04,0.04},{-0.02,0.02},
             {-0.01,0.01},{-0.01,0.01},{-0.01,0.01},{-0.01,0.01},{0,0}
         },
-        "figs/inclusive/resolution/y_relres_binned_em.png",
-        "figs/inclusive/resolution/profile/y_relres_binned_em",
+        "figs/inclusive/resolutions/y_relres_binned_em.png",
+        "figs/inclusive/resolutions/binned/bins/y_relres_binned_em",
         std::make_pair(0.0, 1.0),
         false
     );
@@ -3651,8 +3665,8 @@ int main(int argc, char** argv) {
             {-0.2,0.05},{-0.2,0.05},{-0.2,0.05},{-0.18,0.1},{-0.15,0.05},
             {-0.12,0.1},{-0.1,0.06},{-0.06,0.04},{-0.06,0.04},{-0.05,0.03}
         },
-        "figs/inclusive/resolution/y_relres_binned_da.png",
-        "figs/inclusive/resolution/profile/y_relres_binned_da",
+        "figs/inclusive/resolutions/y_relres_binned_da.png",
+        "figs/inclusive/resolutions/binned/bins/y_relres_binned_da",
         std::make_pair(0.0, 1.0),
         false
     );
@@ -3668,8 +3682,8 @@ int main(int argc, char** argv) {
             {-0.6,0.15},{-0.6,0.0},{-0.6,0.0},{-0.6,0.02},{-0.5,0.0},
             {-0.5,0.02},{-0.5,0},{-0.5,0},{-0.3,0},{-0.2,0}
         },
-        "figs/inclusive/resolution/y_relres_binned_sigma.png",
-        "figs/inclusive/resolution/profile/y_relres_binned_sigma",
+        "figs/inclusive/resolutions/y_relres_binned_sigma.png",
+        "figs/inclusive/resolutions/binned/bins/y_relres_binned_sigma",
         std::make_pair(0.0, 1.0),
         false,
         "crystalball"
@@ -3686,8 +3700,8 @@ int main(int argc, char** argv) {
             {0,0}, {-0.4,0.4}, {-0.2,0.2}, {-0.15,0.15}, {-0.1,0.1},
             {-0.05,0.05}, {-0.04,0.04}
         },
-        "figs/inclusive/resolution/w2_relres_binned_em.png",
-        "figs/inclusive/resolution/profile/w2_relres_binned_em",
+        "figs/inclusive/resolutions/w2_relres_binned_em.png",
+        "figs/inclusive/resolutions/binned/bins/w2_relres_binned_em",
         std::make_pair(10.0, 1.0e4),
         true
     );
@@ -3702,8 +3716,8 @@ int main(int argc, char** argv) {
             {-0.3,0.2}, {-0.25,0.15}, {-0.25,0.15}, {-0.3,0.1}, {-0.25,0.1},
             {-0.2,0.1}, {-0.1,0.1}
         },
-        "figs/inclusive/resolution/w2_relres_binned_da.png",
-        "figs/inclusive/resolution/profile/w2_relres_binned_da",
+        "figs/inclusive/resolutions/w2_relres_binned_da.png",
+        "figs/inclusive/resolutions/binned/bins/w2_relres_binned_da",
         std::make_pair(10.0, 1.0e4),
         true
     );
@@ -3718,8 +3732,8 @@ int main(int argc, char** argv) {
             {0,0}, {-0.35,0.35}, {-0.2,0.2}, {-0.12,0.12}, {-0.08,0.08},
             {-0.05,0.05}, {-0.05,0.05}
         },
-        "figs/inclusive/resolution/w2_relres_binned_best.png",
-        "figs/inclusive/resolution/profile/w2_relres_binned_best",
+        "figs/inclusive/resolutions/w2_relres_binned_best.png",
+        "figs/inclusive/resolutions/binned/bins/w2_relres_binned_best",
         std::make_pair(10.0, 1.0e4),
         true
     );
@@ -3734,8 +3748,8 @@ int main(int argc, char** argv) {
             {-0,0}, {-0.25,0.06}, {-0.18,0.02}, {-0.,0.}, {-0.25,0.02},
             {-0.15,0.02}, {0,0}
         },
-        "figs/inclusive/resolution/w2_relres_binned_sigma.png",
-        "figs/inclusive/resolution/profile/w2_relres_binned_sigma",
+        "figs/inclusive/resolutions/w2_relres_binned_sigma.png",
+        "figs/inclusive/resolutions/binned/bins/w2_relres_binned_sigma",
         std::make_pair(10.0, 1.0e4),
         true
     );
@@ -3748,7 +3762,7 @@ int main(int argc, char** argv) {
         "x_{L} Distributions",
         "x_{L}",
         "Counts",
-        "figs/diffractive/histos/xL_distributions.png",
+        "figs/diffractive/distributions/xL_distributions.png",
         false,
         false
     );
@@ -3764,7 +3778,7 @@ int main(int argc, char** argv) {
         "x_{L} Correlation (Unbinned)",
         "Truth x_{L}",
         "Reco x_{L}",
-        "figs/diffractive/histos/xL_corr_unbinned.png",
+        "figs/diffractive/distributions/xL_corr_unbinned.png",
         {0.75, 1.05},
         {0.75, 1.05}
     ));
@@ -3780,7 +3794,7 @@ int main(int argc, char** argv) {
         "x_{pom} Distributions (All)",
         "x_{pom}",
         "Counts",
-        "figs/diffractive/histos/xpom_def_comparison_all.png",
+        "figs/diffractive/distributions/xpom_def_comparison_all.png",
         true,
         false
     );
@@ -3795,7 +3809,7 @@ int main(int argc, char** argv) {
         "x_{pom} Distributions (B0)",
         "x_{pom}",
         "Counts",
-        "figs/diffractive/histos/xpom_def_comparison_b0.png",
+        "figs/diffractive/distributions/xpom_def_comparison_b0.png",
         true,
         false
     );
@@ -3810,7 +3824,7 @@ int main(int argc, char** argv) {
         "x_{pom} Distributions (RP)",
         "x_{pom}",
         "Counts",
-        "figs/diffractive/histos/xpom_def_comparison_rp.png",
+        "figs/diffractive/distributions/xpom_def_comparison_rp.png",
         true,
         false
     );
@@ -3826,7 +3840,7 @@ int main(int argc, char** argv) {
         "x_{pom} Correlation (EM, B0)",
         "Truth x_{pom}",
         "Reco x_{pom}",
-        "figs/diffractive/histos/xpom_corr_unbinned_em_b0.png",
+        "figs/diffractive/distributions/xpom_corr_unbinned_em_b0.png",
         {1e-4, 0.3},
         {1e-4, 0.3},
         true,
@@ -3841,7 +3855,7 @@ int main(int argc, char** argv) {
         "x_{pom} Correlation (DA, B0)",
         "Truth x_{pom}",
         "Reco x_{pom}",
-        "figs/diffractive/histos/xpom_corr_unbinned_da_b0.png",
+        "figs/diffractive/distributions/xpom_corr_unbinned_da_b0.png",
         {1e-4, 0.3},
         {1e-4, 0.3},
         true,
@@ -3856,7 +3870,7 @@ int main(int argc, char** argv) {
         "x_{pom} Correlation (#Sigma, B0)",
         "Truth x_{pom}",
         "Reco x_{pom}",
-        "figs/diffractive/histos/xpom_corr_unbinned_sigma_b0.png",
+        "figs/diffractive/distributions/xpom_corr_unbinned_sigma_b0.png",
         {1e-4, 0.3},
         {1e-4, 0.3},
         true,
@@ -3871,7 +3885,7 @@ int main(int argc, char** argv) {
         "x_{pom} Correlation (EM, RP)",
         "Truth x_{pom}",
         "Reco x_{pom}",
-        "figs/diffractive/histos/xpom_corr_unbinned_em_rp.png",
+        "figs/diffractive/distributions/xpom_corr_unbinned_em_rp.png",
         {1e-4, 0.3},
         {1e-4, 0.3},
         true,
@@ -3886,7 +3900,7 @@ int main(int argc, char** argv) {
         "x_{pom} Correlation (DA, RP)",
         "Truth x_{pom}",
         "Reco x_{pom}",
-        "figs/diffractive/histos/xpom_corr_unbinned_da_rp.png",
+        "figs/diffractive/distributions/xpom_corr_unbinned_da_rp.png",
         {1e-4, 0.3},
         {1e-4, 0.3},
         true,
@@ -3901,7 +3915,7 @@ int main(int argc, char** argv) {
         "x_{pom} Correlation (#Sigma, RP)",
         "Truth x_{pom}",
         "Reco x_{pom}",
-        "figs/diffractive/histos/xpom_corr_unbinned_sigma_rp.png",
+        "figs/diffractive/distributions/xpom_corr_unbinned_sigma_rp.png",
         {1e-4, 0.3},
         {1e-4, 0.3},
         true,
@@ -4094,7 +4108,7 @@ int main(int argc, char** argv) {
         "#beta Distributions (All)",
         "#beta",
         "Counts",
-        "figs/diffractive/histos/beta_comparison_all.png",
+        "figs/diffractive/distributions/beta_comparison_all.png",
         false,
         false
     );
@@ -4109,7 +4123,7 @@ int main(int argc, char** argv) {
         "#beta Distributions (B0)",
         "#beta",
         "Counts",
-        "figs/diffractive/histos/beta_comparison_b0.png",
+        "figs/diffractive/distributions/beta_comparison_b0.png",
         false,
         false
     );
@@ -4124,7 +4138,7 @@ int main(int argc, char** argv) {
         "#beta Distributions (RP)",
         "#beta",
         "Counts",
-        "figs/diffractive/histos/beta_comparison_rp.png",
+        "figs/diffractive/distributions/beta_comparison_rp.png",
         false,
         false
     );
@@ -4140,7 +4154,7 @@ int main(int argc, char** argv) {
         "#beta Correlation (EM, B0)",
         "#beta_{truth}",
         "#beta_{reco}",
-        "figs/diffractive/histos/beta_corr_unbinned_em_b0.png",
+        "figs/diffractive/distributions/beta_corr_unbinned_em_b0.png",
         {0.0, 1.0},
         {0.0, 1.0},
         false,
@@ -4155,7 +4169,7 @@ int main(int argc, char** argv) {
         "#beta Correlation (DA, B0)",
         "#beta_{truth}",
         "#beta_{reco}",
-        "figs/diffractive/histos/beta_corr_unbinned_da_b0.png",
+        "figs/diffractive/distributions/beta_corr_unbinned_da_b0.png",
         {0.0, 1.0},
         {0.0, 1.0},
         false,
@@ -4170,7 +4184,7 @@ int main(int argc, char** argv) {
         "#beta Correlation (#Sigma, B0)",
         "#beta_{truth}",
         "#beta_{reco}",
-        "figs/diffractive/histos/beta_corr_unbinned_sigma_b0.png",
+        "figs/diffractive/distributions/beta_corr_unbinned_sigma_b0.png",
         {0.0, 1.0},
         {0.0, 1.0},
         false,
@@ -4185,7 +4199,7 @@ int main(int argc, char** argv) {
         "#beta Correlation (EM, RP)",
         "#beta_{truth}",
         "#beta_{reco}",
-        "figs/diffractive/histos/beta_corr_unbinned_em_rp.png",
+        "figs/diffractive/distributions/beta_corr_unbinned_em_rp.png",
         {0.0, 1.0},
         {0.0, 1.0},
         false,
@@ -4200,7 +4214,7 @@ int main(int argc, char** argv) {
         "#beta Correlation (DA, RP)",
         "#beta_{truth}",
         "#beta_{reco}",
-        "figs/diffractive/histos/beta_corr_unbinned_da_rp.png",
+        "figs/diffractive/distributions/beta_corr_unbinned_da_rp.png",
         {0.0, 1.0},
         {0.0, 1.0},
         false,
@@ -4215,7 +4229,7 @@ int main(int argc, char** argv) {
         "#beta Correlation (#Sigma, RP)",
         "#beta_{truth}",
         "#beta_{reco}",
-        "figs/diffractive/histos/beta_corr_unbinned_sigma_rp.png",
+        "figs/diffractive/distributions/beta_corr_unbinned_sigma_rp.png",
         {0.0, 1.0},
         {0.0, 1.0},
         false,
@@ -4232,7 +4246,7 @@ int main(int argc, char** argv) {
         "M_{X}^{2} Distributions",
         "M_{X}^{2} [GeV^{2}]",
         "Counts",
-        "figs/diffractive/histos/MX2_comparison.png",
+        "figs/diffractive/distributions/MX2_comparison.png",
         true,
         false
     );
@@ -4247,7 +4261,7 @@ int main(int argc, char** argv) {
         "M_{X}^{2} Distributions",
         "M_{X}^{2} [GeV^{2}]",
         "Counts",
-        "figs/diffractive/histos/MX2_comparison_logy.png",
+        "figs/diffractive/distributions/MX2_comparison_logy.png",
         true,
         true
     );
@@ -4263,7 +4277,7 @@ int main(int argc, char** argv) {
         "M_{X}^{2} Correlation (Unbinned)",
         "M_{X,truth}^{2} [GeV^{2}]",
         "M_{X,reco}^{2} [GeV^{2}]",
-        "figs/diffractive/histos/MX2_corr_unbinned.png",
+        "figs/diffractive/distributions/MX2_corr_unbinned.png",
         {1e-3, 1000.0},
         {1e-3, 1000.0},
         true,
@@ -4275,7 +4289,7 @@ int main(int argc, char** argv) {
         "#frac{M_{X,reco}^{2} - M_{X,truth}^{2}}{M_{X,truth}^{2}}",
         "Counts",
         -0.6, 0.6,
-        "figs/resolutions/simple/MX2_resolution.png",
+        "figs/diffractive/resolutions/simple/MX2_resolution.png",
         "double_sided_crystalball"
     ));
 
@@ -4284,7 +4298,7 @@ int main(int argc, char** argv) {
         "MX2_corr",
         "M_{X,truth}^{2} [GeV^{2}]",
         "M_{X,reco}^{2} [GeV^{2}]",
-        "figs/diffractive/histos/MX2_truth_vs_reco.png",
+        "figs/diffractive/distributions/MX2_truth_vs_reco.png",
         true,
         true,
         {1e-3, 1000.0},
@@ -4297,7 +4311,7 @@ int main(int argc, char** argv) {
         "MX2_t_truth",
         "M_{X}^{2} [GeV^{2}]",
         "|t| [GeV^{2}]",
-        "figs/diffractive/histos/MX2_vs_t_truth.png",
+        "figs/diffractive/distributions/MX2_vs_t_truth.png",
         true,
         true,
         {1e-3, 1000.0},
@@ -4308,7 +4322,7 @@ int main(int argc, char** argv) {
         "MX2_t_B0",
         "M_{X}^{2} [GeV^{2}]",
         "|t| [GeV^{2}]",
-        "figs/diffractive/histos/MX2_vs_t_b0.png",
+        "figs/diffractive/distributions/MX2_vs_t_b0.png",
         true,
         true,
         {1e-3, 1000.0},
@@ -4319,7 +4333,7 @@ int main(int argc, char** argv) {
         "MX2_t_RP",
         "M_{X}^{2} [GeV^{2}]",
         "|t| [GeV^{2}]",
-        "figs/diffractive/histos/MX2_vs_t_rp.png",
+        "figs/diffractive/distributions/MX2_vs_t_rp.png",
         true,
         true,
         {1e-3, 1000.0},
@@ -4337,7 +4351,7 @@ int main(int argc, char** argv) {
         "Mandelstam |t| Distributions",
         "|t| [GeV^{2}]",
         "Counts",
-        "figs/diffractive/histos/t_distributions.png",
+        "figs/diffractive/distributions/t_distributions.png",
         true,
         false
     );
@@ -4351,7 +4365,7 @@ int main(int argc, char** argv) {
         "Mandelstam |t| Distributions",
         "|t| [GeV^{2}]",
         "Counts",
-        "figs/diffractive/histos/t_distributions_logy.png",
+        "figs/diffractive/distributions/t_distributions_logy.png",
         true,
         true
     );
@@ -4365,7 +4379,7 @@ int main(int argc, char** argv) {
         "d#sigma/dt",
         "|t| [GeV^{2}]",
         "d#sigma/dt [nb/GeV^{2}]",
-        "figs/diffractive/histos/dsigma_dt.png",
+        "figs/diffractive/distributions/dsigma_dt.png",
         true,
         true
     );
@@ -4379,7 +4393,7 @@ int main(int argc, char** argv) {
         "Proton Scattering Angles",
         "#theta [mrad]",
         "Counts",
-        "figs/diffractive/histos/theta_distributions.png",
+        "figs/diffractive/distributions/theta_distributions.png",
         false,
         true
     );
@@ -4395,7 +4409,7 @@ int main(int argc, char** argv) {
         "|t| Correlation (Unbinned)",
         "Truth |t| [GeV^{2}]",
         "Reco |t| [GeV^{2}]",
-        "figs/diffractive/histos/t_corr_unbinned.png",
+        "figs/diffractive/distributions/t_corr_unbinned.png",
         {1e-3, 2.0},
         {1e-3, 2.0},
         true,
@@ -4430,7 +4444,7 @@ int main(int argc, char** argv) {
         "(|t|_{reco} - |t|_{truth})/|t|_{truth}",
         "Counts",
         -0.1, 0.2,
-        "figs/diffractive/resolution/t_res_b0.png",
+        "figs/diffractive/resolutions/t_res_b0.png",
         "dscb"
     ));
 
@@ -4439,7 +4453,7 @@ int main(int argc, char** argv) {
         "(|t|_{reco} - |t|_{truth})/|t|_{truth}",
         "Counts",
         -0.3, 0.4,
-        "figs/diffractive/resolution/t_res_rp.png",
+        "figs/diffractive/resolutions/t_res_rp.png",
         "dscb"
     ));
 
@@ -4449,8 +4463,8 @@ int main(int argc, char** argv) {
         "|t|_{B0}",
         "",
         {},
-        "figs/diffractive/resolution/t_relres_binned_b0.png",
-        "diffractive/resolution/profile/t_relres_binned_b0",
+        "figs/diffractive/resolutions/t_relres_binned_b0.png",
+        "figs/diffractive/resolutions/binned/bins/t_relres_binned_b0",
         std::make_pair(1e-3, 2.0),
         true
     );
@@ -4462,8 +4476,8 @@ int main(int argc, char** argv) {
         "|t|_{RP}",
         "",
         {},
-        "figs/diffractive/resolution/t_relres_binned_rp.png",
-        "diffractive/resolution/profile/t_relres_binned_rp",
+        "figs/diffractive/resolutions/t_relres_binned_rp.png",
+        "figs/diffractive/resolutions/binned/bins/t_relres_binned_rp",
         std::make_pair(1e-3, 2.0),
         true
     );
@@ -4479,7 +4493,7 @@ int main(int argc, char** argv) {
         "E-p_{z} Distribution",
         "#Sigma(E-p_{z}) [GeV]",
         "Counts",
-        "figs/distributions/EPz_distribution.png",
+        "figs/inclusive/distributions/EPz_distribution.png",
         false,
         false
     );
@@ -4493,7 +4507,7 @@ int main(int argc, char** argv) {
         "E-p_{z} Distribution",
         "#Sigma(E-p_{z}) [GeV]",
         "Counts",
-        "figs/distributions/EPz_distribution_logY.png",
+        "figs/inclusive/distributions/EPz_distribution_logY.png",
         false,
         true
     );
@@ -4507,7 +4521,7 @@ int main(int argc, char** argv) {
         "Maximum Pseudorapidity per Event",
         "#eta_{max}",
         "Counts",
-        "figs/distributions/eta_max_distribution.png",
+        "figs/inclusive/distributions/eta_max_distribution.png",
         false,
         false
     );
@@ -4521,7 +4535,7 @@ int main(int argc, char** argv) {
         "Maximum Pseudorapidity per Event",
         "#eta_{max}",
         "Counts",
-        "figs/distributions/eta_max_distribution_logY.png",
+        "figs/inclusive/distributions/eta_max_distribution_logY.png",
         false,
         true
     );
@@ -4535,7 +4549,7 @@ int main(int argc, char** argv) {
         "M_{X}^{2} Distribution",
         "M_{X}^{2} [GeV^{2}]",
         "Counts",
-        "figs/distributions/MX2_distribution.png",
+        "figs/diffractive/distributions/MX2_distribution.png",
         true,
         false
     );
@@ -4550,7 +4564,7 @@ int main(int argc, char** argv) {
         "M_{X}^{2} Distribution",
         "M_{X}^{2} [GeV^{2}]",
         "Counts",
-        "figs/distributions/MX2_distribution_logY.png",
+        "figs/diffractive/distributions/MX2_distribution_logY.png",
         true,
         true
     );
@@ -4565,7 +4579,7 @@ int main(int argc, char** argv) {
         "Mandelstam |t| PDF Comparison",
         "|t| [GeV^{2}]",
         "PDF",
-        "figs/distributions/t_pdf_comparison.png",
+        "figs/diffractive/distributions/t_pdf_comparison.png",
         true,
         true,
         true
@@ -4578,7 +4592,7 @@ int main(int argc, char** argv) {
         "(x_{L,reco} - x_{L,truth})/x_{L,truth}",
         "Counts",
         -0.4, 0.3,
-        "figs/resolutions/simple/xL_resolution_B0.png",
+        "figs/diffractive/resolutions/simple/xL_resolution_B0.png",
         "dscb"
     ));
     plots.push_back(new PlotOptionsRelRes(
@@ -4586,7 +4600,7 @@ int main(int argc, char** argv) {
         "(x_{L,reco} - x_{L,truth})/x_{L,truth}",
         "Counts",
         -0.3, 0.3,
-        "figs/resolutions/simple/xL_resolution_RP.png",
+        "figs/diffractive/resolutions/simple/xL_resolution_RP.png",
         "dscb"
     ));
     plots.push_back(new PlotOptionsRelRes(
@@ -4594,7 +4608,7 @@ int main(int argc, char** argv) {
         "(x_{pom,reco} - x_{pom,truth})/x_{pom,truth}",
         "Counts",
         -1.0, 1.0,
-        "figs/resolutions/simple/xpom_resolution_B0.png",
+        "figs/diffractive/resolutions/simple/xpom_resolution_B0.png",
         "dscb"
     ));
     plots.push_back(new PlotOptionsRelRes(
@@ -4602,7 +4616,7 @@ int main(int argc, char** argv) {
         "(x_{pom,reco} - x_{pom,truth})/x_{pom,truth}",
         "Counts",
         -1.0, 1.0,
-        "figs/resolutions/simple/xpom_resolution_RP.png",
+        "figs/diffractive/resolutions/simple/xpom_resolution_RP.png",
         "dscb"
     ));
     plots.push_back(new PlotOptionsRelRes(
@@ -4610,7 +4624,7 @@ int main(int argc, char** argv) {
         "(#beta_{reco} - #beta_{truth})/#beta_{truth}",
         "Counts",
         -0.5, 0.5,
-        "figs/resolutions/simple/beta_resolution_B0.png",
+        "figs/diffractive/resolutions/simple/beta_resolution_B0.png",
         "dscb"
     ));
     plots.push_back(new PlotOptionsRelRes(
@@ -4618,7 +4632,7 @@ int main(int argc, char** argv) {
         "(#beta_{reco} - #beta_{truth})/#beta_{truth}",
         "Counts",
         -0.5, 0.5,
-        "figs/resolutions/simple/beta_resolution_RP.png",
+        "figs/diffractive/resolutions/simple/beta_resolution_RP.png",
         "dscb"
     ));
 
@@ -4628,8 +4642,8 @@ int main(int argc, char** argv) {
         "x_{L,truth}",
         "(x_{L,reco} - x_{L,truth})/x_{L,truth}",
         {{-0.3, 0.3}},
-        "figs/resolutions/binned/xL_resolution_binned_B0.png",
-        "figs/resolutions/binned/bins/xL_B0",
+        "figs/diffractive/resolutions/binned/xL_resolution_binned_B0.png",
+        "figs/diffractive/resolutions/binned/bins/xL_B0",
         std::make_pair(0.75, 1.05),
         false
     );
@@ -4641,8 +4655,8 @@ int main(int argc, char** argv) {
         "x_{L,truth}",
         "(x_{L,reco} - x_{L,truth})/x_{L,truth}",
         {{-0.3, 0.3}},
-        "figs/resolutions/binned/xL_resolution_binned_RP.png",
-        "figs/resolutions/binned/bins/xL_RP",
+        "figs/diffractive/resolutions/binned/xL_resolution_binned_RP.png",
+        "figs/diffractive/resolutions/binned/bins/xL_RP",
         std::make_pair(0.75, 1.05),
         false
     );
@@ -4654,8 +4668,8 @@ int main(int argc, char** argv) {
         "x_{pom,truth}",
         "(x_{pom,reco} - x_{pom,truth})/x_{pom,truth}",
         {{0,0},{0,0},{0,0},{0,0},{0,0},{-1.0,1.0}},
-        "figs/resolutions/binned/xpom_resolution_binned_B0.png",
-        "figs/resolutions/binned/bins/xpom_B0",
+        "figs/diffractive/resolutions/binned/xpom_resolution_binned_B0.png",
+        "figs/diffractive/resolutions/binned/bins/xpom_B0",
         std::make_pair(1e-4, 0.4),
         true,
         "dscb"
@@ -4668,8 +4682,8 @@ int main(int argc, char** argv) {
         "x_{pom,truth}",
         "(x_{pom,reco} - x_{pom,truth})/x_{pom,truth}",
         {{0,0},{0,0},{0,0},{-0.8,0.9},{-1.0,1.0},{-1.0,1.0}},
-        "figs/resolutions/binned/xpom_resolution_binned_RP.png",
-        "figs/resolutions/binned/bins/xpom_RP",
+        "figs/diffractive/resolutions/binned/xpom_resolution_binned_RP.png",
+        "figs/diffractive/resolutions/binned/bins/xpom_RP",
         std::make_pair(1e-4, 0.4),
         true,
         "dscb"
@@ -4682,8 +4696,8 @@ int main(int argc, char** argv) {
         "x_{pom,truth}",
         "(x_{pom,reco} - x_{pom,truth})/x_{pom,truth}",
         {{0,0},{0,0},{0,0},{0,0},{0,0},{-1.0,1.0}},
-        "figs/resolutions/binned/xpom_resolution_binned_w2best_B0.png",
-        "figs/resolutions/binned/bins/xpom_w2best_B0",
+        "figs/diffractive/resolutions/binned/xpom_resolution_binned_w2best_B0.png",
+        "figs/diffractive/resolutions/binned/bins/xpom_w2best_B0",
         std::make_pair(1e-4, 0.4),
         true,
         "dscb"
@@ -4696,8 +4710,8 @@ int main(int argc, char** argv) {
         "x_{pom,truth}",
         "(x_{pom,reco} - x_{pom,truth})/x_{pom,truth}",
         {{0,0},{0,0},{0,0},{-0.8,0.9},{-1.0,1.0},{-1.0,1.0}},
-        "figs/resolutions/binned/xpom_resolution_binned_w2best_RP.png",
-        "figs/resolutions/binned/bins/xpom_w2best_RP",
+        "figs/diffractive/resolutions/binned/xpom_resolution_binned_w2best_RP.png",
+        "figs/diffractive/resolutions/binned/bins/xpom_w2best_RP",
         std::make_pair(1e-4, 0.4),
         true,
         "dscb"
@@ -4710,8 +4724,8 @@ int main(int argc, char** argv) {
         "#beta_{truth}",
         "(#beta_{reco} - #beta_{truth})/#beta_{truth}",
         {{-0.4, 0.8}, {-0.4,0.8},{-0.3,0.6},{-0.2,0.4},{-0.1,0.2}},
-        "figs/resolutions/binned/beta_resolution_binned_B0.png",
-        "figs/resolutions/binned/bins/beta_B0",
+        "figs/diffractive/resolutions/binned/beta_resolution_binned_B0.png",
+        "figs/diffractive/resolutions/binned/bins/beta_B0",
         std::make_pair(0.0, 1.0),
         false,
         "dscb"
@@ -4724,8 +4738,8 @@ int main(int argc, char** argv) {
         "#beta_{truth}",
         "(#beta_{reco} - #beta_{truth})/#beta_{truth}",
         {{-0.4, 0.8}, {-0.4,0.8},{-0.3,0.6},{-0.2,0.4},{-0.1,0.2}},
-        "figs/resolutions/binned/beta_resolution_binned_RP.png",
-        "figs/resolutions/binned/bins/beta_RP",
+        "figs/diffractive/resolutions/binned/beta_resolution_binned_RP.png",
+        "figs/diffractive/resolutions/binned/bins/beta_RP",
         std::make_pair(0.0, 1.0),
         false,
         "dscb"
@@ -4738,8 +4752,8 @@ int main(int argc, char** argv) {
         "#beta_{truth}",
         "(#beta_{reco} - #beta_{truth})/#beta_{truth}",
         {{-0.4, 0.8}, {-0.4,0.8},{-0.3,0.6},{-0.2,0.4},{-0.1,0.2}},
-        "figs/resolutions/binned/beta_resolution_binned_w2best_B0.png",
-        "figs/resolutions/binned/bins/beta_w2best_B0",
+        "figs/diffractive/resolutions/binned/beta_resolution_binned_w2best_B0.png",
+        "figs/diffractive/resolutions/binned/bins/beta_w2best_B0",
         std::make_pair(0.0, 1.0),
         false,
         "dscb"
@@ -4752,8 +4766,8 @@ int main(int argc, char** argv) {
         "#beta_{truth}",
         "(#beta_{reco} - #beta_{truth})/#beta_{truth}",
         {{-0.4, 0.8}, {-0.4,0.8},{-0.3,0.6},{-0.2,0.4},{-0.1,0.2}},
-        "figs/resolutions/binned/beta_resolution_binned_w2best_RP.png",
-        "figs/resolutions/binned/bins/beta_w2best_RP",
+        "figs/diffractive/resolutions/binned/beta_resolution_binned_w2best_RP.png",
+        "figs/diffractive/resolutions/binned/bins/beta_w2best_RP",
         std::make_pair(0.0, 1.0),
         false,
         "dscb"
@@ -4766,8 +4780,8 @@ int main(int argc, char** argv) {
         "M_{X,truth}^{2} [GeV^{2}]",
         "(M_{X,reco}^{2} - M_{X,truth}^{2})/M_{X,truth}^{2}",
         {{-0.5, 0.5}},
-        "figs/resolutions/binned/MX2_resolution_binned.png",
-        "figs/resolutions/binned/bins/MX2",
+        "figs/diffractive/resolutions/binned/MX2_resolution_binned.png",
+        "figs/diffractive/resolutions/binned/bins/MX2",
         std::make_pair(1e-3, 1000.0),
         true
     );
@@ -4777,7 +4791,7 @@ int main(int argc, char** argv) {
         "Corr_Q2_EM",
         "Q^{2} (true) [GeV^{2}]",
         "Q^{2} (EM) [GeV^{2}]",
-        "figs/response_matrices/response_matrix_Q2_EM.png",
+        "figs/inclusive/response/response_matrix_Q2_EM.png",
         true,
         true,
         {1.0, 300.0},
@@ -4787,7 +4801,7 @@ int main(int argc, char** argv) {
         "Corr_Q2_DA",
         "Q^{2} (true) [GeV^{2}]",
         "Q^{2} (DA) [GeV^{2}]",
-        "figs/response_matrices/response_matrix_Q2_DA.png",
+        "figs/inclusive/response/response_matrix_Q2_DA.png",
         true,
         true,
         {1.0, 300.0},
@@ -4797,7 +4811,7 @@ int main(int argc, char** argv) {
         "Corr_Q2_Sigma",
         "Q^{2} (true) [GeV^{2}]",
         "Q^{2} (Sigma) [GeV^{2}]",
-        "figs/response_matrices/response_matrix_Q2_Esigma.png",
+        "figs/inclusive/response/response_matrix_Q2_Esigma.png",
         true,
         true,
         {1.0, 300.0},
@@ -4807,7 +4821,7 @@ int main(int argc, char** argv) {
         "x_Corr_EM",
         "x_{Bj} (true)",
         "x_{Bj} (EM)",
-        "figs/response_matrices/response_matrix_x_EM.png",
+        "figs/inclusive/response/response_matrix_x_EM.png",
         true,
         true,
         {1e-3, 0.3},
@@ -4817,7 +4831,7 @@ int main(int argc, char** argv) {
         "x_Corr_DA",
         "x_{Bj} (true)",
         "x_{Bj} (DA)",
-        "figs/response_matrices/response_matrix_x_DA.png",
+        "figs/inclusive/response/response_matrix_x_DA.png",
         true,
         true,
         {1e-3, 0.3},
@@ -4827,7 +4841,7 @@ int main(int argc, char** argv) {
         "x_Corr_Sigma",
         "x_{Bj} (true)",
         "x_{Bj} (Sigma)",
-        "figs/response_matrices/response_matrix_x_Sigma.png",
+        "figs/inclusive/response/response_matrix_x_Sigma.png",
         true,
         true,
         {1e-3, 0.3},
@@ -4837,7 +4851,7 @@ int main(int argc, char** argv) {
         "y_Corr_EM",
         "y (true)",
         "y (EM)",
-        "figs/response_matrices/response_matrix_y_EM.png",
+        "figs/inclusive/response/response_matrix_y_EM.png",
         false,
         false,
         {0.0, 1.0},
@@ -4847,7 +4861,7 @@ int main(int argc, char** argv) {
         "y_Corr_DA",
         "y (true)",
         "y (DA)",
-        "figs/response_matrices/response_matrix_y_DA.png",
+        "figs/inclusive/response/response_matrix_y_DA.png",
         false,
         false,
         {0.0, 1.0},
@@ -4857,7 +4871,7 @@ int main(int argc, char** argv) {
         "y_Corr_Sigma",
         "y (true)",
         "y (Sigma)",
-        "figs/response_matrices/response_matrix_y_Sigma.png",
+        "figs/inclusive/response/response_matrix_y_Sigma.png",
         false,
         false,
         {0.0, 1.0},
@@ -4867,7 +4881,7 @@ int main(int argc, char** argv) {
         "t_corr_B0",
         "Truth |t| [GeV^{2}]",
         "B0 Reco |t| [GeV^{2}]",
-        "figs/response_matrices/response_matrix_t_B0.png",
+        "figs/diffractive/response/response_matrix_t_B0.png",
         true,
         true,
         {1e-3, 2.0},
@@ -4877,7 +4891,7 @@ int main(int argc, char** argv) {
         "t_corr_RP",
         "Truth |t| [GeV^{2}]",
         "RP Reco |t| [GeV^{2}]",
-        "figs/response_matrices/response_matrix_t_RP.png",
+        "figs/diffractive/response/response_matrix_t_RP.png",
         true,
         true,
         {1e-3, 2.0},
@@ -4888,7 +4902,7 @@ int main(int argc, char** argv) {
         "xL_corr_B0",
         "Truth x_{L}",
         "B0 Reco x_{L}",
-        "figs/response_matrices/response_matrix_xL_B0.png",
+        "figs/diffractive/response/response_matrix_xL_B0.png",
         false,
         false,
         {0.75, 1.05},
@@ -4898,7 +4912,7 @@ int main(int argc, char** argv) {
         "xL_corr_RP",
         "Truth x_{L}",
         "RP Reco x_{L}",
-        "figs/response_matrices/response_matrix_xL_RP.png",
+        "figs/diffractive/response/response_matrix_xL_RP.png",
         false,
         false,
         {0.75, 1.05},
@@ -4908,7 +4922,7 @@ int main(int argc, char** argv) {
         "xpom_corr_B0",
         "Truth x_{pom} (1-x_{L})",
         "B0 Reco x_{pom} (1-x_{L})",
-        "figs/response_matrices/response_matrix_xpom_B0.png",
+        "figs/diffractive/response/response_matrix_xpom_B0.png",
         true,
         true,
         {1e-4, 0.4},
@@ -4918,7 +4932,7 @@ int main(int argc, char** argv) {
         "xpom_corr_RP",
         "Truth x_{pom} (1-x_{L})",
         "RP Reco x_{pom} (1-x_{L})",
-        "figs/response_matrices/response_matrix_xpom_RP.png",
+        "figs/diffractive/response/response_matrix_xpom_RP.png",
         true,
         true,
         {1e-4, 0.4},
@@ -4928,7 +4942,7 @@ int main(int argc, char** argv) {
         "beta_corr_B0",
         "Truth #beta",
         "B0 Reco #beta",
-        "figs/response_matrices/response_matrix_beta_B0.png",
+        "figs/diffractive/response/response_matrix_beta_B0.png",
         false,
         false,
         {0.0, 1.0},
@@ -4938,7 +4952,7 @@ int main(int argc, char** argv) {
         "beta_corr_RP",
         "Truth #beta",
         "RP Reco #beta",
-        "figs/response_matrices/response_matrix_beta_RP.png",
+        "figs/diffractive/response/response_matrix_beta_RP.png",
         false,
         false,
         {0.0, 1.0},
@@ -4948,7 +4962,7 @@ int main(int argc, char** argv) {
         "MX2_corr",
         "M_{X,truth}^{2} [GeV^{2}]",
         "M_{X,reco}^{2} [GeV^{2}]",
-        "figs/response_matrices/response_matrix_MX2.png",
+        "figs/diffractive/response/response_matrix_MX2.png",
         true,
         true,
         {1e-3, 1000.0},
@@ -4962,7 +4976,7 @@ int main(int argc, char** argv) {
         "MC Truth x_{pom} Comparison",
         "x_{pom}",
         "Counts",
-        "figs/distributions/xpom_comparison_MC_logxy.png",
+        "figs/diffractive/distributions/xpom_comparison_MC_logxy.png",
         true,
         true
     );
@@ -4976,7 +4990,7 @@ int main(int argc, char** argv) {
         "B0 Reco x_{pom} Comparison",
         "x_{pom}",
         "Counts",
-        "figs/distributions/xpom_comparison_B0_logxy.png",
+        "figs/diffractive/distributions/xpom_comparison_B0_logxy.png",
         true,
         true
     );
@@ -4990,7 +5004,7 @@ int main(int argc, char** argv) {
         "RP Reco x_{pom} Comparison",
         "x_{pom}",
         "Counts",
-        "figs/distributions/xpom_comparison_RP_logxy.png",
+        "figs/diffractive/distributions/xpom_comparison_RP_logxy.png",
         true,
         true
     );
@@ -5004,7 +5018,7 @@ int main(int argc, char** argv) {
         "x_{pom} Comparison (All)",
         "x_{pom}",
         "Counts",
-        "figs/distributions/xpom_comparison_all_logxy.png",
+        "figs/diffractive/distributions/xpom_comparison_all_logxy.png",
         true,
         true
     );
@@ -5015,7 +5029,7 @@ int main(int argc, char** argv) {
         "xpom_comp_MC",
         "x_{pom} = 1 - x_{L}",
         "x_{pom} = (M_{X}^{2}+Q^{2}+|t|)/(W^{2}+Q^{2}-m_{p}^{2})",
-        "figs/distributions/xpom_2D_comparison_MC.png",
+        "figs/diffractive/distributions/xpom_2D_comparison_MC.png",
         true,
         true,
         {1e-4, 0.4},
@@ -5025,7 +5039,7 @@ int main(int argc, char** argv) {
         "xpom_comp_B0",
         "x_{pom} = 1 - x_{L}",
         "x_{pom} = (M_{X}^{2}+Q^{2}+|t|)/(W^{2}+Q^{2}-m_{p}^{2})",
-        "figs/distributions/xpom_2D_comparison_B0.png",
+        "figs/diffractive/distributions/xpom_2D_comparison_B0.png",
         true,
         true,
         {1e-4, 0.4},
@@ -5035,7 +5049,7 @@ int main(int argc, char** argv) {
         "xpom_comp_RP",
         "x_{pom} = 1 - x_{L}",
         "x_{pom} = (M_{X}^{2}+Q^{2}+|t|)/(W^{2}+Q^{2}-m_{p}^{2})",
-        "figs/distributions/xpom_2D_comparison_RP.png",
+        "figs/diffractive/distributions/xpom_2D_comparison_RP.png",
         true,
         true,
         {1e-4, 0.4},
@@ -5049,7 +5063,7 @@ int main(int argc, char** argv) {
         "Proton Scattering Angle Distribution",
         "#theta [mrad]",
         "Counts",
-        "figs/distributions/theta_comparison_B0_acceptance.png",
+        "figs/diffractive/distributions/theta_comparison_B0_acceptance.png",
         false,
         false
     );
@@ -5063,7 +5077,7 @@ int main(int argc, char** argv) {
         "Proton Scattering Angle Distribution",
         "#theta [mrad]",
         "Counts",
-        "figs/distributions/theta_comparison_B0_acceptance_logxy.png",
+        "figs/diffractive/distributions/theta_comparison_B0_acceptance_logxy.png",
         false,
         true
     );
@@ -5077,7 +5091,7 @@ int main(int argc, char** argv) {
         "#beta = x_{Bj} / x_{pom} Distributions",
         "#beta",
         "Counts",
-        "figs/distributions/beta_distributions_logy.png",
+        "figs/diffractive/distributions/beta_distributions_logy.png",
         false,
         true
     );
@@ -5088,7 +5102,7 @@ int main(int argc, char** argv) {
         "beta_vs_Q2",
         "Q^{2} [GeV^{2}]",
         "#beta",
-        "figs/distributions/beta_vs_Q2.png",
+        "figs/diffractive/distributions/beta_vs_Q2.png",
         true,
         false,
         {1.0, 300.0},
@@ -5098,7 +5112,7 @@ int main(int argc, char** argv) {
         "beta_vs_xpom",
         "x_{pom}",
         "#beta",
-        "figs/distributions/beta_vs_xpom.png",
+        "figs/diffractive/distributions/beta_vs_xpom.png",
         true,
         false,
         {1e-4, 0.4},
@@ -5108,7 +5122,7 @@ int main(int argc, char** argv) {
         "beta_vs_t",
         "|t| [GeV^{2}]",
         "#beta",
-        "figs/distributions/beta_vs_t.png",
+        "figs/diffractive/distributions/beta_vs_t.png",
         false,
         false,
         {1e-3, 2.0},
@@ -5133,29 +5147,29 @@ int main(int argc, char** argv) {
                   {"Q2_RelRes_vs_k_EM", "Q2_RelRes_vs_k_DA", "Q2_RelRes_vs_k_Sigma"},
                   {"EM", "DA", "Sigma"},
                   "Q^{2} relative resolution vs k",
-                  "figs/resolutions/binned/q2_relres_vs_k.png");
+                  "figs/inclusive/resolutions/binned/q2_relres_vs_k.png");
 
     PlotRelResVsK(inputFile,
                   {"xpom_RelRes_vs_k_EM_B0", "xpom_RelRes_vs_k_DA_B0", "xpom_RelRes_vs_k_Sigma_B0"},
                   {"EM", "DA", "Sigma"},
                   "x_{pom} relative resolution vs k (B0)",
-                  "figs/resolutions/binned/xpom_relres_vs_k_b0.png");
+                  "figs/diffractive/resolutions/binned/xpom_relres_vs_k_b0.png");
     PlotRelResVsK(inputFile,
                   {"xpom_RelRes_vs_k_EM_RP", "xpom_RelRes_vs_k_DA_RP", "xpom_RelRes_vs_k_Sigma_RP"},
                   {"EM", "DA", "Sigma"},
                   "x_{pom} relative resolution vs k (RP)",
-                  "figs/resolutions/binned/xpom_relres_vs_k_rp.png");
+                  "figs/diffractive/resolutions/binned/xpom_relres_vs_k_rp.png");
 
     PlotRelResVsK(inputFile,
                   {"beta_RelRes_vs_k_EM_B0", "beta_RelRes_vs_k_DA_B0", "beta_RelRes_vs_k_Sigma_B0"},
                   {"EM", "DA", "Sigma"},
                   "#beta relative resolution vs k (B0)",
-                  "figs/resolutions/binned/beta_relres_vs_k_b0.png");
+                  "figs/diffractive/resolutions/binned/beta_relres_vs_k_b0.png");
     PlotRelResVsK(inputFile,
                   {"beta_RelRes_vs_k_EM_RP", "beta_RelRes_vs_k_DA_RP", "beta_RelRes_vs_k_Sigma_RP"},
                   {"EM", "DA", "Sigma"},
                   "#beta relative resolution vs k (RP)",
-                  "figs/resolutions/binned/beta_relres_vs_k_rp.png");
+                  "figs/diffractive/resolutions/binned/beta_relres_vs_k_rp.png");
 
     // |t|-bin performance metrics
     PlotTBinMetric(inputFile,
@@ -5299,32 +5313,32 @@ int main(int argc, char** argv) {
         delete c;
     };
 
-    createCirclePlot("Q2_RelRes_vs_xy_EM", "figs/resolutions/2d_maps/Q2_RelRes_Q2x_EM.png", "x_{Bj}", "Q^{2} [GeV^{2}]", true, true);
-    createCirclePlot("Q2_RelRes_vs_xy_DA", "figs/resolutions/2d_maps/Q2_RelRes_Q2x_DA.png", "x_{Bj}", "Q^{2} [GeV^{2}]", true, true);
-    createCirclePlot("Q2_RelRes_vs_xy_Sigma", "figs/resolutions/2d_maps/Q2_RelRes_Q2x_Sigma.png", "x_{Bj}", "Q^{2} [GeV^{2}]", true, true);
-    createCirclePlot("x_RelRes_vs_xQ2_EM", "figs/resolutions/2d_maps/x_RelRes_xQ2_EM.png", "x_{Bj}", "Q^{2} [GeV^{2}]", true, true);
-    createCirclePlot("x_RelRes_vs_xQ2_DA", "figs/resolutions/2d_maps/x_RelRes_xQ2_DA.png", "x_{Bj}", "Q^{2} [GeV^{2}]", true, true);
-    createCirclePlot("x_RelRes_vs_xQ2_Sigma", "figs/resolutions/2d_maps/x_RelRes_xQ2_Sigma.png", "x_{Bj}", "Q^{2} [GeV^{2}]", true, true);
-    createCirclePlot("y_RelRes_vs_xQ2_EM", "figs/resolutions/2d_maps/y_RelRes_xQ2_EM.png", "x_{Bj}", "Q^{2} [GeV^{2}]", true, true);
-    createCirclePlot("y_RelRes_vs_xQ2_DA", "figs/resolutions/2d_maps/y_RelRes_xQ2_DA.png", "x_{Bj}", "Q^{2} [GeV^{2}]", true, true);
-    createCirclePlot("y_RelRes_vs_xQ2_Sigma", "figs/resolutions/2d_maps/y_RelRes_xQ2_Sigma.png", "x_{Bj}", "Q^{2} [GeV^{2}]", true, true);
-    createCirclePlot("t_RelRes_vs_xpomQ2_B0", "figs/resolutions/2d_maps/t_RelRes_xpomQ2_B0.png", "x_{pom}", "Q^{2} [GeV^{2}]", true, true);
-    createCirclePlot("t_RelRes_vs_xpomQ2_RP", "figs/resolutions/2d_maps/t_RelRes_xpomQ2_RP.png", "x_{pom}", "Q^{2} [GeV^{2}]", true, true);
-    createCirclePlot("xpom_RelRes_vs_xpomQ2_B0", "figs/resolutions/2d_maps/xpom_RelRes_xpomQ2_B0.png", "x_{pom}", "Q^{2} [GeV^{2}]", true, true);
-    createCirclePlot("xpom_RelRes_vs_xpomQ2_RP", "figs/resolutions/2d_maps/xpom_RelRes_xpomQ2_RP.png", "x_{pom}", "Q^{2} [GeV^{2}]", true, true);
-    createCirclePlot("beta_RelRes_vs_betaQ2_B0", "figs/resolutions/2d_maps/beta_RelRes_betaQ2_B0.png", "#beta", "Q^{2} [GeV^{2}]", false, true);
-    createCirclePlot("beta_RelRes_vs_betaQ2_RP", "figs/resolutions/2d_maps/beta_RelRes_betaQ2_RP.png", "#beta", "Q^{2} [GeV^{2}]", false, true);
-    createCirclePlot("xL_RelRes_vs_xLQ2_B0", "figs/resolutions/2d_maps/xL_RelRes_xLQ2_B0.png", "x_{L}", "Q^{2} [GeV^{2}]", false, true);
-    createCirclePlot("xL_RelRes_vs_xLQ2_RP", "figs/resolutions/2d_maps/xL_RelRes_xLQ2_RP.png", "x_{L}", "Q^{2} [GeV^{2}]", false, true);
+    createCirclePlot("Q2_RelRes_vs_xy_EM", "figs/inclusive/resolutions/2d_maps/Q2_RelRes_Q2x_EM.png", "x_{Bj}", "Q^{2} [GeV^{2}]", true, true);
+    createCirclePlot("Q2_RelRes_vs_xy_DA", "figs/inclusive/resolutions/2d_maps/Q2_RelRes_Q2x_DA.png", "x_{Bj}", "Q^{2} [GeV^{2}]", true, true);
+    createCirclePlot("Q2_RelRes_vs_xy_Sigma", "figs/inclusive/resolutions/2d_maps/Q2_RelRes_Q2x_Sigma.png", "x_{Bj}", "Q^{2} [GeV^{2}]", true, true);
+    createCirclePlot("x_RelRes_vs_xQ2_EM", "figs/inclusive/resolutions/2d_maps/x_RelRes_xQ2_EM.png", "x_{Bj}", "Q^{2} [GeV^{2}]", true, true);
+    createCirclePlot("x_RelRes_vs_xQ2_DA", "figs/inclusive/resolutions/2d_maps/x_RelRes_xQ2_DA.png", "x_{Bj}", "Q^{2} [GeV^{2}]", true, true);
+    createCirclePlot("x_RelRes_vs_xQ2_Sigma", "figs/inclusive/resolutions/2d_maps/x_RelRes_xQ2_Sigma.png", "x_{Bj}", "Q^{2} [GeV^{2}]", true, true);
+    createCirclePlot("y_RelRes_vs_xQ2_EM", "figs/inclusive/resolutions/2d_maps/y_RelRes_xQ2_EM.png", "x_{Bj}", "Q^{2} [GeV^{2}]", true, true);
+    createCirclePlot("y_RelRes_vs_xQ2_DA", "figs/inclusive/resolutions/2d_maps/y_RelRes_xQ2_DA.png", "x_{Bj}", "Q^{2} [GeV^{2}]", true, true);
+    createCirclePlot("y_RelRes_vs_xQ2_Sigma", "figs/inclusive/resolutions/2d_maps/y_RelRes_xQ2_Sigma.png", "x_{Bj}", "Q^{2} [GeV^{2}]", true, true);
+    createCirclePlot("t_RelRes_vs_xpomQ2_B0", "figs/diffractive/resolutions/2d_maps/t_RelRes_xpomQ2_B0.png", "x_{pom}", "Q^{2} [GeV^{2}]", true, true);
+    createCirclePlot("t_RelRes_vs_xpomQ2_RP", "figs/diffractive/resolutions/2d_maps/t_RelRes_xpomQ2_RP.png", "x_{pom}", "Q^{2} [GeV^{2}]", true, true);
+    createCirclePlot("xpom_RelRes_vs_xpomQ2_B0", "figs/diffractive/resolutions/2d_maps/xpom_RelRes_xpomQ2_B0.png", "x_{pom}", "Q^{2} [GeV^{2}]", true, true);
+    createCirclePlot("xpom_RelRes_vs_xpomQ2_RP", "figs/diffractive/resolutions/2d_maps/xpom_RelRes_xpomQ2_RP.png", "x_{pom}", "Q^{2} [GeV^{2}]", true, true);
+    createCirclePlot("beta_RelRes_vs_betaQ2_B0", "figs/diffractive/resolutions/2d_maps/beta_RelRes_betaQ2_B0.png", "#beta", "Q^{2} [GeV^{2}]", false, true);
+    createCirclePlot("beta_RelRes_vs_betaQ2_RP", "figs/diffractive/resolutions/2d_maps/beta_RelRes_betaQ2_RP.png", "#beta", "Q^{2} [GeV^{2}]", false, true);
+    createCirclePlot("xL_RelRes_vs_xLQ2_B0", "figs/diffractive/resolutions/2d_maps/xL_RelRes_xLQ2_B0.png", "x_{L}", "Q^{2} [GeV^{2}]", false, true);
+    createCirclePlot("xL_RelRes_vs_xLQ2_RP", "figs/diffractive/resolutions/2d_maps/xL_RelRes_xLQ2_RP.png", "x_{L}", "Q^{2} [GeV^{2}]", false, true);
 
     createBestMethodPlot("Q2_RelRes_vs_xy_EM", "Q2_RelRes_vs_xy_DA", "Q2_RelRes_vs_xy_Sigma",
-                         "figs/resolutions/2d_maps/Q2_RelRes_Q2x_BestMethod.png",
+                         "figs/inclusive/resolutions/2d_maps/Q2_RelRes_Q2x_BestMethod.png",
                          "x_{Bj}", "Q^{2} [GeV^{2}]", true, true);
     createBestMethodPlot("x_RelRes_vs_xQ2_EM", "x_RelRes_vs_xQ2_DA", "x_RelRes_vs_xQ2_Sigma",
-                         "figs/resolutions/2d_maps/x_RelRes_xQ2_BestMethod.png",
+                         "figs/inclusive/resolutions/2d_maps/x_RelRes_xQ2_BestMethod.png",
                          "x_{Bj}", "Q^{2} [GeV^{2}]", true, true);
     createBestMethodPlot("y_RelRes_vs_xQ2_EM", "y_RelRes_vs_xQ2_DA", "y_RelRes_vs_xQ2_Sigma",
-                         "figs/resolutions/2d_maps/y_RelRes_xQ2_BestMethod.png",
+                         "figs/inclusive/resolutions/2d_maps/y_RelRes_xQ2_BestMethod.png",
                          "x_{Bj}", "Q^{2} [GeV^{2}]", true, true);
 
     if (auto* profMX2 = (TProfile2D*)inputFile->Get("MX2_RelRes_vs_MX2Q2")) {
@@ -5334,7 +5348,7 @@ int main(int argc, char** argv) {
         cMX2->SetLogy();
         profMX2->SetTitle("M_{X}^{2} Resolution vs (M_{X}^{2}, Q^{2});M_{X}^{2} [GeV^{2}];Q^{2} [GeV^{2}]");
         profMX2->Draw("COLZ TEXT");
-        SaveCanvas(cMX2, "figs/resolutions/2d_maps/MX2_RelRes_MX2Q2.png");
+        SaveCanvas(cMX2, "figs/diffractive/resolutions/2d_maps/MX2_RelRes_MX2Q2.png");
         delete cMX2;
     }
 
@@ -5343,7 +5357,7 @@ int main(int argc, char** argv) {
         cEPz->SetRightMargin(0.15);
         cEPz->SetGrid();
         hEPz2D->Draw("COLZ");
-        SaveCanvas(cEPz, "figs/distributions/EPz_2D.png");
+        SaveCanvas(cEPz, "figs/inclusive/distributions/EPz_2D.png");
         delete cEPz;
     }
 
@@ -6085,131 +6099,6 @@ int main(int argc, char** argv) {
     }
     delete hD3SumLocal;
 
-    // Legacy path compatibility: mirror the same plots to older output names.
-    auto copyPlotAlias = [](const char* src, const char* dst) {
-        if (!src || !dst) return;
-        if (gSystem->AccessPathName(src)) return;
-        std::string dstPath(dst);
-        const size_t slash = dstPath.find_last_of('/');
-        if (slash != std::string::npos) {
-            gSystem->mkdir(dstPath.substr(0, slash).c_str(), true);
-        }
-        gSystem->CopyFile(src, dst, true);
-    };
-
-    const std::vector<std::pair<const char*, const char*>> legacyPlotAliases = {
-        {"figs/inclusive/histos/q2_methods_hist.png", "figs/distributions/Q2_hist.png"},
-        {"figs/inclusive/histos/q2_methods_pdf.png", "figs/distributions/Q2_pdf.png"},
-        {"figs/inclusive/histos/xbj_methods_hist.png", "figs/distributions/x_hist.png"},
-        {"figs/inclusive/histos/xbj_methods_pdf.png", "figs/distributions/x_pdf.png"},
-        {"figs/inclusive/histos/y_methods_hist.png", "figs/distributions/y_hist.png"},
-        {"figs/inclusive/histos/y_methods_pdf.png", "figs/distributions/y_pdf.png"},
-        {"figs/diffractive/histos/t_distributions.png", "figs/distributions/t_distributions.png"},
-        {"figs/diffractive/histos/t_distributions_logy.png", "figs/distributions/t_distributions_logy.png"},
-        {"figs/diffractive/histos/theta_distributions.png", "figs/distributions/theta_distributions.png"},
-        {"figs/inclusive/resolution/q2_relres_em.png", "figs/resolutions/simple/DDIS_Q2RelRes_EM.png"},
-        {"figs/inclusive/resolution/q2_relres_da.png", "figs/resolutions/simple/DDIS_Q2RelRes_DA.png"},
-        {"figs/inclusive/resolution/q2_relres_sigma.png", "figs/resolutions/simple/DDIS_Q2RelRes_Sigma.png"},
-        {"figs/inclusive/resolution/xbj_relres_em.png", "figs/resolutions/simple/DDIS_RelRes_xBj_EM.png"},
-        {"figs/inclusive/resolution/xbj_relres_da.png", "figs/resolutions/simple/DDIS_RelRes_xBj_DA.png"},
-        {"figs/inclusive/resolution/xbj_relres_sigma.png", "figs/resolutions/simple/DDIS_RelRes_x_Sigma.png"},
-        {"figs/inclusive/resolution/y_relres_em.png", "figs/resolutions/simple/DDIS_RelRes_y_EM.png"},
-        {"figs/inclusive/resolution/y_relres_da.png", "figs/resolutions/simple/DDIS_RelRes_y_DA.png"},
-        {"figs/inclusive/resolution/y_relres_sigma.png", "figs/resolutions/simple/DDIS_RelRes_y_Sigma.png"},
-        {"figs/diffractive/resolution/t_res_b0.png", "figs/resolutions/simple/t_resolution_B0.png"},
-        {"figs/diffractive/resolution/t_res_rp.png", "figs/resolutions/simple/t_resolution_RP.png"},
-        {"figs/inclusive/resolution/q2_relres_binned_em.png", "figs/resolutions/binned/DDIS_Q2RelRes_binned_EM.png"},
-        {"figs/inclusive/resolution/q2_relres_binned_da.png", "figs/resolutions/binned/DDIS_Q2RelRes_binned_DA.png"},
-        {"figs/inclusive/resolution/q2_relres_binned_sigma.png", "figs/resolutions/binned/DDIS_Q2RelRes_binned_Sigma.png"},
-        {"figs/inclusive/resolution/xbj_relres_binned_em.png", "figs/resolutions/binned/DDIS_RelRes_binned_x_EM.png"},
-        {"figs/inclusive/resolution/xbj_relres_binned_da.png", "figs/resolutions/binned/DDIS_RelRes_binned_x_DA.png"},
-        {"figs/inclusive/resolution/xbj_relres_binned_sigma.png", "figs/resolutions/binned/DDIS_RelRes_binned_x_Sigma.png"},
-        {"figs/inclusive/resolution/y_relres_binned_em.png", "figs/resolutions/binned/DDIS_RelRes_binned_y_EM.png"},
-        {"figs/inclusive/resolution/y_relres_binned_da.png", "figs/resolutions/binned/DDIS_RelRes_binned_y_DA.png"},
-        {"figs/inclusive/resolution/y_relres_binned_sigma.png", "figs/resolutions/binned/DDIS_RelRes_binned_y_Sigma.png"},
-        {"figs/diffractive/resolution/t_relres_binned_b0.png", "figs/resolutions/binned/t_resolution_binned_B0.png"},
-        {"figs/diffractive/resolution/t_relres_binned_rp.png", "figs/resolutions/binned/t_resolution_binned_RP.png"},
-
-        {"figs/distributions/EPz_distribution.png", "figs/EPz_distribution.png"},
-        {"figs/distributions/EPz_distribution_logY.png", "figs/EPz_distribution_logY.png"},
-        {"figs/distributions/MX2_distribution.png", "figs/MX2_distribution.png"},
-        {"figs/distributions/MX2_distribution_logY.png", "figs/MX2_distribution_logY.png"},
-        {"figs/diffractive/histos/MX2_comparison.png", "figs/MX2_comparison.png"},
-        {"figs/resolutions/2d_maps/Q2_RelRes_Q2x_EM.png", "figs/Q2_RelRes_Q2x_EM.png"},
-        {"figs/resolutions/2d_maps/Q2_RelRes_Q2x_DA.png", "figs/Q2_RelRes_Q2x_DA.png"},
-        {"figs/resolutions/2d_maps/Q2_RelRes_Q2x_Sigma.png", "figs/Q2_RelRes_Q2x_Sigma.png"},
-        {"figs/resolutions/2d_maps/Q2_RelRes_Q2x_BestMethod.png", "figs/Q2_RelRes_Q2x_BestMethod.png"},
-        {"figs/distributions/Q2_hist.png", "figs/Q2_hist.png"},
-        {"figs/distributions/beta_distributions_logy.png", "figs/beta_distributions_logy.png"},
-        {"figs/distributions/beta_vs_Q2.png", "figs/beta_vs_Q2.png"},
-        {"figs/distributions/beta_vs_t.png", "figs/beta_vs_t.png"},
-        {"figs/distributions/beta_vs_xpom.png", "figs/beta_vs_xpom.png"},
-        {"figs/resolutions/simple/beta_resolution_B0.png", "figs/beta_resolution_B0.png"},
-        {"figs/resolutions/simple/beta_resolution_RP.png", "figs/beta_resolution_RP.png"},
-        {"figs/cross_sections/d3sigma_vs_beta.png", "figs/d3sigma_vs_beta.png"},
-        {"figs/cross_sections/d3sigma_vs_xpom.png", "figs/d3sigma_vs_xpom.png"},
-        {"figs/diffractive/histos/dsigma_dt.png", "figs/dsigma_dt.png"},
-        {"figs/cross_sections/dsigma_dt_logy_with_fit.png", "figs/dsigma_dt_logy.png"},
-        {"figs/distributions/eta_max_distribution.png", "figs/eta_max_distribution.png"},
-        {"figs/distributions/eta_max_distribution_logY.png", "figs/eta_max_distribution_logY.png"},
-        {"figs/response_matrices/response_matrix_Q2_EM.png", "figs/response_matrix_Q2_EM.png"},
-        {"figs/response_matrices/response_matrix_Q2_DA.png", "figs/response_matrix_Q2_DA.png"},
-        {"figs/response_matrices/response_matrix_Q2_Esigma.png", "figs/response_matrix_Q2_Esigma.png"},
-        {"figs/response_matrices/response_matrix_x_EM.png", "figs/response_matrix_x_EM.png"},
-        {"figs/response_matrices/response_matrix_x_DA.png", "figs/response_matrix_x_DA.png"},
-        {"figs/response_matrices/response_matrix_x_Sigma.png", "figs/response_matrix_x_Sigma.png"},
-        {"figs/response_matrices/response_matrix_y_EM.png", "figs/response_matrix_y_EM.png"},
-        {"figs/response_matrices/response_matrix_y_DA.png", "figs/response_matrix_y_DA.png"},
-        {"figs/response_matrices/response_matrix_y_Sigma.png", "figs/response_matrix_y_Sigma.png"},
-        {"figs/response_matrices/response_matrix_t_B0.png", "figs/response_matrix_t_B0.png"},
-        {"figs/response_matrices/response_matrix_t_RP.png", "figs/response_matrix_t_RP.png"},
-        {"figs/response_matrices/response_matrix_xL_B0.png", "figs/response_matrix_xL_B0.png"},
-        {"figs/response_matrices/response_matrix_xL_RP.png", "figs/response_matrix_xL_RP.png"},
-        {"figs/response_matrices/response_matrix_xpom_B0.png", "figs/response_matrix_xpom_B0.png"},
-        {"figs/response_matrices/response_matrix_xpom_RP.png", "figs/response_matrix_xpom_RP.png"},
-        {"figs/response_matrices/response_matrix_beta_B0.png", "figs/response_matrix_beta_B0.png"},
-        {"figs/response_matrices/response_matrix_beta_RP.png", "figs/response_matrix_beta_RP.png"},
-        {"figs/response_matrices/response_matrix_MX2.png", "figs/response_matrix_MX2.png"},
-        {"figs/response_matrices/response_matrix_t_B0.png", "figs/response_matrix_B0_cutFirstBin.png"},
-        {"figs/response_matrices/response_matrix_xL_B0.png", "figs/response_matrix_xL_B0_cutFirstBin.png"},
-        {"figs/response_matrices/response_matrix_xpom_B0.png", "figs/response_matrix_xpom_B0_cutFirstBin.png"},
-        {"figs/diffractive/histos/t_distributions.png", "figs/t_distributions.png"},
-        {"figs/diffractive/histos/t_distributions_logy.png", "figs/t_distributions_logy.png"},
-        {"figs/distributions/t_pdf_comparison.png", "figs/t_pdf_comparison.png"},
-        {"figs/diffractive/resolution/t_res_b0.png", "figs/t_resolution_B0.png"},
-        {"figs/diffractive/resolution/t_res_rp.png", "figs/t_resolution_RP.png"},
-        {"figs/distributions/theta_comparison_B0_acceptance.png", "figs/theta_comparison_B0_acceptance.png"},
-        {"figs/distributions/theta_comparison_B0_acceptance_logxy.png", "figs/theta_comparison_B0_acceptance_logxy.png"},
-        {"figs/diffractive/histos/theta_distributions.png", "figs/theta_distributions.png"},
-        {"figs/resolutions/simple/xL_resolution_B0.png", "figs/xL_resolution_B0.png"},
-        {"figs/resolutions/simple/xL_resolution_RP.png", "figs/xL_resolution_RP.png"},
-        {"figs/resolutions/simple/MX2_resolution.png", "figs/MX2_resolution.png"},
-        {"figs/diffractive/histos/xL_distributions.png", "figs/x_L_comparison.png"},
-        {"figs/diffractive/histos/xL_distributions.png", "figs/x_L_comparison_logy.png"},
-        {"figs/distributions/xpom_2D_comparison_MC.png", "figs/xpom_2D_comparison_MC.png"},
-        {"figs/distributions/xpom_2D_comparison_B0.png", "figs/xpom_2D_comparison_B0.png"},
-        {"figs/distributions/xpom_2D_comparison_RP.png", "figs/xpom_2D_comparison_RP.png"},
-        {"figs/distributions/xpom_comparison_B0_logxy.png", "figs/xpom_B0_comparison_firstBinCut.png"},
-        {"figs/distributions/xpom_comparison_B0_logxy.png", "figs/xpom_comparison_B0_logxy.png"},
-        {"figs/distributions/xpom_comparison_MC_logxy.png", "figs/xpom_comparison_MC_logxy.png"},
-        {"figs/distributions/xpom_comparison_RP_logxy.png", "figs/xpom_comparison_RP_logxy.png"},
-        {"figs/distributions/xpom_comparison_all_logxy.png", "figs/xpom_comparison_all_logxy.png"},
-        {"figs/distributions/xpom_comparison_all_logxy.png", "figs/xpom_comparison_logx.png"},
-        {"figs/distributions/xpom_comparison_all_logxy.png", "figs/xpom_comparison_logxy.png"},
-        {"figs/resolutions/simple/xpom_resolution_B0.png", "figs/xpom_resolution_B0.png"},
-        {"figs/resolutions/simple/xpom_resolution_RP.png", "figs/xpom_resolution_RP.png"},
-        {"figs/diffractive/histos/t_distributions.png", "figs/t_B0_comparison_firstBinCut.png"},
-        {"figs/diffractive/histos/t_distributions.png", "figs/t_correlation_combined.png"},
-        {"figs/diffractive/histos/xL_distributions.png", "figs/xL_B0_comparison_firstBinCut.png"},
-        {"figs/distributions/Q2_hist.png", "figs/Q2_comparison.png"}
-    };
-    // Keep legacy duplicate plot paths opt-in to reduce clutter in figs/.
-    const bool kEnableLegacyPlotAliases = false;
-    if (kEnableLegacyPlotAliases) {
-        for (const auto& alias : legacyPlotAliases) {
-            copyPlotAlias(alias.first, alias.second);
-        }
-    }
 
     inputFile->Close();
     delete inputFile;
