@@ -15,6 +15,7 @@
 #include <cstring>   // std::strchr
 #include <iostream>
 #include <utility>
+#include <vector>
 
 // Constructor must match your header
 PlotOptions1D::PlotOptions1D(const std::vector<TString>& histNames,
@@ -42,11 +43,28 @@ PlotOptions1D::PlotOptions1D(const std::vector<TString>& histNames,
 void PlotOptions1D::Plot(TFile* inputFile) {
     // unique canvas name to avoid clashes
     TCanvas* c = new TCanvas(Form("c_%p", this), m_canvasTitle, 1200, 900);
+    gStyle->SetOptTitle(0);
 
     if (m_isLogX) c->SetLogx();
     if (m_isLogY) c->SetLogy();
 
-    
+    auto isTruthHistogram = [](const TString& name) {
+        return name.Contains("truth") || name.Contains("MC");
+    };
+    auto hasPointLikeDrawOption = [](const TString& opt) {
+        return opt.Contains("P", TString::kIgnoreCase) ||
+               opt.Contains("E", TString::kIgnoreCase);
+    };
+
+    const bool hasTruthHist = std::any_of(m_histNames.begin(), m_histNames.end(),
+        [&](const TString& name) { return isTruthHistogram(name); });
+    const bool hasRecoHist = std::any_of(m_histNames.begin(), m_histNames.end(),
+        [&](const TString& name) { return !isTruthHistogram(name); });
+    const bool isTruthRecoOverlay = hasTruthHist && hasRecoHist && !m_disableFills;
+    constexpr double kRecoMarkerScale = 1.2;
+    std::vector<TH1*> transientHists;
+    transientHists.reserve(m_histNames.size());
+
     // ---------- Draw histograms ----------
     TH1* firstHist = nullptr;
 
@@ -67,19 +85,52 @@ void PlotOptions1D::Plot(TFile* inputFile) {
 
         // simple styling by name convention (adapt as you like)
         hist->SetLineWidth((i == 0) ? 2 : 1);
-        if (m_histNames[i].Contains("truth")|| m_histNames[i].Contains("MC")) {
+        const bool isTruth = isTruthHistogram(m_histNames[i]);
+        // Step-style draw options like "hist" should show as a line only
+        // (no marker in the plot or the legend).
+        TString drawOptForStyle = m_drawOptions[i];
+        drawOptForStyle.ToLower();
+        const bool thisIsStepStyle = drawOptForStyle.Contains("hist") && !hasPointLikeDrawOption(m_drawOptions[i]);
+        if (isTruth) {
             hist->SetLineColor(kBlack);
-        } else if (m_histNames[i].Contains("EM")|| m_histNames[i].Contains("B0")) {
+            if (m_disableFills) {
+                hist->SetMarkerColor(kBlack);
+                hist->SetMarkerStyle(thisIsStepStyle ? 0 : 20);
+                hist->SetMarkerSize(thisIsStepStyle ? 0.0 : 1.0);
+                hist->SetFillStyle(0);
+            } else {
+                hist->SetMarkerStyle(0);
+                hist->SetMarkerSize(0.0);
+                if (isTruthRecoOverlay) {
+                    hist->SetFillColor(kYellow - 9);
+                    hist->SetFillStyle(1001);
+                } else {
+                    hist->SetFillStyle(0);
+                }
+            }
+        } else if (m_histNames[i].Contains("Best")) {
+            hist->SetLineColor(kMagenta + 1);
+            hist->SetMarkerColor(kMagenta + 1);
+            hist->SetMarkerStyle(22);  // Full up-triangle
+        } else if (m_histNames[i].Contains("EM")) {
             hist->SetLineColor(kRed);
             hist->SetMarkerColor(kRed);
             hist->SetMarkerStyle(20);
-        } else if (m_histNames[i].Contains("DA")|| m_histNames[i].Contains("RP")) {
+        } else if (m_histNames[i].Contains("DA")) {
             hist->SetLineColor(kBlue);
             hist->SetMarkerColor(kBlue);
             hist->SetMarkerStyle(20);
         } else if (m_histNames[i].Contains("Sigma")) {
             hist->SetLineColor(kGreen + 2);
             hist->SetMarkerColor(kGreen + 2);
+            hist->SetMarkerStyle(20);
+        } else if (m_histNames[i].Contains("B0")) {
+            hist->SetLineColor(kRed);
+            hist->SetMarkerColor(kRed);
+            hist->SetMarkerStyle(20);
+        } else if (m_histNames[i].Contains("RP")) {
+            hist->SetLineColor(kBlue);
+            hist->SetMarkerColor(kBlue);
             hist->SetMarkerStyle(20);
         } else if (m_histNames[i].Contains("Sum")) {
             hist->SetLineColor(kOrange+7);
@@ -92,8 +143,37 @@ void PlotOptions1D::Plot(TFile* inputFile) {
             hist->SetMarkerStyle(20);  // Filled circle
         }
 
+        if (!isTruth && isTruthRecoOverlay && hist->GetMarkerStyle() > 0) {
+            hist->SetMarkerSize(hist->GetMarkerSize() * kRecoMarkerScale);
+        }
+
         // Draw with user draw options; ensure SAME for i>0
         TString drawOption = m_drawOptions[i];
+
+        // Step-style histograms (draw option "hist" without point markers) get a
+        // light-yellow fill so they read as a filled distribution behind any
+        // overlaid points.
+        TString drawOptLower = drawOption;
+        drawOptLower.ToLower();
+        const bool isStepStyle = drawOptLower.Contains("hist") && !hasPointLikeDrawOption(drawOption);
+        if (isStepStyle && !m_disableFills) {
+            hist->SetFillColor(kYellow - 9);
+            hist->SetFillStyle(1001);
+        }
+
+        if (isTruth && isTruthRecoOverlay) {
+            TH1* fillClone = static_cast<TH1*>(hist->Clone(Form("%s_fill_%p_%zu", hist->GetName(), this, i)));
+            fillClone->SetDirectory(nullptr);
+            fillClone->SetStats(false);
+            fillClone->SetLineWidth(0);
+            fillClone->SetLineColorAlpha(kYellow - 9, 0.0);
+            fillClone->SetMarkerStyle(0);
+            fillClone->SetMarkerSize(0.0);
+            fillClone->SetFillColor(kYellow - 9);
+            fillClone->SetFillStyle(1001);
+            fillClone->Draw((i == 0) ? "HIST" : "HIST SAME");
+            transientHists.push_back(fillClone);
+        }
         if (i == 0) {
             hist->Draw(drawOption);
             firstHist = hist;
@@ -140,7 +220,19 @@ void PlotOptions1D::Plot(TFile* inputFile) {
     
     for (size_t i = 0; i < m_histNames.size(); ++i) {
         TH1* hist = static_cast<TH1*>(inputFile->Get(m_histNames[i]));
-        if (hist) legend->AddEntry(hist, m_legendEntries[i], "lp");
+        if (!hist) continue;
+
+        const bool hasFill = hist->GetFillStyle() != 0;
+        const bool hasPoints = (hist->GetMarkerStyle() > 0) || hasPointLikeDrawOption(m_drawOptions[i]);
+        const char* legendOpt = "l";
+        if (hasFill && hasPoints) {
+            legendOpt = "lfp";
+        } else if (hasFill) {
+            legendOpt = "lf";
+        } else if (hasPoints) {
+            legendOpt = "lp";
+        }
+        legend->AddEntry(hist, m_legendEntries[i], legendOpt);
     }
     
     legend->SetBorderSize(0);
@@ -155,6 +247,7 @@ void PlotOptions1D::Plot(TFile* inputFile) {
 
     // ---------- Axes labels and ranges ----------
     if (firstHist) {
+        firstHist->SetTitle("");
         firstHist->GetXaxis()->SetTitle(m_xLabel);
         firstHist->GetYaxis()->SetTitle(m_yLabel);
         firstHist->GetXaxis()->SetTitleSize(0.04);
@@ -172,18 +265,17 @@ void PlotOptions1D::Plot(TFile* inputFile) {
     }
 
     // ---------- Add ePIC simulation labels ----------
-    TLatex latex;
-    latex.SetTextSize(0.04);
-    latex.SetNDC();
-    latex.SetTextColor(kBlack);
-    latex.DrawLatex(0.2, 0.92, "#bf{ePIC} Simulation (100k events)");
-    latex.DrawLatex(0.65, 0.92, "#bf{Diff. DIS} 10x100 GeV");
+    gStyle->SetOptTitle(0);
+    DrawSimLabels(inputFile);
 
     // ---------- Draw legend and save ----------
     // legend->Draw();
     // gPad->Update();
     c->Update();
-    c->SaveAs(m_saveName);
+    SaveCanvas(c, m_saveName);
 
+    for (TH1* hist : transientHists) {
+        delete hist;
+    }
     delete c;
 }

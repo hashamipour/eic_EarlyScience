@@ -2,8 +2,128 @@
 #include <TF1.h>
 #include <TLine.h>
 #include <TLatex.h>
-#include <TPaveText.h>
+#include <algorithm>
+#include <cmath>
+#include <cstring>
 #include <iostream>
+
+namespace {
+
+TString NormalizeFitFunction(const char* fitFunction) {
+    TString normalized = fitFunction ? fitFunction : "gaus";
+    normalized.ToLower();
+    return normalized;
+}
+
+bool UseCrystalBall(const TString& fitFunction) {
+    return fitFunction == "crystalball" || fitFunction == "crystal_ball" || fitFunction == "cb";
+}
+
+bool UseDSCB(const TString& fitFunction) {
+    return fitFunction == "dscb" ||
+           fitFunction == "doublecrystalball" ||
+           fitFunction == "double_crystal_ball" ||
+           fitFunction == "double_sided_crystalball" ||
+           fitFunction == "double_sided_crystal_ball";
+}
+
+double CrystalBallCore(double* x, double* p) {
+    const double amplitude = p[0];
+    const double mean = p[1];
+    const double sigma = std::max(std::abs(p[2]), 1e-9);
+    const double alpha = p[3];
+    const double n = std::max(p[4], 1.01);
+
+    double t = (x[0] - mean) / sigma;
+    if (alpha < 0.) {
+        t = -t;
+    }
+
+    const double absAlpha = std::max(std::abs(alpha), 1e-9);
+    if (t > -absAlpha) {
+        return amplitude * std::exp(-0.5 * t * t);
+    }
+
+    const double A = std::pow(n / absAlpha, n) * std::exp(-0.5 * absAlpha * absAlpha);
+    const double B = (n / absAlpha) - absAlpha;
+    return amplitude * A * std::pow(B - t, -n);
+}
+
+double DoubleSidedCrystalBallCore(double* x, double* p) {
+    const double amplitude = p[0];
+    const double mean = p[1];
+    const double sigma = std::max(std::abs(p[2]), 1e-9);
+    const double alphaL = std::max(std::abs(p[3]), 1e-9);
+    const double nL = std::max(p[4], 1.01);
+    const double alphaR = std::max(std::abs(p[5]), 1e-9);
+    const double nR = std::max(p[6], 1.01);
+
+    const double t = (x[0] - mean) / sigma;
+
+    if (t < -alphaL) {
+        const double AL = std::pow(nL / alphaL, nL) * std::exp(-0.5 * alphaL * alphaL);
+        const double BL = (nL / alphaL) - alphaL;
+        return amplitude * AL * std::pow(BL - t, -nL);
+    }
+
+    if (t > alphaR) {
+        const double AR = std::pow(nR / alphaR, nR) * std::exp(-0.5 * alphaR * alphaR);
+        const double BR = (nR / alphaR) - alphaR;
+        return amplitude * AR * std::pow(BR + t, -nR);
+    }
+
+    return amplitude * std::exp(-0.5 * t * t);
+}
+
+TF1* BuildFitFunction(const TString& fitFunction,
+                      const TString& functionName,
+                      const double xMinFit,
+                      const double xMaxFit,
+                      TH1D* hist) {
+    const double amplitude = hist->GetMaximum();
+    const double mean = hist->GetMean();
+    const double sigma = std::max(hist->GetRMS(), 1e-6);
+
+    if (UseCrystalBall(fitFunction)) {
+        TF1* fit = new TF1(functionName, CrystalBallCore, xMinFit, xMaxFit, 5);
+        fit->SetParNames("A", "Mean", "Sigma", "Alpha", "n");
+        fit->SetParameters(amplitude, mean, sigma, 1.5, 3.0);
+        fit->SetParLimits(2, 1e-6, 10.0);
+        fit->SetParLimits(3, 0.01, 25.0);
+        fit->SetParLimits(4, 1.01, 100.0);
+        return fit;
+    }
+
+    if (UseDSCB(fitFunction)) {
+        TF1* fit = new TF1(functionName, DoubleSidedCrystalBallCore, xMinFit, xMaxFit, 7);
+        fit->SetParNames("A", "Mean", "Sigma", "AlphaL", "nL", "AlphaR", "nR");
+        fit->SetParameters(amplitude, mean, sigma, 1.5, 3.0, 1.5, 3.0);
+        fit->SetParLimits(2, 1e-6, 10.0);
+        fit->SetParLimits(3, 0.01, 25.0);
+        fit->SetParLimits(4, 1.01, 100.0);
+        fit->SetParLimits(5, 0.01, 25.0);
+        fit->SetParLimits(6, 1.01, 100.0);
+        return fit;
+    }
+
+    TF1* fit = new TF1(functionName, "gaus", xMinFit, xMaxFit);
+    fit->SetParameters(amplitude, mean, sigma);
+    return fit;
+}
+
+const char* FitLegendLabel(const TString& fitFunction) {
+    if (UseDSCB(fitFunction)) return "Double-sided CrystalBall Fit";
+    if (UseCrystalBall(fitFunction)) return "CrystalBall Fit";
+    return "Gaussian Fit";
+}
+
+const char* FitFunctionLabel(const TString& fitFunction) {
+    if (UseDSCB(fitFunction)) return "Double-sided CrystalBall";
+    if (UseCrystalBall(fitFunction)) return "CrystalBall";
+    return "Gaussian";
+}
+
+}  // namespace
 
 PlotOptionsBinnedRelRes::PlotOptionsBinnedRelRes(const TString& histName,
                                                  const char* title,
@@ -13,12 +133,14 @@ PlotOptionsBinnedRelRes::PlotOptionsBinnedRelRes(const TString& histName,
                                                  const char* saveName,
                                                  const char* binSavePrefix,
                                                  const std::pair<double, double>& x_axis_range,
-                                                 const bool isLogX
+                                                 const bool isLogX,
+                                                 const char* fitFunction
                                                 )
     : m_histName(histName),
       m_title(title),
       m_xLabel(xLabel),
       m_yLabel(yLabel),
+      m_fitFunction(NormalizeFitFunction(fitFunction)),
       m_fitRanges(fitRanges),
       m_xMinFit(0.0),
       m_xMaxFit(0.0),
@@ -110,7 +232,7 @@ void PlotOptionsBinnedRelRes::SetFitRangeByBins(TH1D* hist) {
     }
     
     if (validFits.empty()) {
-        std::cerr << "Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)" << std::endl;
+        Logger::error("No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)");
         m_xMinFit = hist->GetBinCenter(peakBin) - 0.55 * hist->GetRMS();
         m_xMaxFit = hist->GetBinCenter(peakBin) + 0.45 * hist->GetRMS();
         return;
@@ -173,23 +295,42 @@ void PlotOptionsBinnedRelRes::SetFitRangeByBins(TH1D* hist) {
 }
 
 void PlotOptionsBinnedRelRes::Plot(TFile* inputFile) {
-    TH2D* h_RelRes_binned = (TH2D*)inputFile->Get(m_histName);
-    if (!h_RelRes_binned) {
-        std::cerr << "Error: 2D Histogram " << m_histName << " not found." << std::endl;
+    const bool stitched = (m_histNameRP.Length() > 0 && m_histNameB0.Length() > 0 &&
+                           std::isfinite(m_boundaryValue));
+    TH2D* h_rp = stitched ? (TH2D*)inputFile->Get(m_histNameRP) : nullptr;
+    TH2D* h_b0 = stitched ? (TH2D*)inputFile->Get(m_histNameB0) : nullptr;
+    TH2D* h_RelRes_binned = stitched ? h_rp : (TH2D*)inputFile->Get(m_histName);
+    if (!h_RelRes_binned || (stitched && !h_b0)) {
+        std::cerr << "Error: 2D Histogram " << (stitched ? m_histNameRP : m_histName)
+                  << " not found." << std::endl;
         return;
     }
+    gStyle->SetOptTitle(0);
+    gStyle->SetOptStat(0);
+    gStyle->SetOptFit(0);
 
     TCanvas* c = new TCanvas("c_binned", "", 1200, 800);
     c->SetLeftMargin(0.15);
+    c->SetBottomMargin(0.18);
 
     if (m_isLogX){c->SetLogx();}
 
     int nbinsX = h_RelRes_binned->GetNbinsX();
     TGraphErrors* g = new TGraphErrors(nbinsX);
     TGraphErrors* g_RMS = new TGraphErrors(nbinsX);
+    TGraphErrors* g_RMS_RP = stitched ? new TGraphErrors(nbinsX) : nullptr;
+    TGraphErrors* g_RMS_B0 = stitched ? new TGraphErrors(nbinsX) : nullptr;
+    int nRP = 0, nB0 = 0;
 
     for (int j = 1; j <= nbinsX; ++j) {
-        TH1D* projY = h_RelRes_binned->ProjectionY("", j, j);
+        TH2D* h_src = h_RelRes_binned;
+        bool isRPBin = true;
+        if (stitched) {
+            const double xCenter = h_RelRes_binned->GetXaxis()->GetBinCenter(j);
+            isRPBin = (xCenter < m_boundaryValue);
+            h_src = isRPBin ? h_rp : h_b0;
+        }
+        TH1D* projY = h_src->ProjectionY("", j, j);
         
         if (projY->GetEntries() == 0) {
             delete projY;
@@ -199,15 +340,15 @@ void PlotOptionsBinnedRelRes::Plot(TFile* inputFile) {
         double _center = h_RelRes_binned->GetXaxis()->GetBinCenter(j);
         
         // Check if we should skip fitting for this bin
-        bool skipFit = false;
-        if (!m_fitRanges.empty() && j - 1 < static_cast<int>(m_fitRanges.size())) {
-            if (TMath::AreEqualRel(m_fitRanges[j - 1].first, 0., 1e-6) && 
+        bool skipFit = m_disableFit;
+        if (!skipFit && !m_fitRanges.empty() && j - 1 < static_cast<int>(m_fitRanges.size())) {
+            if (TMath::AreEqualRel(m_fitRanges[j - 1].first, 0., 1e-6) &&
                 TMath::AreEqualRel(m_fitRanges[j - 1].second, 0., 1e-6)) {
                 skipFit = true;
             }
         }
         
-        TF1* gaus = nullptr;
+        TF1* fitFunc = nullptr;
         double mean = 0.0;
         double sigma = 0.0;
         
@@ -226,64 +367,75 @@ void PlotOptionsBinnedRelRes::Plot(TFile* inputFile) {
                 }
             }
             
-            gaus = new TF1("gaus", "gaus", m_xMinFit, m_xMaxFit);
-            gaus->SetParameters(projY->GetMaximum(), projY->GetMean(), projY->GetRMS());
-            projY->Fit(gaus, "RQ");
-            
-            mean = gaus->GetParameter(1);
-            sigma = gaus->GetParameter(2);
+            fitFunc = BuildFitFunction(
+                m_fitFunction,
+                Form("fit_bin_%d", j),
+                m_xMinFit,
+                m_xMaxFit,
+                projY
+            );
+            projY->Fit(fitFunc, "RQ");
+
+            // Use fit moments (same definition as displayed in the plot header).
+            mean = fitFunc->Mean(m_xMinFit, m_xMaxFit);
+            const double fitVar = fitFunc->Variance(m_xMinFit, m_xMaxFit);
+            sigma = (fitVar > 0.0) ? std::sqrt(fitVar) : -1.0;
+            if (!std::isfinite(mean)) {
+                mean = fitFunc->GetParameter(1);
+            }
+            if (!std::isfinite(sigma) || sigma < 0.0) {
+                sigma = std::abs(fitFunc->GetParameter(2));
+            }
         }
         
         // Always create and save the projection plot
         TCanvas* c_proj = new TCanvas(Form("c_proj_%s_%d", m_binSavePrefix, j),
                                       Form("Bin Projection %d", j), 800, 600);
-        projY->SetTitle(Form("%s Bin: %.1e-%.1e", m_xLabel, 
-                     h_RelRes_binned->GetXaxis()->GetBinLowEdge(j), 
-                     h_RelRes_binned->GetXaxis()->GetBinUpEdge(j)));
+        c_proj->SetBottomMargin(0.18);
+        projY->SetTitle("");
         
         projY->SetStats(0);
         projY->Draw();
         
         double ymax = 1.1 * projY->GetMaximum();
-        if (gaus) {
-            ymax = 1.1 * std::fmax(projY->GetMaximum(), gaus->GetMaximum());
-            gaus->SetLineColor(kRed);
-            gaus->Draw("same");
+        if (fitFunc) {
+            ymax = 1.1 * std::fmax(projY->GetMaximum(), fitFunc->GetMaximum());
+            fitFunc->SetLineColor(kRed);
+            fitFunc->Draw("same");
         }
         projY->GetYaxis()->SetRangeUser(0, ymax);
-        
-        // Create stats box
-        TPaveText* statsBox = new TPaveText(0.6, 0.6, 0.9, 0.9, "NDC");
-        statsBox->SetFillColor(kWhite);
-        statsBox->SetBorderSize(1);
-        statsBox->SetTextAlign(12);
-        statsBox->SetTextSize(0.035);
-        statsBox->SetTextFont(42);
 
-        statsBox->AddText(Form("Entries: %d", (int)projY->GetEntries()));
-        statsBox->AddText(Form("#mu: %.5f", projY->GetMean()));
-        statsBox->AddText(Form("RMS: %.5f", projY->GetRMS()));
+        TLatex* latex = new TLatex();
+        latex->SetNDC();
+        latex->SetTextSize(0.025);
+        latex->SetTextColor(kBlack);
+        latex->SetTextAlign(13);
 
-        if (gaus) {
-            statsBox->AddText(Form("#chi^{2}/ndf: %.1f/%d", gaus->GetChisquare(), gaus->GetNDF()));
-            statsBox->AddText(Form("Fit #mu: %.5f #pm %.5f", mean, gaus->GetParError(1)));
-            statsBox->AddText(Form("Fit #sigma: %.4f #pm %.5f", sigma, gaus->GetParError(2)));
-            statsBox->AddText(Form("Fit range: [%.3f, %.3f]", m_xMinFit, m_xMaxFit));
+        if (fitFunc) {
+            latex->DrawLatex(
+                0.12, 0.88,
+                Form("Fit: %s | #chi^{2}/ndf=%.2f/%d | #mu_{fit}=%.5f | #mu_{hist}=%.5f | #sigma_{fit}=%.5f | RMS_{hist}=%.5f",
+                     FitFunctionLabel(m_fitFunction),
+                     fitFunc->GetChisquare(),
+                     fitFunc->GetNDF(),
+                     mean,
+                     projY->GetMean(),
+                     sigma,
+                     projY->GetRMS())
+            );
         } else {
-            statsBox->AddText("(Fit skipped)");
+            latex->DrawLatex(
+                0.12, 0.88,
+                Form("Fit: (skipped) | #mu_{hist}=%.5f | RMS_{hist}=%.5f",
+                     projY->GetMean(),
+                     projY->GetRMS())
+            );
         }
-        statsBox->Draw();
 
-        // Add ePIC simulation labels
-        TLatex latex_proj;
-        latex_proj.SetTextSize(0.035);
-        latex_proj.SetNDC();
-        latex_proj.SetTextColor(kBlack);
-        latex_proj.DrawLatex(0.15, 0.85, "#bf{ePIC} Simulation");
-        latex_proj.DrawLatex(0.15, 0.80, "#bf{Diff. DIS} 10x100 GeV");
+        DrawSimLabels(inputFile);
 
         c_proj->Update();
-        c_proj->SaveAs(Form("figs/%s_bin_%d.png", m_binSavePrefix, j));
+        SaveCanvas(c_proj, Form("%s_bin_%d.png", m_binSavePrefix, j));
         
         // Add to fit graph only if fit was performed
         if (!skipFit) {
@@ -292,25 +444,37 @@ void PlotOptionsBinnedRelRes::Plot(TFile* inputFile) {
         }
         
         // Always add RMS points
-        if (m_isLogX){
-            g_RMS->SetPoint(j - 1, _center * 1.05, projY->GetMean());
-        } else {
-            g_RMS->SetPoint(j - 1, _center + 0.005, projY->GetMean());
-        }
+        const double xDraw = m_isLogX ? _center * 1.05 : _center + 0.005;
+        g_RMS->SetPoint(j - 1, xDraw, projY->GetMean());
         g_RMS->SetPointError(j - 1, 0.0, projY->GetRMS());
+        if (stitched) {
+            if (isRPBin) {
+                g_RMS_RP->SetPoint(nRP, xDraw, projY->GetMean());
+                g_RMS_RP->SetPointError(nRP, 0.0, projY->GetRMS());
+                ++nRP;
+            } else {
+                g_RMS_B0->SetPoint(nB0, xDraw, projY->GetMean());
+                g_RMS_B0->SetPointError(nB0, 0.0, projY->GetRMS());
+                ++nB0;
+            }
+        }
 
         delete c_proj;
-        delete statsBox;
-        if (gaus) delete gaus;
+        delete latex;
+        if (fitFunc) delete fitFunc;
         delete projY;
     }
     
     // Rest of the plotting code remains the same...
-    g_RMS->SetTitle(m_title);
+    g_RMS->SetTitle(m_title ? m_title : "");
     g_RMS->SetMarkerStyle(20);
-    g_RMS->SetMarkerColor(kBlack);
-    g_RMS->SetLineColor(kBlack);
+    g_RMS->SetMarkerColor(stitched ? kGray + 2 : kBlack);
+    g_RMS->SetLineColor(stitched ? kGray + 2 : kBlack);
     g_RMS->SetLineWidth(2);
+    if (stitched) {
+        g_RMS->SetMarkerSize(0.0);
+        g_RMS->SetLineStyle(0);
+    }
 
     // Use base class range if set, otherwise fall back to constructor parameter
     auto xRange = m_rangeX ? *m_rangeX : m_xAxisRange;
@@ -319,14 +483,34 @@ void PlotOptionsBinnedRelRes::Plot(TFile* inputFile) {
     }
     g_RMS->Draw("AP");
 
-    g->SetTitle(m_title);
-    g->SetMarkerStyle(20);
-    g->SetMarkerColor(kBlue + 2);
-    g->SetLineColor(kBlue + 2);
-    g->SetLineWidth(2);
-    g->Draw("PSAME");
+    const TString titleText = m_title ? m_title : "";
+    const bool titleProvidesAxes = titleText.CountChar(';') >= 2;
+    if (!titleProvidesAxes && m_xLabel && std::strlen(m_xLabel) > 0) {
+        g_RMS->GetXaxis()->SetTitle(m_xLabel);
+    }
+    if (m_yLabel && std::strlen(m_yLabel) > 0) {
+        g_RMS->GetYaxis()->SetTitle(m_yLabel);
+    }
+    if (m_rangeY) {
+        g_RMS->GetYaxis()->SetRangeUser(m_rangeY->first, m_rangeY->second);
+    }
+    g_RMS->GetXaxis()->SetTitleSize(0.045);
+    g_RMS->GetYaxis()->SetTitleSize(0.045);
+    g_RMS->GetXaxis()->SetLabelSize(0.040);
+    g_RMS->GetXaxis()->SetTitleOffset(1.2);
+    g_RMS->GetYaxis()->SetLabelSize(0.040);
+    g_RMS->GetYaxis()->SetTitleOffset(1.35);
 
-    g_RMS->SetTitle(m_title);
+    g_RMS->SetTitle("");
+
+    if (!m_disableFit) {
+        g->SetTitle("");
+        g->SetMarkerStyle(20);
+        g->SetMarkerColor(kBlue + 2);
+        g->SetLineColor(kBlue + 2);
+        g->SetLineWidth(2);
+        g->Draw("PSAME");
+    }
 
     TLine* line = new TLine(0, 0, g_RMS->GetXaxis()->GetXmax(), 0);
     line->SetLineColor(kRed);
@@ -334,23 +518,56 @@ void PlotOptionsBinnedRelRes::Plot(TFile* inputFile) {
     line->SetLineWidth(2);
     line->Draw();
 
-    TLegend* legend = new TLegend(m_legendLB->first, m_legendLB->second, m_legendRT->first, m_legendRT->second);
-    legend->AddEntry(g_RMS, "Histograms", "ep");
-    legend->AddEntry(g, "Gaussian Fit", "ep");
-    legend->Draw();
+    TLine* splitLine = nullptr;
+    if (stitched) {
+        if (g_RMS_RP && g_RMS_RP->GetN() > 0) {
+            g_RMS_RP->SetMarkerStyle(20);
+            g_RMS_RP->SetMarkerColor(kBlue + 1);
+            g_RMS_RP->SetLineColor(kBlue + 1);
+            g_RMS_RP->SetLineWidth(2);
+            g_RMS_RP->Draw("PSAME");
+        }
+        if (g_RMS_B0 && g_RMS_B0->GetN() > 0) {
+            g_RMS_B0->SetMarkerStyle(21);
+            g_RMS_B0->SetMarkerColor(kRed + 1);
+            g_RMS_B0->SetLineColor(kRed + 1);
+            g_RMS_B0->SetLineWidth(2);
+            g_RMS_B0->Draw("PSAME");
+        }
+        double yLo = g_RMS->GetYaxis()->GetXmin();
+        double yHi = g_RMS->GetYaxis()->GetXmax();
+        if (m_rangeY) { yLo = m_rangeY->first; yHi = m_rangeY->second; }
+        splitLine = new TLine(m_boundaryValue, yLo, m_boundaryValue, yHi);
+        splitLine->SetLineColor(kBlack);
+        splitLine->SetLineStyle(7);
+        splitLine->SetLineWidth(2);
+        splitLine->Draw("SAME");
+    }
 
-    // Add ePIC simulation labels
-    TLatex latex;
-    latex.SetTextSize(0.035);
-    latex.SetNDC();
-    latex.SetTextColor(kBlack);
-    latex.DrawLatex(0.15, 0.85, "#bf{ePIC} Simulation (100k events)");
-    latex.DrawLatex(0.15, 0.80, "#bf{Diff. DIS} 10x100 GeV");
+    if (m_legendLB && m_legendRT) {
+        TLegend* legend = new TLegend(m_legendLB->first, m_legendLB->second,
+                                      m_legendRT->first, m_legendRT->second);
+        if (stitched) {
+            if (g_RMS_RP && g_RMS_RP->GetN() > 0) legend->AddEntry(g_RMS_RP, m_lowLabel ? m_lowLabel : "RP", "ep");
+            if (g_RMS_B0 && g_RMS_B0->GetN() > 0) legend->AddEntry(g_RMS_B0, m_highLabel ? m_highLabel : "B0", "ep");
+        } else {
+            legend->AddEntry(g_RMS, "RMS (#mu #pm #sigma_{RMS})", "ep");
+            if (!m_disableFit) {
+                legend->AddEntry(g, Form("Fitted (#mu #pm #sigma_{fit}) [%s]", FitLegendLabel(m_fitFunction)), "ep");
+            }
+        }
+        legend->Draw();
+    }
+
+    DrawSimLabels(inputFile);
 
     c->Update();
-    c->SaveAs(m_saveName);
+    SaveCanvas(c, m_saveName);
     delete c;
     delete g;
     delete g_RMS;
+    if (g_RMS_RP) delete g_RMS_RP;
+    if (g_RMS_B0) delete g_RMS_B0;
     delete line;
+    if (splitLine) delete splitLine;
 }

@@ -1,0 +1,11 @@
+# Example binning scheme for DDIS 3D binning
+# Hierarchy: Q2 (master), x_pom (secondary), beta (tertiary)
+
+Q2_BINS 6
+5.0 8.0 12.0 20.0 40.0 80.0 150.0
+
+BETA_BINS 5
+0.0 0.2 0.4 0.6 0.8 1.0
+
+XPOM_BINS 7
+1e-4 3e-4 1e-3 3e-3 1e-2 3e-2 1e-1 3e-1

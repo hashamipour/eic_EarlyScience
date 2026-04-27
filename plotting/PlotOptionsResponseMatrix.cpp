@@ -3,6 +3,7 @@
 #include <TLine.h>
 #include <TStyle.h>
 #include <TText.h>
+#include <cmath>
 #include <iostream>
 #include "Utility.hpp"
 
@@ -31,6 +32,20 @@ void PlotOptionsResponseMatrix::Plot(TFile* inputFile) {
         return;
     }
 
+    // If a second histogram is set, add it to the first (combined B0+RP)
+    TH2D* h_combined = nullptr;
+    if (m_histName2.Length() > 0) {
+        TH2D* h2 = (TH2D*)inputFile->Get(m_histName2);
+        if (h2) {
+            h_combined = (TH2D*)h_matrix_orig->Clone(Form("%s_combined", h_matrix_orig->GetName()));
+            h_combined->Add(h2);
+            h_matrix_orig = h_combined;
+        } else {
+            std::cerr << "Warning: Second histogram " << m_histName2
+                      << " not found; using first only." << std::endl;
+        }
+    }
+
     TH2D* h_matrix_perc = (TH2D*)h_matrix_orig->Clone(Form("%s_percentages", h_matrix_orig->GetName()));
     h_matrix_perc->Reset();
     h_matrix_perc->SetTitle("");
@@ -40,6 +55,7 @@ void PlotOptionsResponseMatrix::Plot(TFile* inputFile) {
     TCanvas* c = new TCanvas("c_response_matrix", "Response Matrix", 1200, 1000);
     gStyle->SetPaintTextFormat(".0f");
     gStyle->SetOptStat(0);
+    gStyle->SetOptTitle(0);
     c->SetRightMargin(0.15);
     c->SetLeftMargin(0.15);
     c->SetTopMargin(0.1);
@@ -105,7 +121,7 @@ void PlotOptionsResponseMatrix::Plot(TFile* inputFile) {
     diagonal_line->Draw("SAME");
 
     TText t;
-    t.SetTextSize(0.02);
+    t.SetTextSize(0.04);
     t.SetTextAlign(22);
     for (int iy = 1; iy <= nbinsY; iy++) {
         for (int ix = 1; ix <= nbinsX; ix++) {
@@ -123,18 +139,39 @@ void PlotOptionsResponseMatrix::Plot(TFile* inputFile) {
         }
     }
 
-    TLatex latex;
-    latex.SetTextSize(0.04);
-    latex.SetNDC();
-    latex.SetTextColor(kBlack);
-    latex.DrawLatex(0.2, 0.92, "#bf{ePIC} Simulation (100k events)");
-    latex.DrawLatex(0.65, 0.92, "#bf{Diff. DIS} #10x100 GeV");
+    if (std::isfinite(m_boundaryValue)) {
+        const double xb = m_boundaryValue;
+        if (xb > xmin && xb < xmax) {
+            TLine* vline = new TLine(xb, ymin, xb, ymax);
+            vline->SetLineColor(kBlack);
+            vline->SetLineStyle(7);
+            vline->SetLineWidth(2);
+            vline->Draw("SAME");
+        }
+        if (xb > ymin && xb < ymax) {
+            TLine* hline = new TLine(xmin, xb, xmax, xb);
+            hline->SetLineColor(kBlack);
+            hline->SetLineStyle(7);
+            hline->SetLineWidth(2);
+            hline->Draw("SAME");
+        }
+        TLatex lbl;
+        lbl.SetNDC();
+        lbl.SetTextFont(62);
+        lbl.SetTextSize(0.035);
+        lbl.SetTextColor(kBlack);
+        if (m_lowLabel)  lbl.DrawLatex(0.20, 0.18, m_lowLabel);
+        if (m_highLabel) lbl.DrawLatex(0.80, 0.86, m_highLabel);
+    }
+
+    DrawSimLabels(inputFile);
 
     SetCustomPalette("SolarBloom");
     TColor::InvertPalette(); // Invert the palette for better visibility
     c->Update();
-    c->SaveAs(m_saveName);
+    SaveCanvas(c, m_saveName);
 
     delete h_matrix_perc;
+    if (h_combined) delete h_combined;
     delete c;
 }

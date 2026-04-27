@@ -12,6 +12,9 @@
 #include <vector>
 #include <TStyle.h>
 #include <TColor.h>
+#include <string>
+#include <optional>
+#include <limits>
 #include "Utility.hpp"  // Use your existing utility functions
 
 // Base class for plot options
@@ -53,6 +56,7 @@ private:
     bool m_isLogX;
     bool m_isLogY;
     bool m_normalizeToPDF;
+    bool m_disableFills = false;
 
 public:
     PlotOptions1D(const std::vector<TString>& histNames,
@@ -65,7 +69,9 @@ public:
                   const bool  isLogX = false,
                   const bool  isLogY = false,
                   const bool  normalizeToPDF = false);
-    
+
+    void SetDisableFills(bool disable) { m_disableFills = disable; }
+
     void Plot(TFile* inputFile) override;
 };
 
@@ -75,6 +81,7 @@ private:
     TString m_histName;
     const char* m_xLabel;
     const char* m_yLabel;
+    TString m_fitFunction;
     double m_xMinFit;
     double m_xMaxFit;
     const char* m_saveName;
@@ -91,7 +98,8 @@ public:
                       const char* yLabel,
                       double xMinFit,
                       double xMaxFit,
-                      const char* saveName
+                      const char* saveName,
+                      const char* fitFunction = "gaus"
                     );
     
     void Plot(TFile* inputFile) override;
@@ -104,6 +112,7 @@ private:
     const char* m_title;
     const char* m_xLabel;
     const char* m_yLabel;
+    TString m_fitFunction;
     std::vector<std::pair<double, double>> m_fitRanges;
     double m_xMinFit;
     double m_xMaxFit;
@@ -111,6 +120,12 @@ private:
     const char* m_binSavePrefix;
     std::pair<double, double> m_xAxisRange;
     const bool m_isLogX;
+    bool m_disableFit = true;
+    TString m_histNameRP;
+    TString m_histNameB0;
+    double m_boundaryValue = std::numeric_limits<double>::quiet_NaN();
+    const char* m_lowLabel = nullptr;
+    const char* m_highLabel = nullptr;
 
     void SetFitRangeByBins(TH1D* hist);
 
@@ -123,14 +138,64 @@ public:
                             const char* saveName,
                             const char* binSavePrefix,
                             const std::pair<double, double>& x_axis_range = {-999., -999.},
-                            const bool  isLogX = false
+                            const bool  isLogX = false,
+                            const char* fitFunction = "gaus"
                         );
-    
+
+    void SetDisableFit(bool disable) { m_disableFit = disable; }
+    void SetStitchedDetectors(const TString& rpHist,
+                              const TString& b0Hist,
+                              double boundary,
+                              const char* lowLabel = "RP",
+                              const char* highLabel = "B0") {
+        m_histNameRP = rpHist;
+        m_histNameB0 = b0Hist;
+        m_boundaryValue = boundary;
+        m_lowLabel = lowLabel;
+        m_highLabel = highLabel;
+    }
+
     void Plot(TFile* inputFile) override;
 };
 
 // Response matrix plot options
 class PlotOptionsResponseMatrix : public PlotOptions {
+private:
+    TString m_histName;
+    TString m_histName2;  // optional second histogram to add (for combined B0+RP)
+    const char* m_xLabel;
+    const char* m_yLabel;
+    const char* m_saveName;
+    bool m_isLogX;
+    bool m_isLogY;
+    std::pair<double, double> m_xRange;
+    std::pair<double, double> m_yRange;
+    double m_boundaryValue = std::numeric_limits<double>::quiet_NaN();
+    const char* m_lowLabel = nullptr;
+    const char* m_highLabel = nullptr;
+
+public:
+    PlotOptionsResponseMatrix(const TString& histName,
+                              const char* xLabel,
+                              const char* yLabel,
+                              const char* saveName,
+                              const bool isLogX = false,
+                              const bool isLogY = false,
+                              const std::pair<double, double>& xRange = {-999., -999.},
+                              const std::pair<double, double>& yRange = {-999., -999.});
+
+    void SetSecondHistogram(const TString& name) { m_histName2 = name; }
+    void SetDetectorBoundary(double value, const char* lowLabel = "RP", const char* highLabel = "B0") {
+        m_boundaryValue = value;
+        m_lowLabel = lowLabel;
+        m_highLabel = highLabel;
+    }
+
+    void Plot(TFile* inputFile) override;
+};
+
+// Simple 2D histogram plot (density)
+class PlotOptions2D : public PlotOptions {
 private:
     TString m_histName;
     const char* m_xLabel;
@@ -142,15 +207,15 @@ private:
     std::pair<double, double> m_yRange;
 
 public:
-    PlotOptionsResponseMatrix(const TString& histName,
-                              const char* xLabel,
-                              const char* yLabel,
-                              const char* saveName,
-                              const bool isLogX = false,
-                              const bool isLogY = false,
-                              const std::pair<double, double>& xRange = {-999., -999.},
-                              const std::pair<double, double>& yRange = {-999., -999.});
-    
+    PlotOptions2D(const TString& histName,
+                  const char* xLabel,
+                  const char* yLabel,
+                  const char* saveName,
+                  const bool isLogX = false,
+                  const bool isLogY = false,
+                  const std::pair<double, double>& xRange = {-999., -999.},
+                  const std::pair<double, double>& yRange = {-999., -999.});
+
     void Plot(TFile* inputFile) override;
 };
 
@@ -167,6 +232,8 @@ private:
     const char* m_saveName;
     std::pair<double, double> m_xRange;
     std::pair<double, double> m_yRange;
+    bool m_isLogX;
+    bool m_isLogY;
 
 public:
     PlotOptionsCombinedCorrelation(const std::vector<TString>& histNames,
@@ -178,9 +245,15 @@ public:
                                    const char* yLabel,
                                    const char* saveName,
                                    const std::pair<double, double>& xRange = {-999., -999.},
-                                   const std::pair<double, double>& yRange = {-999., -999.});
+                                   const std::pair<double, double>& yRange = {-999., -999.},
+                                   const bool isLogX = false,
+                                   const bool isLogY = false);
     
     void Plot(TFile* inputFile) override;
 };
+
+void SaveCanvas(TCanvas* canvas, const char* filename);
+std::string BuildSimLabel(TFile* inputFile);
+void DrawSimLabels(TFile* inputFile);
 
 #endif // PLOTTING_HPP

@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "*.dat": "csv",
+        "*.hepmcout": "csv",
+        "Visualize_Binning_Scheme.C": "cpp",
+        "check_histos.C": "cpp"
+    }
+}

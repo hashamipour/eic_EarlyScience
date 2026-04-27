@@ -93,7 +93,7 @@ void SetCustomPalette(const int& paletteID = 0) {
 std::vector<Double_t> GetRoundedLogBins(double min_val, double max_val, int n_bins) {
 
     if (min_val <= 0) {
-        std::cerr << "Error: The minimum value for logarithmic binning must be greater than zero." << std::endl;
+        Logger::error("The minimum value for logarithmic binning must be greater than zero.");
         return std::vector<Double_t>();
     }
 
@@ -174,7 +174,7 @@ std::vector<Double_t> GetLogBins(double min_val, double max_val, int n_bins) {
 
     // Ensure that min_val is positive and non-zero for logarithmic binning.
     if (min_val <= 0) {
-        std::cerr << "Error: The minimum value for logarithmic binning must be greater than zero." << std::endl;
+        Logger::error("The minimum value for logarithmic binning must be greater than zero.");
         return std::vector<Double_t>();
     }
 
