@@ -3,6 +3,7 @@
 #include <TLine.h>
 #include <TStyle.h>
 #include <TText.h>
+#include <cmath>
 #include <iostream>
 #include "Utility.hpp"
 
@@ -29,6 +30,20 @@ void PlotOptionsResponseMatrix::Plot(TFile* inputFile) {
     if (!h_matrix_orig) {
         std::cerr << "Error: 2D Histogram " << m_histName << " not found." << std::endl;
         return;
+    }
+
+    // If a second histogram is set, add it to the first (combined B0+RP)
+    TH2D* h_combined = nullptr;
+    if (m_histName2.Length() > 0) {
+        TH2D* h2 = (TH2D*)inputFile->Get(m_histName2);
+        if (h2) {
+            h_combined = (TH2D*)h_matrix_orig->Clone(Form("%s_combined", h_matrix_orig->GetName()));
+            h_combined->Add(h2);
+            h_matrix_orig = h_combined;
+        } else {
+            std::cerr << "Warning: Second histogram " << m_histName2
+                      << " not found; using first only." << std::endl;
+        }
     }
 
     TH2D* h_matrix_perc = (TH2D*)h_matrix_orig->Clone(Form("%s_percentages", h_matrix_orig->GetName()));
@@ -124,6 +139,31 @@ void PlotOptionsResponseMatrix::Plot(TFile* inputFile) {
         }
     }
 
+    if (std::isfinite(m_boundaryValue)) {
+        const double xb = m_boundaryValue;
+        if (xb > xmin && xb < xmax) {
+            TLine* vline = new TLine(xb, ymin, xb, ymax);
+            vline->SetLineColor(kBlack);
+            vline->SetLineStyle(7);
+            vline->SetLineWidth(2);
+            vline->Draw("SAME");
+        }
+        if (xb > ymin && xb < ymax) {
+            TLine* hline = new TLine(xmin, xb, xmax, xb);
+            hline->SetLineColor(kBlack);
+            hline->SetLineStyle(7);
+            hline->SetLineWidth(2);
+            hline->Draw("SAME");
+        }
+        TLatex lbl;
+        lbl.SetNDC();
+        lbl.SetTextFont(62);
+        lbl.SetTextSize(0.035);
+        lbl.SetTextColor(kBlack);
+        if (m_lowLabel)  lbl.DrawLatex(0.20, 0.18, m_lowLabel);
+        if (m_highLabel) lbl.DrawLatex(0.80, 0.86, m_highLabel);
+    }
+
     DrawSimLabels(inputFile);
 
     SetCustomPalette("SolarBloom");
@@ -132,5 +172,6 @@ void PlotOptionsResponseMatrix::Plot(TFile* inputFile) {
     SaveCanvas(c, m_saveName);
 
     delete h_matrix_perc;
+    if (h_combined) delete h_combined;
     delete c;
 }

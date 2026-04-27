@@ -15,6 +15,8 @@
 #include <iostream>
 #include <algorithm>
 
+#include "Utility.hpp"
+
 //==============================================================================
 // STRUCTURE TO HOLD BINNING SCHEME
 //==============================================================================
@@ -75,7 +77,7 @@ inline BinningScheme ReadBinningScheme(const std::string& filename) {
 
     std::ifstream infile(filename);
     if(!infile.is_open()) {
-        std::cerr << "ERROR: Cannot open binning file " << filename << std::endl;
+        Logger::error("Cannot open binning file " + filename);
         return binning;
     }
 
@@ -102,8 +104,8 @@ inline BinningScheme ReadBinningScheme(const std::string& filename) {
             }
 
             if((int)binning.Q2_edges.size() != nEdges) {
-                std::cerr << "WARNING: Expected " << nEdges << " Q2 edges, found "
-                          << binning.Q2_edges.size() << std::endl;
+                Logger::warning("Expected " + std::to_string(nEdges) +
+                                " Q2 edges, found " + std::to_string(binning.Q2_edges.size()));
             }
         }
         else if(keyword == "BETA_BINS") {
@@ -120,8 +122,8 @@ inline BinningScheme ReadBinningScheme(const std::string& filename) {
             }
 
             if((int)binning.beta_edges.size() != nEdges) {
-                std::cerr << "WARNING: Expected " << nEdges << " beta edges, found "
-                          << binning.beta_edges.size() << std::endl;
+                Logger::warning("Expected " + std::to_string(nEdges) +
+                                " beta edges, found " + std::to_string(binning.beta_edges.size()));
             }
         }
         else if(keyword == "XPOM_BINS") {
@@ -138,8 +140,8 @@ inline BinningScheme ReadBinningScheme(const std::string& filename) {
             }
 
             if((int)binning.xpom_edges.size() != nEdges) {
-                std::cerr << "WARNING: Expected " << nEdges << " xpom edges, found "
-                          << binning.xpom_edges.size() << std::endl;
+                Logger::warning("Expected " + std::to_string(nEdges) +
+                                " xpom edges, found " + std::to_string(binning.xpom_edges.size()));
             }
         }
     }
@@ -148,13 +150,13 @@ inline BinningScheme ReadBinningScheme(const std::string& filename) {
 
     // Verify that we read all three sets of bin edges
     if(binning.Q2_edges.empty()) {
-        std::cerr << "ERROR: No Q2 bin edges found in " << filename << std::endl;
+        Logger::error("No Q2 bin edges found in " + filename);
     }
     if(binning.beta_edges.empty()) {
-        std::cerr << "ERROR: No beta bin edges found in " << filename << std::endl;
+        Logger::error("No beta bin edges found in " + filename);
     }
     if(binning.xpom_edges.empty()) {
-        std::cerr << "ERROR: No xpom bin edges found in " << filename << std::endl;
+        Logger::error("No xpom bin edges found in " + filename);
     }
 
     return binning;

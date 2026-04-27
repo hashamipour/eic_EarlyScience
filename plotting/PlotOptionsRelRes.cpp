@@ -528,7 +528,7 @@ void PlotOptionsRelRes::SetFitRangeByBins(TH1D* hist) {
     }
     
     if (validFits.empty()) {
-        std::cerr << "Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)" << std::endl;
+        Logger::error("No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)");
         return;
     }
     

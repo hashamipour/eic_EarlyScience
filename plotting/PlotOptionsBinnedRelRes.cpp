@@ -232,7 +232,7 @@ void PlotOptionsBinnedRelRes::SetFitRangeByBins(TH1D* hist) {
     }
     
     if (validFits.empty()) {
-        std::cerr << "Error: No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)" << std::endl;
+        Logger::error("No valid fits found! (All fits had chi2/ndf > 10 or y-difference > 10%)");
         m_xMinFit = hist->GetBinCenter(peakBin) - 0.55 * hist->GetRMS();
         m_xMaxFit = hist->GetBinCenter(peakBin) + 0.45 * hist->GetRMS();
         return;
@@ -295,9 +295,14 @@ void PlotOptionsBinnedRelRes::SetFitRangeByBins(TH1D* hist) {
 }
 
 void PlotOptionsBinnedRelRes::Plot(TFile* inputFile) {
-    TH2D* h_RelRes_binned = (TH2D*)inputFile->Get(m_histName);
-    if (!h_RelRes_binned) {
-        std::cerr << "Error: 2D Histogram " << m_histName << " not found." << std::endl;
+    const bool stitched = (m_histNameRP.Length() > 0 && m_histNameB0.Length() > 0 &&
+                           std::isfinite(m_boundaryValue));
+    TH2D* h_rp = stitched ? (TH2D*)inputFile->Get(m_histNameRP) : nullptr;
+    TH2D* h_b0 = stitched ? (TH2D*)inputFile->Get(m_histNameB0) : nullptr;
+    TH2D* h_RelRes_binned = stitched ? h_rp : (TH2D*)inputFile->Get(m_histName);
+    if (!h_RelRes_binned || (stitched && !h_b0)) {
+        std::cerr << "Error: 2D Histogram " << (stitched ? m_histNameRP : m_histName)
+                  << " not found." << std::endl;
         return;
     }
     gStyle->SetOptTitle(0);
@@ -313,9 +318,19 @@ void PlotOptionsBinnedRelRes::Plot(TFile* inputFile) {
     int nbinsX = h_RelRes_binned->GetNbinsX();
     TGraphErrors* g = new TGraphErrors(nbinsX);
     TGraphErrors* g_RMS = new TGraphErrors(nbinsX);
+    TGraphErrors* g_RMS_RP = stitched ? new TGraphErrors(nbinsX) : nullptr;
+    TGraphErrors* g_RMS_B0 = stitched ? new TGraphErrors(nbinsX) : nullptr;
+    int nRP = 0, nB0 = 0;
 
     for (int j = 1; j <= nbinsX; ++j) {
-        TH1D* projY = h_RelRes_binned->ProjectionY("", j, j);
+        TH2D* h_src = h_RelRes_binned;
+        bool isRPBin = true;
+        if (stitched) {
+            const double xCenter = h_RelRes_binned->GetXaxis()->GetBinCenter(j);
+            isRPBin = (xCenter < m_boundaryValue);
+            h_src = isRPBin ? h_rp : h_b0;
+        }
+        TH1D* projY = h_src->ProjectionY("", j, j);
         
         if (projY->GetEntries() == 0) {
             delete projY;
@@ -325,9 +340,9 @@ void PlotOptionsBinnedRelRes::Plot(TFile* inputFile) {
         double _center = h_RelRes_binned->GetXaxis()->GetBinCenter(j);
         
         // Check if we should skip fitting for this bin
-        bool skipFit = false;
-        if (!m_fitRanges.empty() && j - 1 < static_cast<int>(m_fitRanges.size())) {
-            if (TMath::AreEqualRel(m_fitRanges[j - 1].first, 0., 1e-6) && 
+        bool skipFit = m_disableFit;
+        if (!skipFit && !m_fitRanges.empty() && j - 1 < static_cast<int>(m_fitRanges.size())) {
+            if (TMath::AreEqualRel(m_fitRanges[j - 1].first, 0., 1e-6) &&
                 TMath::AreEqualRel(m_fitRanges[j - 1].second, 0., 1e-6)) {
                 skipFit = true;
             }
@@ -429,12 +444,20 @@ void PlotOptionsBinnedRelRes::Plot(TFile* inputFile) {
         }
         
         // Always add RMS points
-        if (m_isLogX){
-            g_RMS->SetPoint(j - 1, _center * 1.05, projY->GetMean());
-        } else {
-            g_RMS->SetPoint(j - 1, _center + 0.005, projY->GetMean());
-        }
+        const double xDraw = m_isLogX ? _center * 1.05 : _center + 0.005;
+        g_RMS->SetPoint(j - 1, xDraw, projY->GetMean());
         g_RMS->SetPointError(j - 1, 0.0, projY->GetRMS());
+        if (stitched) {
+            if (isRPBin) {
+                g_RMS_RP->SetPoint(nRP, xDraw, projY->GetMean());
+                g_RMS_RP->SetPointError(nRP, 0.0, projY->GetRMS());
+                ++nRP;
+            } else {
+                g_RMS_B0->SetPoint(nB0, xDraw, projY->GetMean());
+                g_RMS_B0->SetPointError(nB0, 0.0, projY->GetRMS());
+                ++nB0;
+            }
+        }
 
         delete c_proj;
         delete latex;
@@ -445,9 +468,13 @@ void PlotOptionsBinnedRelRes::Plot(TFile* inputFile) {
     // Rest of the plotting code remains the same...
     g_RMS->SetTitle(m_title ? m_title : "");
     g_RMS->SetMarkerStyle(20);
-    g_RMS->SetMarkerColor(kBlack);
-    g_RMS->SetLineColor(kBlack);
+    g_RMS->SetMarkerColor(stitched ? kGray + 2 : kBlack);
+    g_RMS->SetLineColor(stitched ? kGray + 2 : kBlack);
     g_RMS->SetLineWidth(2);
+    if (stitched) {
+        g_RMS->SetMarkerSize(0.0);
+        g_RMS->SetLineStyle(0);
+    }
 
     // Use base class range if set, otherwise fall back to constructor parameter
     auto xRange = m_rangeX ? *m_rangeX : m_xAxisRange;
@@ -474,14 +501,16 @@ void PlotOptionsBinnedRelRes::Plot(TFile* inputFile) {
     g_RMS->GetYaxis()->SetLabelSize(0.040);
     g_RMS->GetYaxis()->SetTitleOffset(1.35);
 
-    g->SetTitle("");
-    g->SetMarkerStyle(20);
-    g->SetMarkerColor(kBlue + 2);
-    g->SetLineColor(kBlue + 2);
-    g->SetLineWidth(2);
-    g->Draw("PSAME");
-
     g_RMS->SetTitle("");
+
+    if (!m_disableFit) {
+        g->SetTitle("");
+        g->SetMarkerStyle(20);
+        g->SetMarkerColor(kBlue + 2);
+        g->SetLineColor(kBlue + 2);
+        g->SetLineWidth(2);
+        g->Draw("PSAME");
+    }
 
     TLine* line = new TLine(0, 0, g_RMS->GetXaxis()->GetXmax(), 0);
     line->SetLineColor(kRed);
@@ -489,11 +518,44 @@ void PlotOptionsBinnedRelRes::Plot(TFile* inputFile) {
     line->SetLineWidth(2);
     line->Draw();
 
+    TLine* splitLine = nullptr;
+    if (stitched) {
+        if (g_RMS_RP && g_RMS_RP->GetN() > 0) {
+            g_RMS_RP->SetMarkerStyle(20);
+            g_RMS_RP->SetMarkerColor(kBlue + 1);
+            g_RMS_RP->SetLineColor(kBlue + 1);
+            g_RMS_RP->SetLineWidth(2);
+            g_RMS_RP->Draw("PSAME");
+        }
+        if (g_RMS_B0 && g_RMS_B0->GetN() > 0) {
+            g_RMS_B0->SetMarkerStyle(21);
+            g_RMS_B0->SetMarkerColor(kRed + 1);
+            g_RMS_B0->SetLineColor(kRed + 1);
+            g_RMS_B0->SetLineWidth(2);
+            g_RMS_B0->Draw("PSAME");
+        }
+        double yLo = g_RMS->GetYaxis()->GetXmin();
+        double yHi = g_RMS->GetYaxis()->GetXmax();
+        if (m_rangeY) { yLo = m_rangeY->first; yHi = m_rangeY->second; }
+        splitLine = new TLine(m_boundaryValue, yLo, m_boundaryValue, yHi);
+        splitLine->SetLineColor(kBlack);
+        splitLine->SetLineStyle(7);
+        splitLine->SetLineWidth(2);
+        splitLine->Draw("SAME");
+    }
+
     if (m_legendLB && m_legendRT) {
         TLegend* legend = new TLegend(m_legendLB->first, m_legendLB->second,
                                       m_legendRT->first, m_legendRT->second);
-        legend->AddEntry(g_RMS, "Histograms", "ep");
-        legend->AddEntry(g, FitLegendLabel(m_fitFunction), "ep");
+        if (stitched) {
+            if (g_RMS_RP && g_RMS_RP->GetN() > 0) legend->AddEntry(g_RMS_RP, m_lowLabel ? m_lowLabel : "RP", "ep");
+            if (g_RMS_B0 && g_RMS_B0->GetN() > 0) legend->AddEntry(g_RMS_B0, m_highLabel ? m_highLabel : "B0", "ep");
+        } else {
+            legend->AddEntry(g_RMS, "RMS (#mu #pm #sigma_{RMS})", "ep");
+            if (!m_disableFit) {
+                legend->AddEntry(g, Form("Fitted (#mu #pm #sigma_{fit}) [%s]", FitLegendLabel(m_fitFunction)), "ep");
+            }
+        }
         legend->Draw();
     }
 
@@ -504,5 +566,8 @@ void PlotOptionsBinnedRelRes::Plot(TFile* inputFile) {
     delete c;
     delete g;
     delete g_RMS;
+    if (g_RMS_RP) delete g_RMS_RP;
+    if (g_RMS_B0) delete g_RMS_B0;
     delete line;
+    if (splitLine) delete splitLine;
 }

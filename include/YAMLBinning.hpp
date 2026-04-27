@@ -6,7 +6,10 @@
 #include <sstream>
 #include <algorithm>
 #include <cmath>
+#include <iomanip>
 #include <iostream>
+
+#include "Utility.hpp"
 
 struct BinDef {
     int bin_id = -1;
@@ -68,7 +71,7 @@ inline std::vector<BinDef> ReadBinsFromYAML(const std::string& path) {
     std::vector<BinDef> bins;
     std::ifstream in(path);
     if (!in.is_open()) {
-        std::cerr << "ERROR: cannot open YAML file " << path << std::endl;
+        Logger::error("cannot open YAML file " + path);
         return bins;
     }
     bool in_bins = false;
@@ -142,4 +145,109 @@ inline void CollectEdges(const std::vector<BinDef>& bins,
     q2_edges = UniqueSorted(q2_edges);
     beta_edges = UniqueSorted(beta_edges);
     xpom_edges = UniqueSorted(xpom_edges);
+}
+
+//==============================================================================
+// Global-bin helpers and on-disk writers (shared by skim + plotter).
+// Previously duplicated in DDIS_Skim_Final.cpp and DDIS_Plot_Final.cpp.
+//==============================================================================
+
+inline bool EdgesMatchWithinTolerance(double a, double b) {
+    const double scale = std::max(1.0, std::max(std::abs(a), std::abs(b)));
+    return std::abs(a - b) <= 1e-12 * scale;
+}
+
+inline int FindLowerEdgeIndex(const std::vector<double>& edges, double value) {
+    if (edges.size() < 2) return -1;
+    for (size_t i = 0; i + 1 < edges.size(); ++i) {
+        if (EdgesMatchWithinTolerance(edges[i], value)) {
+            return static_cast<int>(i);
+        }
+    }
+    return -1;
+}
+
+// Convention matches the plotter: k = iBeta + iXpom*nBeta + iQ2*(nBeta*nXpom).
+inline int GetGlobalBinFromBinDef(const BinDef& b,
+                                  const std::vector<double>& q2_edges,
+                                  const std::vector<double>& xpom_edges,
+                                  const std::vector<double>& beta_edges) {
+    const int iQ2 = FindLowerEdgeIndex(q2_edges, b.Q2_min);
+    const int iXpom = FindLowerEdgeIndex(xpom_edges, b.xpom_min);
+    const int iBeta = FindLowerEdgeIndex(beta_edges, b.beta_min);
+    if (iQ2 < 0 || iXpom < 0 || iBeta < 0) return -1;
+
+    if (iQ2 + 1 >= static_cast<int>(q2_edges.size()) ||
+        iXpom + 1 >= static_cast<int>(xpom_edges.size()) ||
+        iBeta + 1 >= static_cast<int>(beta_edges.size())) {
+        return -1;
+    }
+
+    if (!EdgesMatchWithinTolerance(q2_edges[iQ2 + 1], b.Q2_max) ||
+        !EdgesMatchWithinTolerance(xpom_edges[iXpom + 1], b.xpom_max) ||
+        !EdgesMatchWithinTolerance(beta_edges[iBeta + 1], b.beta_max)) {
+        return -1;
+    }
+
+    const int nBeta = static_cast<int>(beta_edges.size()) - 1;
+    const int nXpom = static_cast<int>(xpom_edges.size()) - 1;
+    return iBeta + iXpom * nBeta + iQ2 * (nBeta * nXpom);
+}
+
+inline bool WriteBinsTSV(const std::string& path, const std::vector<BinDef>& bins) {
+    std::ofstream out(path);
+    if (!out.is_open()) {
+        Logger::error("cannot open " + path + " for writing bins TSV");
+        return false;
+    }
+    out << "# bin_id\tQ2_min\tQ2_max\tbeta_min\tbeta_max\tx_pom_min\tx_pom_max\n";
+    out << std::setprecision(8);
+    for (const auto& b : bins) {
+        out << b.bin_id << "\t"
+            << b.Q2_min << "\t" << b.Q2_max << "\t"
+            << b.beta_min << "\t" << b.beta_max << "\t"
+            << b.xpom_min << "\t" << b.xpom_max << "\n";
+    }
+    return true;
+}
+
+inline bool WriteBinOccupancyYAML(const std::string& path,
+                                  const std::vector<BinDef>& bins,
+                                  const std::vector<int>& occupancy,
+                                  const std::vector<double>& q2_edges,
+                                  const std::vector<double>& xpom_edges,
+                                  const std::vector<double>& beta_edges) {
+    std::ofstream out(path);
+    if (!out.is_open()) {
+        Logger::error("cannot open " + path + " for writing bin occupancy YAML");
+        return false;
+    }
+
+    long long totalAssigned = 0;
+    for (const int c : occupancy) totalAssigned += c;
+
+    out << "metadata:\n";
+    out << "  description: \"Per-bin occupancy from truth global bin assignment (Q2_truth, x_pom_truth, beta_truth).\"\n";
+    out << "  n_bins: " << bins.size() << "\n";
+    out << "  total_assigned_events: " << totalAssigned << "\n";
+    out << "  k_index_convention: \"one_based\"\n";
+    out << "bins:\n";
+    out << std::setprecision(8);
+
+    for (const auto& b : bins) {
+        const int kZeroBased = GetGlobalBinFromBinDef(b, q2_edges, xpom_edges, beta_edges);
+        const int occ = (kZeroBased >= 0 && kZeroBased < static_cast<int>(occupancy.size()))
+                            ? occupancy[kZeroBased]
+                            : 0;
+        out << "  - bin_id: " << b.bin_id << "\n";
+        out << "    k_index: " << (kZeroBased >= 0 ? kZeroBased + 1 : -1) << "\n";
+        out << "    occupancy: " << occ << "\n";
+        out << "    Q2_min: " << b.Q2_min << "\n";
+        out << "    Q2_max: " << b.Q2_max << "\n";
+        out << "    x_pom_min: " << b.xpom_min << "\n";
+        out << "    x_pom_max: " << b.xpom_max << "\n";
+        out << "    beta_min: " << b.beta_min << "\n";
+        out << "    beta_max: " << b.beta_max << "\n";
+    }
+    return true;
 }
