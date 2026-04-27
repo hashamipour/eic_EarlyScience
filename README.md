@@ -29,12 +29,19 @@ This repository organizes your EIC DDIS **Q²** analysis into a modular, extenda
 
 ## Build Requirements
 
-- C++17 compiler (GCC ≥ 9 or Clang ≥ 10)
+- C++20 compiler
 - [ROOT](https://root.cern/) (with `Core`, `Hist`, `Tree`, `RIO`, `Graf`, `Gpad` components)
 - CMake ≥ 3.16
-- Make (GNU make)
+- `podio`, `EDM4HEP`, `EDM4EIC` — supplied by the ePIC software stack. The
+  simplest way to get them is to build inside the `eic-shell` container:
 
-Ensure `root-config` is on your `PATH` and `ROOT` environment is set (e.g., `source thisroot.sh`).
+  ```bash
+  eic-shell
+  # inside the container:
+  make
+  ```
+
+Ensure `root-config` is on your `PATH` and `ROOT` environment is set (e.g., `source thisroot.sh`) if you're not using `eic-shell`.
 
 ## Configure & Build (cmake + make)
 
