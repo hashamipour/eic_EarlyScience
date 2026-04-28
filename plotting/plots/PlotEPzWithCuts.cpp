@@ -21,10 +21,21 @@ void PlotEPzWithCuts(TFile* inputFile) {
     // Compare Set A (MC) vs Set B (pseudo-data) using histograms filled BEFORE the
     // E-p_z cut, so the accepted Sigma(E-p_z) window can be drawn on top to show
     // how many events would be removed by the cut.
-    TH1D* h_setA = (TH1D*)inputFile->Get("EPz_reco_mc");
-    TH1D* h_setB = (TH1D*)inputFile->Get("EPz_reco_pdata");
+    //
+    // Sigma(E-pz) is computed by ElectronID::ComputeEventDeltaH() over
+    // ReconstructedParticles (the EID stream), so the cut shown here matches
+    // the paper A.1 event-level requirement. Falls back to the old
+    // TTreeReader-matched EPz_reco_{mc,pdata} histograms if the EID
+    // versions aren't present (e.g. skim ran with --no-eid).
+    TH1D* h_setA = (TH1D*)inputFile->Get("EPz_eid_mc");
+    TH1D* h_setB = (TH1D*)inputFile->Get("EPz_eid_pdata");
     if (!h_setA || !h_setB) {
-        Logger::warning("EPz_reco_{mc,pdata} histograms not found; skipping EPz cut plot.");
+        Logger::warning("EPz_eid_{mc,pdata} not found; falling back to EPz_reco_{mc,pdata}.");
+        h_setA = (TH1D*)inputFile->Get("EPz_reco_mc");
+        h_setB = (TH1D*)inputFile->Get("EPz_reco_pdata");
+    }
+    if (!h_setA || !h_setB) {
+        Logger::warning("EPz histograms not found; skipping EPz cut plot.");
         return;
     }
 

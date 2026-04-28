@@ -76,6 +76,7 @@ target_link_libraries(eicplot PUBLIC
     ${ROOFIT_LIB} ${ROOFITCORE_LIB}
     podio::podio
     podio::podioRootIO
+    podio::podioIO
     EDM4HEP::edm4hep
     EDM4EIC::edm4eic
 )

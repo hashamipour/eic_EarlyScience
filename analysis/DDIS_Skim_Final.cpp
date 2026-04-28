@@ -43,7 +43,7 @@
 #include "SkimFileList.hpp"
 
 #include "podio/Frame.h"
-#include "podio/ROOTReader.h"
+#include "podio/Reader.h"
 #include "edm4hep/utils/vector_utils.h"
 #include "edm4hep/utils/kinematics.h"
 
@@ -51,24 +51,47 @@
 
 
 int main(int argc, char** argv) {
-    if (argc < 3) {
-        std::cerr << "Usage: " << argv[0] << " <fileList.txt> [N] <bins.yaml>" << std::endl;
+    // Optional flags (--no-eid, --output PATH). Strip them from the argv view
+    // so the existing positional parsing is unchanged.
+    bool disableElectronIDFlag = false;
+    std::string outputPath = "DDIS_Combined_output.root";
+    std::vector<char*> args;
+    args.reserve(argc);
+    for (int i = 0; i < argc; ++i) {
+        const std::string a = argv[i];
+        if (a == "--no-eid") { disableElectronIDFlag = true; continue; }
+        if (a == "--output" || a == "-o") {
+            if (i + 1 >= argc) {
+                std::cerr << "ERROR: " << a << " requires a path argument." << std::endl;
+                return 1;
+            }
+            outputPath = argv[++i];
+            continue;
+        }
+        args.push_back(argv[i]);
+    }
+    const int posArgc = static_cast<int>(args.size());
+
+    if (posArgc < 3) {
+        std::cerr << "Usage: " << argv[0]
+                  << " <fileList.txt> [N] <bins.yaml> [--no-eid] [--output PATH]"
+                  << std::endl;
         return 1;
     }
-    TString fileList = argv[1];
+    TString fileList = args[1];
     int sampleN = -1;
     std::string yamlPath;
-    if (argc == 3) {
-        yamlPath = argv[2];
+    if (posArgc == 3) {
+        yamlPath = args[2];
     } else {
         char* end = nullptr;
-        long parsed = std::strtol(argv[2], &end, 10);
+        long parsed = std::strtol(args[2], &end, 10);
         if (!(end && *end == '\0' && parsed > 0)) {
             Logger::error("Expected integer N as second argument when providing 3 args.");
             return 1;
         }
         sampleN = static_cast<int>(parsed);
-        yamlPath = argv[3];
+        yamlPath = args[3];
     }
     if (yamlPath.empty()) {
         Logger::error("bins.yaml is mandatory.");
@@ -158,9 +181,56 @@ int main(int argc, char** argv) {
     // can consume edm4eic collections in lockstep with the flat TTree branches.
     // Disabled if any file is XRootD or the reader can't open the inputs; the
     // skim still runs without ElectronID in that case.
-    podio::ROOTReader podioReader;
+    //
+    // Uses the modern podio::Reader interface (podio/Reader.h) which lets us
+    // pass a per-event collection filter to readEvent(idx, collsToRead). That
+    // restricts the Frame deserialization to only the collections ElectronID
+    // touches and is the dominant per-event cost we're cutting here.
+    //
+    // ReconstructedParticles holds OneToMany relations to the cluster
+    // collections; for getClusters() to dereference correctly the target
+    // cluster collections must be in the filter, otherwise iterating
+    // getClusters() returns dangling references and segfaults inside
+    // ElectronID::CalculateParticleValues. We include all primary
+    // (non-Truth, non-Baseline) cluster collections produced by the
+    // standard ePIC reco; ReconstructedParticles can attach clusters
+    // from any of them depending on the particle's eta/phi.
+    //
+    // This is still a substantial reduction vs. the unfiltered Frame
+    // (which would also load all raw hit / track / tracker collections),
+    // so we still expect a meaningful per-event speedup.
+    const std::vector<std::string> kEidCollections = {
+        "ReconstructedParticles",
+        "MCParticles",
+        "ReconstructedParticleAssociations",
+        // ECAL clusters
+        "B0ECalClusters",
+        "EcalBarrelClusters",
+        "EcalBarrelImagingClusters",
+        "EcalBarrelScFiClusters",
+        "EcalEndcapNClusters",
+        "EcalEndcapNSplitMergeClusters",
+        "EcalEndcapPClusters",
+        "EcalEndcapPSplitMergeClusters",
+        "EcalFarForwardZDCClusters",
+        "EcalLumiSpecClusters",
+        // HCAL clusters
+        "HcalBarrelClusters",
+        "HcalBarrelSplitMergeClusters",
+        "HcalEndcapNClusters",
+        "HcalEndcapNSplitMergeClusters",
+        "HcalEndcapPInsertClusters",
+        "HcalFarForwardZDCClusters",
+        "LFHCALClusters",
+        "LFHCALSplitMergeClusters",
+    };
+    std::unique_ptr<podio::Reader> podioReader;
     bool useElectronID = true;
-    {
+    if (disableElectronIDFlag) {
+        Logger::info("ElectronID: disabled via --no-eid flag (no podio reader will be opened).");
+        useElectronID = false;
+    }
+    if (useElectronID) {
         bool anyRemote = false;
         for (const auto& f : addedFiles) {
             if (f.rfind("root://", 0) == 0) { anyRemote = true; break; }
@@ -170,26 +240,32 @@ int main(int argc, char** argv) {
             useElectronID = false;
         } else {
             try {
-                podioReader.openFiles(addedFiles);
-                const auto podioEntries = podioReader.getEntries("events");
+                podioReader = std::make_unique<podio::Reader>(podio::makeReader(addedFiles));
+                const auto podioEntries = podioReader->getEvents();
                 if (static_cast<Long64_t>(podioEntries) != events->GetEntries()) {
                     Logger::warning("ElectronID: entry-count mismatch podio=" + std::to_string(podioEntries) +
                                     " tchain=" + std::to_string(events->GetEntries()) +
                                     "; disabling ElectronID stream.");
                     useElectronID = false;
+                    podioReader.reset();
                 } else {
                     Logger::info("ElectronID: podio reader opened " +
-                                 std::to_string(podioEntries) + " entries.");
+                                 std::to_string(podioEntries) + " entries; "
+                                 "restricting Frame deserialization to " +
+                                 std::to_string(kEidCollections.size()) +
+                                 " collections for speed.");
                 }
             } catch (const std::exception& e) {
-                Logger::warning(std::string("ElectronID: podio openFiles failed (") + e.what() + "); disabling.");
+                Logger::warning(std::string("ElectronID: makeReader failed (") + e.what() + "); disabling.");
                 useElectronID = false;
+                podioReader.reset();
             }
         }
     }
 
-    // Create output file
-    TFile* outputFile = new TFile("DDIS_Combined_output.root", "RECREATE");
+    // Create output file (default DDIS_Combined_output.root, override via --output PATH)
+    Logger::info("Output file: " + outputPath);
+    TFile* outputFile = new TFile(outputPath.c_str(), "RECREATE");
 
     // Create TTree for event-level data
     TTree* tree = new TTree("Q2_tree", "Q2 Kinematics Data");
@@ -572,6 +648,12 @@ int main(int argc, char** argv) {
     TH1D* h_phi_e_eid = new TH1D("phi_e_eid", "ElectronID e' #phi;#phi_{e} [rad]",         50, -TMath::Pi(), TMath::Pi());
     TH1D* h_pT_e_eid  = new TH1D("pT_e_eid",  "ElectronID e' p_{T};p_{T}^{e} [GeV]",       50, 0, 10);
     TH1D* h_EPz_eid   = new TH1D("EPz_eid",   "ElectronID event #Sigma(E-p_{z}) [GeV]",    80, 0, 40);
+
+    // EID Sigma(E-pz) split by Set A (MC) / Set B (pseudo-data) for the
+    // EPz cuts plot, mirroring the layout of EPz_reco_mc / EPz_reco_pdata.
+    // Source is ElectronID::ComputeEventDeltaH() over ReconstructedParticles.
+    TH1D* h_EPz_eid_mc    = new TH1D("EPz_eid_mc",    "EID Sigma(E-p_{z}) (MC);#Sigma(E-p_{z}) [GeV];Number of events",          80, 0.0, 40.0);
+    TH1D* h_EPz_eid_pdata = new TH1D("EPz_eid_pdata", "EID Sigma(E-p_{z}) (Pseudo-data);#Sigma(E-p_{z}) [GeV];Number of events", 80, 0.0, 40.0);
 
     // Old (ScatteredElectronsTruth_objIdx) vs new (ElectronID) comparison plots.
     TH2D* h_pT_e_old_vs_eid  = new TH2D("pT_e_old_vs_eid",
@@ -1517,26 +1599,28 @@ int main(int argc, char** argv) {
         nProcessed++;
         const bool is_mc_subsample = ((i % 2) == 0);
 
-        // ElectronID (paper A.1 cuts) on the same event via podio.
+        // ElectronID (paper A.1 cuts) on the same event via podio. The
+        // podio::Reader::readEvent overload takes a per-call collection
+        // filter; restricting to the few collections ElectronID needs is
+        // the dominant per-event speedup.
         bool eid_found = false;
+        bool eid_epz_valid = false;
         double eid_E = 0.0, eid_pT = 0.0, eid_phi = 0.0, eid_epz = 0.0;
-        if (useElectronID) {
+        if (useElectronID && podioReader) {
             try {
-                auto frameData = podioReader.readEntry("events", static_cast<unsigned>(i));
-                if (frameData) {
-                    podio::Frame frame(std::move(frameData));
-                    eid.SetEvent(&frame);
-                    eid.ComputeEventDeltaH();
-                    eid_epz = eid.GetEventDeltaH();
-                    auto cands = eid.FindScatteredElectron();
-                    if (cands.size() > 0) {
-                        const auto ePart = eid.SelectHighestPT(cands);
-                        const auto& mom = ePart.getMomentum();
-                        eid_E   = ePart.getEnergy();
-                        eid_pT  = std::hypot(mom.x, mom.y);
-                        eid_phi = std::atan2(mom.y, mom.x);
-                        eid_found = true;
-                    }
+                podio::Frame frame = podioReader->readEvent(static_cast<size_t>(i), kEidCollections);
+                eid.SetEvent(&frame);
+                eid.ComputeEventDeltaH();
+                eid_epz = eid.GetEventDeltaH();
+                eid_epz_valid = true;
+                auto cands = eid.FindScatteredElectron();
+                if (cands.size() > 0) {
+                    const auto ePart = eid.SelectHighestPT(cands);
+                    const auto& mom = ePart.getMomentum();
+                    eid_E   = ePart.getEnergy();
+                    eid_pT  = std::hypot(mom.x, mom.y);
+                    eid_phi = std::atan2(mom.y, mom.x);
+                    eid_found = true;
                 }
             } catch (const std::exception& e) {
                 static bool warned = false;
@@ -1546,6 +1630,17 @@ int main(int argc, char** argv) {
                     warned = true;
                 }
             }
+        }
+
+        // Pre-cut Set A / Set B fills for the EID Sigma(E-pz) plot:
+        // populated as soon as the EID frame is read, BEFORE any DIS or
+        // E-pz cut, so the plot can show how many events the cut would
+        // remove. eid_epz is the event-level Sigma(E-pz) over
+        // ReconstructedParticles (paper A.1), independent of whether a
+        // candidate electron was actually found.
+        if (eid_epz_valid) {
+            if (is_mc_subsample) h_EPz_eid_mc->Fill(eid_epz);
+            else                 h_EPz_eid_pdata->Fill(eid_epz);
         }
 
         float electron_Q2_EM = GetArrayValue(kin_Q2_EM);
@@ -2099,11 +2194,14 @@ int main(int argc, char** argv) {
         //        electron. Acceptance-limited (forward part of X is missed).
         //        The kinematic M_X^2 = (q + p - p')^2 below provides the
         //        acceptance-independent counterpart.
+        const int n_mc = static_cast<int>(mc_px_array.GetSize());
+        const int n_re = static_cast<int>(re_energy_array.GetSize());
+
         int scat_reco_idx_mx2 = scat_reco_idx;
         if (scat_reco_idx_mx2 < 0) {
             double bestE = -1.0;
             int bestIdx = -1;
-            for (int j = 0; j < re_energy_array.GetSize(); j++) {
+            for (int j = 0; j < n_re; j++) {
                 if (re_pdg_array[j] != 11) continue;
                 if (re_energy_array[j] > bestE) {
                     bestE = re_energy_array[j];
@@ -2114,62 +2212,88 @@ int main(int argc, char** argv) {
         }
 
         P3EVector total_hadrons_reco(0.0, 0.0, 0.0, 0.0);
-        for (int j = 0; j < re_energy_array.GetSize(); j++) {
+        for (int j = 0; j < n_re; j++) {
             if (j == scat_reco_idx_mx2) continue;
             P3EVector particle(re_px_array[j], re_py_array[j], re_pz_array[j], re_energy_array[j]);
             total_hadrons_reco += particle;
         }
         double MX2_reco = total_hadrons_reco.M2();
 
+        // Combined truth pass: in one walk over MCParticles, accumulate the
+        // hadronic sum over X (excluding scattered e, neutrinos, and ALL
+        // status==1 protons), record indices of all status==1 protons, and
+        // pick the leading raw-pz proton. The hadronic-sum exclusion is
+        // applied AFTER the loop by re-adding non-leading protons.
         int lead_mc_proton_idx = -1;
         double lead_mc_pz = -1.0e30;
-        for (int j = 0; j < (int)mc_px_array.GetSize(); j++) {
-            if (mc_genStatus_array[j] != 1) continue;
-            if (mc_pdg_array[j] != 2212) continue;
-            if (mc_pz_array[j] > lead_mc_pz) {
-                lead_mc_pz = mc_pz_array[j];
-                lead_mc_proton_idx = j;
-            }
-        }
-
         P3EVector total_hadrons_truth(0.0, 0.0, 0.0, 0.0);
-        for (int j = 0; j < (int)mc_px_array.GetSize(); j++) {
+        std::vector<int> proton_indices_status1;
+        proton_indices_status1.reserve(4);
+        for (int j = 0; j < n_mc; j++) {
             if (mc_genStatus_array[j] != 1) continue;
-            if (j == scat_mc_idx) continue;
-            if (j == lead_mc_proton_idx) continue;
             const int pdg = mc_pdg_array[j];
+            if (pdg == 2212) {
+                // Track all status==1 protons (lead-pz selection and the
+                // truth_protons vector below treat them as candidates
+                // regardless of whether they overlap with scat_mc_idx).
+                proton_indices_status1.push_back(j);
+                if (mc_pz_array[j] > lead_mc_pz) {
+                    lead_mc_pz = mc_pz_array[j];
+                    lead_mc_proton_idx = j;
+                }
+                continue;
+            }
+            // Non-proton hadronic-sum branch: drop scattered electron and
+            // neutrinos (mirrors the original loop 5 filter set).
+            if (j == scat_mc_idx) continue;
             if (pdg == 12 || pdg == -12 || pdg == 14 || pdg == -14 || pdg == 16 || pdg == -16) continue;
-
             const double px = mc_px_array[j];
             const double py = mc_py_array[j];
             const double pz = mc_pz_array[j];
             const double m  = mc_mass_array[j];
             const double E  = TMath::Sqrt(px*px + py*py + pz*pz + m*m);
-            P3EVector particle(px, py, pz, E);
-            total_hadrons_truth += particle;
+            total_hadrons_truth += P3EVector(px, py, pz, E);
+        }
+        for (int j : proton_indices_status1) {
+            if (j == lead_mc_proton_idx) continue;
+            if (j == scat_mc_idx) continue;
+            const double px = mc_px_array[j];
+            const double py = mc_py_array[j];
+            const double pz = mc_pz_array[j];
+            const double m  = mc_mass_array[j];
+            const double E  = TMath::Sqrt(px*px + py*py + pz*pz + m*m);
+            total_hadrons_truth += P3EVector(px, py, pz, E);
         }
         double MX2_truth = total_hadrons_truth.M2();
+
+        // Build the undoAfterburned proton vector once (reused both for the
+        // kinematic MX^2 below and the per-proton truth fills further down).
+        // truth_protons_lead_idx points at the leading raw-pz proton, so
+        // we can avoid re-boosting it for the kinematic MX^2.
+        std::vector<P3MVector> truth_protons;
+        truth_protons.reserve(proton_indices_status1.size());
+        int truth_protons_lead_idx = -1;
+        for (int j : proton_indices_status1) {
+            P3MVector p(mc_px_array[j], mc_py_array[j], mc_pz_array[j], mc_mass_array[j]);
+            undoAfterburn(p);
+            truth_protons.push_back(p);
+            if (j == lead_mc_proton_idx) truth_protons_lead_idx = static_cast<int>(truth_protons.size()) - 1;
+        }
 
         // Kinematic M_X^2 = (q + p - p')^2 with q = k - k' (truth side).
         // Uses only the scattered electron and the leading-pz MC proton, so
         // it does NOT depend on summing X particles -- this is the
         // acceptance-independent counterpart to the hadronic-sum MX^2 above.
-        // Beams are already undoAfterburned at startup; the scattered
-        // electron and the recoil proton must be undoAfterburned to live in
-        // the same frame.
+        // Reuse the already-boosted leading proton from `truth_protons`
+        // instead of re-reading and re-undoAfterburning it.
         double MX2_truth_kin = std::numeric_limits<double>::quiet_NaN();
-        if (scat_mc_idx >= 0 && scat_mc_idx < (int)mc_px_array.GetSize() && lead_mc_proton_idx >= 0) {
+        if (scat_mc_idx >= 0 && scat_mc_idx < n_mc && truth_protons_lead_idx >= 0) {
             P3MVector k_prime_truth(mc_px_array[scat_mc_idx],
                                     mc_py_array[scat_mc_idx],
                                     mc_pz_array[scat_mc_idx],
                                     beams.fMass_electron);
             undoAfterburn(k_prime_truth);
-            P3MVector p_prime_truth(mc_px_array[lead_mc_proton_idx],
-                                    mc_py_array[lead_mc_proton_idx],
-                                    mc_pz_array[lead_mc_proton_idx],
-                                    beams.fMass_proton);
-            undoAfterburn(p_prime_truth);
-            const auto X4 = (beams.e_beam - k_prime_truth) + beams.p_beam - p_prime_truth;
+            const auto X4 = (beams.e_beam - k_prime_truth) + beams.p_beam - truth_protons[truth_protons_lead_idx];
             MX2_truth_kin = X4.M2();
         }
 
@@ -2218,13 +2342,9 @@ int main(int argc, char** argv) {
         // RP-tagged and B0-tagged protons). Combined histogram prefers RP.
         double mx2_kin_rp_best = -1.0;
         double mx2_kin_b0_best = -1.0;
-        std::vector<P3MVector> truth_protons;
-        truth_protons.reserve(4);
-        for (int j = 0; j < mc_px_array.GetSize(); j++) {
-            if (mc_genStatus_array[j] != 1 || mc_pdg_array[j] != 2212) continue;
-            P3MVector p(mc_px_array[j], mc_py_array[j], mc_pz_array[j], mc_mass_array[j]);
-            undoAfterburn(p);
-            truth_protons.push_back(p);
+        // Iterate the already-built undoAfterburned proton list (no
+        // additional MCParticle pass, no additional undoAfterburn calls).
+        for (const auto& p : truth_protons) {
             if (p.Pz() > lead_truth_pz) {
                 lead_truth_pz = p.Pz();
                 lead_truth = p;
@@ -3721,6 +3841,8 @@ int main(int argc, char** argv) {
     h_Ep_e_truth->Write(); h_phi_e_truth->Write(); h_pT_e_truth->Write();
     h_Ep_e_eid->Write(); h_phi_e_eid->Write(); h_pT_e_eid->Write();
     h_EPz_eid->Write();
+    h_EPz_eid_mc->Write();
+    h_EPz_eid_pdata->Write();
     h_pT_e_old_vs_eid->Write(); h_Ep_e_old_vs_eid->Write();
     h_dphi_e_old_eid->Write(); h_dpT_e_old_eid->Write();
     h_e_finder_category->Write();

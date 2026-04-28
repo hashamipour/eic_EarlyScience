@@ -845,7 +845,7 @@ int main(int argc, char** argv) {
     // NEW: Scattered electron leptonic quantities
     // =================================================================
     plot_ptr = new PlotOptions1D(
-        {"Ep_e_truth", "Ep_e"},
+        {"Ep_e_truth", "Ep_e_eid"},
         {"MC Truth", "Reconstruction"},
         {"hist", "E1"},
         "Scattered Electron Energy",
@@ -859,7 +859,7 @@ int main(int argc, char** argv) {
     plots.push_back(plot_ptr);
 
     plot_ptr = new PlotOptions1D(
-        {"Ep_e_truth", "Ep_e"},
+        {"Ep_e_truth", "Ep_e_eid"},
         {"MC Truth", "Reconstruction"},
         {"hist", "E1"},
         "Scattered Electron Energy",
@@ -873,7 +873,7 @@ int main(int argc, char** argv) {
     plots.push_back(plot_ptr);
 
     plot_ptr = new PlotOptions1D(
-        {"phi_e_truth", "phi_e"},
+        {"phi_e_truth", "phi_e_eid"},
         {"MC Truth", "Reconstruction"},
         {"hist", "E1"},
         "Scattered Electron Azimuthal Angle",
@@ -890,7 +890,7 @@ int main(int argc, char** argv) {
     // NEW: Scattered electron p_{T} distributions
     // =================================================================
     plot_ptr = new PlotOptions1D(
-        {"pT_e_truth", "pT_e"},
+        {"pT_e_truth", "pT_e_eid"},
         {"MC Truth", "Reconstruction"},
         {"hist", "E1"},
         "Scattered Electron p_{T}",
@@ -904,7 +904,7 @@ int main(int argc, char** argv) {
     plots.push_back(plot_ptr);
 
     plot_ptr = new PlotOptions1D(
-        {"pT_e_truth", "pT_e"},
+        {"pT_e_truth", "pT_e_eid"},
         {"MC Truth", "Reconstruction"},
         {"hist", "E1"},
         "Scattered Electron p_{T}",
